@@ -1,0 +1,27 @@
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="feedback-system" name="Page-1">
+    <mxGraphModel dx="1220" dy="720" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1220" pageHeight="720" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="一期/二期建设边界图" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=24;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="1"><mxGeometry x="0" y="20" width="1220" height="40" as="geometry"/></mxCell>
+<mxCell id="phase1" value="一期建设范围：先让反馈闭环跑起来" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF4FF;strokeColor=#93A4B7;fontSize=16;fontStyle=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;arcSize=6;" vertex="1" parent="1"><mxGeometry x="70" y="100" width="510" height="530" as="geometry"/></mxCell>
+<mxCell id="phase2" value="二期及接口预留：深度闭环与跨系统联动" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3ECFF;strokeColor=#93A4B7;fontSize=16;fontStyle=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;arcSize=6;" vertex="1" parent="1"><mxGeometry x="640" y="100" width="510" height="530" as="geometry"/></mxCell>
+<mxCell id="p1_0" value="反馈采集：ERP、客服、APP、站内信、线下录入" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="170" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_1" value="卖家精灵API深度对接：竞品、关键词、榜单、评价等" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="235" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_2" value="AI处理：翻译、摘要、去重、分类建议、异常预警" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="300" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_3" value="工单管理：反馈池、分派、处理、关闭、超时提醒" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="365" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_4" value="产品异常处理：P0-P3等级、响应、闭环" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="430" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_5" value="基础看板：反馈趋势、异常统计、竞品核心指标" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="495" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p1_6" value="ERP/PMS基础对接与飞书通知" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EA8;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="110" y="560" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_0" value="需求池深度闭环：需求状态、评分、审批、复盘回写" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="170" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_1" value="事件管理闭环：异常事件升级、整改验证、案例库联动" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="235" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_2" value="项目管理深度联动：立项、任务、里程碑、评审节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="300" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_3" value="计划管理联动：迭代计划、资源排期、延期预警" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="365" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_4" value="生产管理联动：批次、质量、返工、供应链整改" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="430" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_5" value="高阶AI分析：聚类洞察、需求优先级建议、自动报告" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="495" width="430" height="46" as="geometry"/></mxCell>
+<mxCell id="p2_6" value="跨系统数据资产与统一主数据治理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6A4C93;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1"><mxGeometry x="680" y="560" width="430" height="46" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,14 @@
+{
+  "name": "produce-iteration-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "feedback-management-prototype"
+  ],
+  "scripts": {
+    "dev": "npm --workspace feedback-management-prototype run dev",
+    "build": "npm --workspace feedback-management-prototype run build",
+    "preview": "npm --workspace feedback-management-prototype run preview"
+  }
+}
