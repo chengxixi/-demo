@@ -7,7 +7,8 @@ param(
   [string]$Prefix = '',
   [switch]$SkipBuild,
   [switch]$CreateBucket,
-  [bool]$PublicRead = $true,
+  [switch]$PromptSecurityToken,
+  [switch]$NoPublicRead,
   [string]$NodeDir = 'D:\code\.tools\node-v20.19.3-win-x64'
 )
 
@@ -37,7 +38,7 @@ function Invoke-Ossutil([string[]]$Arguments) {
   & $script:OssutilPath @Arguments
 
   if ($LASTEXITCODE -ne 0) {
-    throw "ossutil failed: $($Arguments -join ' ')"
+    throw 'ossutil command failed. Check the command output above for details.'
   }
 }
 
@@ -52,7 +53,7 @@ $AccessKeyId = Read-Required $AccessKeyId 'AccessKeyId'
 if ([string]::IsNullOrWhiteSpace($AccessKeySecret)) {
   $AccessKeySecret = Read-SecretValue 'AccessKeySecret: '
 }
-if ([string]::IsNullOrWhiteSpace($SecurityToken)) {
+if ($PromptSecurityToken -and [string]::IsNullOrWhiteSpace($SecurityToken)) {
   $SecurityToken = Read-SecretValue 'SecurityToken (press Enter if not using STS): '
 }
 $Region = Read-Required $Region 'OSS region, for example cn-shanghai'
@@ -83,6 +84,7 @@ if (!(Test-Path $DistDir)) {
 }
 
 $endpoint = "oss-$Region.aliyuncs.com"
+$publicRead = !$NoPublicRead
 $ossTarget = if ([string]::IsNullOrWhiteSpace($Prefix)) {
   "oss://$Bucket/"
 } else {
@@ -101,7 +103,7 @@ if (![string]::IsNullOrWhiteSpace($SecurityToken)) {
 
 if ($CreateBucket) {
   Write-Host "Creating bucket if needed: $Bucket"
-  $acl = if ($PublicRead) { 'public-read' } else { 'private' }
+  $acl = if ($publicRead) { 'public-read' } else { 'private' }
   $mbArgs = @('mb', "oss://$Bucket", '--acl', $acl) + $commonArgs
   Invoke-Ossutil $mbArgs
 }
@@ -110,10 +112,12 @@ Write-Host "Uploading dist/ to $ossTarget"
 $uploadArgs = @('cp', $DistDir, $ossTarget, '--recursive', '--force', '--update') + $commonArgs
 Invoke-Ossutil $uploadArgs
 
-if ($PublicRead) {
+if ($publicRead) {
   Write-Host 'Setting uploaded objects to public-read...'
   $aclArgs = @('set-acl', $ossTarget, 'public-read', '--recursive', '--force') + $commonArgs
   Invoke-Ossutil $aclArgs
+} else {
+  Write-Host 'Skipping public-read ACL updates.'
 }
 
 Write-Host 'Setting cache policy...'
