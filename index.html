@@ -6,9 +6,3103 @@
     <title>Prototype</title>
     <script type="module" crossorigin src="./assets/index-SXHQTfNW.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-OuHj09xx.css">
+    <style>
+      .local-model-search-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 240px;
+      }
+
+      .local-model-search-field label {
+        color: #253858;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .local-model-search-field input {
+        height: 40px;
+        border: 1px solid #c8d5e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #17233c;
+        font: inherit;
+        padding: 0 12px;
+        outline: none;
+      }
+
+      .local-model-search-field input:focus {
+        border-color: #1f73e8;
+        box-shadow: 0 0 0 3px rgba(31, 115, 232, 0.14);
+      }
+
+      .formula-popover {
+        position: absolute;
+        top: 38px;
+        right: 18px;
+        z-index: 20;
+        display: none;
+        min-width: 150px;
+        border: 1px solid #b8c7dd;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(20, 35, 64, 0.16);
+        color: #17233c;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      .formula-popover.visible {
+        display: block;
+      }
+
+      .has-formula-help {
+        position: relative;
+      }
+
+      .local-model-search-field {
+        position: relative;
+      }
+
+      .local-model-search-field input:not(:placeholder-shown) {
+        padding-right: 34px;
+      }
+
+      .local-model-search-field button {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        width: 24px;
+        height: 24px;
+        display: none;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: #eef2f7;
+        color: #475467;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .local-model-search-field.has-value button {
+        display: grid;
+      }
+
+      .model-rank-table .local-internal-cell {
+        color: #475467;
+        font-weight: 600;
+        line-height: 1.35;
+        white-space: normal;
+      }
+
+      .model-rank-table .local-internal-cell span {
+        display: block;
+        color: #98a2b3;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .model-rank-table .local-no-result-row td {
+        height: 76px;
+        color: #667085;
+        text-align: center;
+      }
+
+      .local-hidden {
+        display: none;
+      }
+
+      .local-site-multi {
+        position: relative;
+      }
+
+      .local-site-multi-panel {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 40;
+        width: 260px;
+        padding: 10px;
+        border: 1px solid #c8d5e8;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(20, 35, 64, 0.16);
+      }
+
+      .local-site-multi-panel[hidden] {
+        display: none;
+      }
+
+      .local-site-multi-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .local-site-multi-list label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #344054;
+        font-size: 13px;
+      }
+
+      .local-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .local-badge.ai {
+        color: #1f73e8;
+        background: #eaf2ff;
+      }
+
+      .local-badge.manual {
+        color: #b54708;
+        background: #fff3e0;
+      }
+
+      .local-badge.review {
+        color: #b42318;
+        background: #fee4e2;
+      }
+
+      .local-badge.low-confidence {
+        color: #7a4c00;
+        background: #fff8cc;
+      }
+
+      .local-merge-parent td {
+        background: #f2f7ff;
+        border-top: 1px solid #d7e7ff;
+        border-bottom: 1px solid #d7e7ff;
+        font-weight: 700;
+      }
+
+      .local-merge-toggle {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+        border: 1px solid #d7deea;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f73e8;
+        font-weight: 800;
+      }
+
+      .local-merge-title {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+      }
+
+      .local-merge-topic {
+        display: block;
+        color: #101828;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .local-merge-meta {
+        display: block;
+        margin-top: 3px;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .local-id-chip {
+        display: inline-flex;
+        align-items: center;
+        max-width: 118px;
+        min-height: 20px;
+        margin-top: 5px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: #eef2f7;
+        color: #475467;
+        font-size: 11px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .local-child-title {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 6px;
+        align-items: start;
+        padding-left: 18px;
+      }
+
+      .local-child-branch {
+        color: #667085;
+        font-weight: 800;
+      }
+
+      .local-child-index {
+        display: block;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .local-review-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 10px;
+        margin-left: 8px;
+        border: 1px solid #d7deea;
+        border-radius: 6px;
+        background: #fee4e2;
+        color: #b42318;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .local-review-filter .local-review-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #fff;
+        color: #b42318;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .local-review-filter.active {
+        border-color: #e5484d;
+        background: #fee4e2;
+        color: #b42318;
+      }
+
+      .local-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(16, 24, 40, 0.46);
+      }
+
+      .local-modal {
+        width: min(920px, 100%);
+        max-height: min(92vh, 920px);
+        overflow: auto;
+        padding: 18px;
+        border: 1px solid #d7deea;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(16, 24, 40, 0.24);
+      }
+
+      .local-modal-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .local-modal-head h2 {
+        margin: 4px 0 0;
+        font-size: 20px;
+      }
+
+      .local-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .local-modal-grid .wide {
+        grid-column: 1 / -1;
+      }
+
+      .local-modal-grid label {
+        display: grid;
+        gap: 6px;
+        color: #344054;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .local-modal-grid input,
+      .local-modal-grid select,
+      .local-modal-grid textarea {
+        width: 100%;
+        min-height: 38px;
+        padding: 8px 10px;
+        border: 1px solid #d7deea;
+        border-radius: 6px;
+        background: #fff;
+        color: #1d2939;
+        font: inherit;
+      }
+
+      .local-modal-grid textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+
+      .local-modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .local-template-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 14px;
+      }
+
+      .local-template-pill {
+        min-height: 30px;
+        padding: 0 10px;
+        border: 1px solid #d7deea;
+        border-radius: 999px;
+        background: #fff;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .local-template-pill.active {
+        border-color: #1f73e8;
+        background: #eff6ff;
+        color: #1f73e8;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (() => {
+        const sortModelRankTable = () => {
+          const tbody = document.querySelector(".model-rank-table tbody");
+          if (!tbody) return false;
+
+          const rows = Array.from(tbody.querySelectorAll("tr"));
+          rows
+            .sort((left, right) => {
+              const leftValue = Number((left.children[3]?.textContent || "").replace(/,/g, "")) || 0;
+              const rightValue = Number((right.children[3]?.textContent || "").replace(/,/g, "")) || 0;
+              return rightValue - leftValue;
+            })
+            .forEach((row, index) => {
+              const rankCell = row.children[0];
+              if (rankCell) rankCell.textContent = String(index + 1);
+              tbody.appendChild(row);
+            });
+
+          return true;
+        };
+
+        if (sortModelRankTable()) return;
+
+        const observer = new MutationObserver(() => {
+          if (!sortModelRankTable()) return;
+          observer.disconnect();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+
+      (() => {
+        const byText = (selector, text) =>
+          Array.from(document.querySelectorAll(selector)).find((node) => node.textContent.trim() === text);
+
+        const ensureInternalSearch = () => {
+          const filterBar = document.querySelector(".filter-bar");
+          if (!filterBar || filterBar.querySelector("[data-local-model-search]")) return Boolean(filterBar);
+
+          const field = document.createElement("div");
+          field.className = "local-model-search-field";
+          field.dataset.localModelSearch = "true";
+          field.innerHTML = '<label for="internal-model-search">内部型号/料号</label><input id="internal-model-search" type="search" placeholder="搜索内部型号或料号" autocomplete="off" />';
+          filterBar.appendChild(field);
+          return true;
+        };
+
+        const formulaTexts = new Map([
+          ["退货率", "计算公式：退货量/销量"],
+          ["反馈率", "计算公式：反馈量/销量"],
+          ["闭环率", "计算公式：反馈单据关闭数量/总反馈量（关闭指关闭、转需求、转异常或直接关闭）"],
+          ["响应达成率", "计算公式：P0/P1/P2/P3异常在规定时间内响应的达成情况"],
+          ["异常占比", "计算公式：产生的异常数量/反馈总数"],
+          ["差评率", "计算公式：差评数量/评论总数"],
+          ["产品型号表现 TOP10", "统计口径：按当前筛选条件下的反馈量从大到小排名"],
+          ["退货率 vs 反馈率", "计算公式：退货率=退货量/销量；反馈率=反馈量/销量"],
+          ["反馈趋势", "统计口径：按时间周期汇总反馈量、退货率和差评率"],
+          ["问题分类分布", "统计口径：分类反馈量/总反馈量"],
+          ["问题层级分布", "统计口径：对应层级反馈量/总反馈量"],
+        ]);
+
+        const attachFormulaPopover = (target, text) => {
+          if (!target || target.dataset.formulaReady === "true") return Boolean(target);
+
+          target.dataset.formulaReady = "true";
+          target.classList.add("has-formula-help");
+          const popover = document.createElement("div");
+          popover.className = "formula-popover";
+          popover.textContent = text;
+          target.appendChild(popover);
+
+          return true;
+        };
+
+        const ensureFormulaPopovers = () => {
+          const results = [];
+          document.querySelectorAll(".metric-card").forEach((card) => {
+            const label = card.querySelector(".metric-label")?.textContent.trim();
+            const text = formulaTexts.get(label);
+            if (text) results.push(attachFormulaPopover(card, text));
+          });
+
+          formulaTexts.forEach((text, label) => {
+            if (["退货率", "反馈率", "闭环率", "响应达成率", "异常占比", "差评率"].includes(label)) return;
+            const title = Array.from(document.querySelectorAll(".panel-title, h2, h3")).find((node) =>
+              node.textContent.includes(label)
+            );
+            const panel = title?.closest(".panel, section, article");
+            if (panel) results.push(attachFormulaPopover(panel, text));
+          });
+
+          return results.length > 0;
+        };
+
+        const metricSets = {
+          mom: [
+            ["4.38%", "-0.72%"],
+            ["12.67%", "-1.34%"],
+            ["87.45%", "+3.21%"],
+            ["92.16%", "+4.57%"],
+            ["6.72%", "+0.89%"],
+            ["3.25%", "-0.31%"],
+          ],
+          yoy: [
+            ["4.91%", "+0.48%"],
+            ["13.24%", "+2.06%"],
+            ["86.03%", "-1.18%"],
+            ["89.74%", "+1.92%"],
+            ["7.18%", "+1.16%"],
+            ["3.62%", "+0.27%"],
+          ],
+        };
+
+        const applyMetricSet = (type) => {
+          const cards = Array.from(document.querySelectorAll(".metric-card"));
+          metricSets[type].forEach(([value, delta], index) => {
+            const card = cards[index];
+            if (!card) return;
+            const valueNode = Array.from(card.querySelectorAll("*")).find((node) => /^\d+(\.\d+)?%$/.test(node.textContent.trim()));
+            const deltaNode = Array.from(card.querySelectorAll("*")).find((node) => /^[+-]\d+(\.\d+)?%$/.test(node.textContent.trim()));
+            if (valueNode) valueNode.textContent = value;
+            if (deltaNode) {
+              deltaNode.textContent = delta;
+              deltaNode.classList.toggle("bad-text", delta.startsWith("+") && index === 4);
+              deltaNode.classList.toggle("good-text", !delta.startsWith("+") || index !== 4);
+            }
+          });
+        };
+
+        const wireCompareButtons = () => {
+          const yoyButton = byText("button", "同比");
+          const momButton = byText("button", "环比");
+          if (!yoyButton || yoyButton.dataset.compareReady === "true") return Boolean(yoyButton);
+
+          yoyButton.dataset.compareReady = "true";
+          yoyButton.addEventListener("click", () => setTimeout(() => applyMetricSet("yoy"), 0));
+          if (momButton) momButton.addEventListener("click", () => setTimeout(() => applyMetricSet("mom"), 0));
+          return true;
+        };
+
+        const wireFormulaClick = () => {
+          if (document.body.dataset.formulaClickReady === "true") return true;
+          document.body.dataset.formulaClickReady = "true";
+
+          document.addEventListener("click", (event) => {
+            const source = event.target.nodeType === 1 ? event.target : event.target.parentElement;
+            const target = source?.closest(".has-formula-help");
+            const visiblePopovers = document.querySelectorAll(".formula-popover.visible");
+
+            if (!target) {
+              visiblePopovers.forEach((node) => node.classList.remove("visible"));
+              return;
+            }
+
+            const rect = target.getBoundingClientRect();
+            const clickedHelpArea = event.clientX > rect.right - 64 && event.clientY < rect.top + 56;
+            const clickedMetricCard = target.classList.contains("metric-card");
+            const clickedLabel = source?.closest(".metric-label");
+            const clickedTitle = source?.closest(".panel-title, h2, h3");
+            if (!clickedHelpArea && !clickedMetricCard && !clickedLabel && !clickedTitle) return;
+
+            const popover = target.querySelector(".formula-popover");
+            if (!popover) return;
+            visiblePopovers.forEach((node) => {
+              if (node !== popover) node.classList.remove("visible");
+            });
+            popover.classList.toggle("visible");
+          }, true);
+
+          return true;
+        };
+
+        const enhance = () => {
+          const ready = [
+            ensureInternalSearch(),
+            ensureFormulaPopovers(),
+            wireFormulaClick(),
+            wireCompareButtons(),
+          ];
+          return ready.every(Boolean);
+        };
+
+        if (enhance()) return;
+
+        const observer = new MutationObserver(() => {
+          enhance();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+
+      (() => {
+        if (window.__localInternalSearchReady) return;
+        window.__localInternalSearchReady = true;
+
+        const extraRows = [
+          ["YB-CS10 入门体脂秤", "2,116", "286", "4.36%", "3.04%", "4.4分"],
+          ["YB-BF511 八电极体脂秤", "1,984", "251", "4.09%", "2.92%", "4.5分"],
+          ["YB-MS30 深层筋膜枪", "1,736", "218", "3.87%", "2.75%", "4.3分"],
+          ["YB-S30 人体秤", "1,514", "176", "3.62%", "2.41%", "4.6分"],
+          ["YB-F2 智能体脂秤 F2", "1,206", "139", "3.44%", "2.18%", "4.5分"],
+        ];
+
+        const internalModelMap = new Map([
+          ["YB-S100 八电极体脂秤", ["YL-S100-8", "PN-S100-8E"]],
+          ["YB-201 人体成分秤", ["YL-201-BIA", "PN-201-B"]],
+          ["YB-301 体脂秤 Pro", ["YL-301-PRO", "PN-301-P"]],
+          ["YB-M3 筋膜枪 M3 Pro", ["YL-M3-PRO", "PN-M3-MASS"]],
+          ["YB-F1 智能体脂秤 F1", ["YL-F1-SCALE", "PN-F1-BIA"]],
+          ["YB-CS10 入门体脂秤", ["YL-CS10-4", "PN-CS10-4E"]],
+          ["YB-BF511 八电极体脂秤", ["YL-BF511-8", "PN-BF511"]],
+          ["YB-MS30 深层筋膜枪", ["YL-MS30", "PN-MS30-MASS"]],
+          ["YB-S30 人体秤", ["YL-S30", "PN-S30-WT"]],
+          ["YB-F2 智能体脂秤 F2", ["YL-F2-SCALE", "PN-F2-BIA"]],
+        ]);
+
+        const normalize = (value) => String(value || "").trim().toLowerCase();
+
+        const getModelName = (row) => row.querySelector(".model-name")?.textContent.trim() || row.children[1]?.textContent.trim() || "";
+
+        const ensureClearButton = (input) => {
+          const field = input.closest(".local-model-search-field");
+          if (!field || field.querySelector("[data-local-clear-model-search]")) return;
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.localClearModelSearch = "true";
+          button.setAttribute("aria-label", "清空内部型号/料号搜索");
+          button.textContent = "×";
+          button.addEventListener("click", () => {
+            input.value = "";
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.focus();
+          });
+          field.appendChild(button);
+        };
+
+        const ensureTop10Rows = (tbody) => {
+          let changed = false;
+          const currentModels = new Set(Array.from(tbody.querySelectorAll("tr")).map(getModelName));
+          extraRows.forEach((cells) => {
+            if (currentModels.has(cells[0])) return;
+
+            const row = document.createElement("tr");
+            row.dataset.localAddedModelRow = "true";
+            row.innerHTML = `<td></td>${cells.map((cell, index) => `<td${index === 0 ? ' class="model-name"' : ""}>${cell}</td>`).join("")}`;
+            tbody.appendChild(row);
+            changed = true;
+          });
+          return changed;
+        };
+
+        const ensureInternalColumn = (table) => {
+          const headRow = table.querySelector("thead tr");
+          if (!headRow || headRow.dataset.localInternalReady === "true") return false;
+
+          headRow.dataset.localInternalReady = "true";
+          const header = document.createElement("th");
+          header.textContent = "内部型号/料号";
+          headRow.insertBefore(header, headRow.children[2] || null);
+          return true;
+        };
+
+        const ensureInternalCells = (tbody) => {
+          let changed = false;
+          Array.from(tbody.querySelectorAll("tr:not(.local-no-result-row)")).forEach((row) => {
+            if (row.dataset.localInternalCellReady === "true") return;
+
+            const modelName = getModelName(row);
+            const [internal, partNo] = internalModelMap.get(modelName) || ["待补充", "待补充"];
+            const cell = document.createElement("td");
+            cell.className = "local-internal-cell";
+            cell.innerHTML = `${internal}<span>${partNo}</span>`;
+            row.dataset.localSearchText = normalize(`${modelName} ${internal} ${partNo}`);
+            row.dataset.localInternalCellReady = "true";
+            row.insertBefore(cell, row.children[2] || null);
+            changed = true;
+          });
+          return changed;
+        };
+
+        const sortVisibleRows = (table, tbody) => {
+          if (table.dataset.localInternalSorted === "true") return;
+          const rows = Array.from(tbody.querySelectorAll("tr:not(.local-no-result-row)"));
+          rows
+            .sort((left, right) => {
+              const leftValue = Number((left.children[4]?.textContent || "").replace(/,/g, "")) || 0;
+              const rightValue = Number((right.children[4]?.textContent || "").replace(/,/g, "")) || 0;
+              return rightValue - leftValue;
+            })
+            .forEach((row) => tbody.appendChild(row));
+          table.dataset.localInternalSorted = "true";
+        };
+
+        const applyInternalSearch = () => {
+          const input = document.querySelector("#internal-model-search");
+          const tbody = document.querySelector(".model-rank-table tbody");
+          if (!input || !tbody) return false;
+
+          const field = input.closest(".local-model-search-field");
+          const query = normalize(input.value);
+          let visibleRank = 0;
+          tbody.querySelector(".local-no-result-row")?.remove();
+
+          Array.from(tbody.querySelectorAll("tr:not(.local-no-result-row)")).forEach((row) => {
+            const matched = !query || row.dataset.localSearchText.includes(query);
+            row.classList.toggle("local-hidden", !matched);
+            if (!matched) return;
+
+            visibleRank += 1;
+            const rankCell = row.children[0];
+            if (rankCell) rankCell.textContent = String(visibleRank);
+          });
+
+          field?.classList.toggle("has-value", Boolean(query));
+          if (visibleRank > 0) return true;
+
+          const noResult = document.createElement("tr");
+          noResult.className = "local-no-result-row";
+          noResult.innerHTML = '<td colspan="8">未找到匹配的内部型号或料号</td>';
+          tbody.appendChild(noResult);
+          return true;
+        };
+
+        const wireInternalModelSearch = () => {
+          const table = document.querySelector(".model-rank-table");
+          const tbody = table?.querySelector("tbody");
+          const input = document.querySelector("#internal-model-search");
+          if (!table || !tbody || !input) return false;
+
+          ensureClearButton(input);
+          const changed = [
+            ensureTop10Rows(tbody),
+            ensureInternalColumn(table),
+            ensureInternalCells(tbody),
+          ].some(Boolean);
+          if (changed) table.dataset.localInternalSorted = "false";
+          sortVisibleRows(table, tbody);
+
+          if (input.dataset.localSearchReady !== "true") {
+            input.dataset.localSearchReady = "true";
+            input.placeholder = "搜索 YL-CS20A-8 或 PN-BF511";
+            input.addEventListener("input", applyInternalSearch);
+          }
+
+          applyInternalSearch();
+          return true;
+        };
+
+        const boot = () => wireInternalModelSearch();
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", boot, { once: true });
+        } else {
+          boot();
+        }
+      })();
+
+      (() => {
+        if (window.__localFeedbackEnhancerBootstrapped) return;
+        window.__localFeedbackEnhancerBootstrapped = true;
+
+        const siteOptions = ["Amazon.com (US)", "天猫", "京东", "抖音"];
+        const feedbackTabOptions = [
+          { key: "all", label: "全部" },
+          { key: "pending", label: "待处理" },
+          { key: "review", label: "待人工复核" },
+          { key: "done", label: "已处理" },
+          { key: "mine", label: "我反馈的" },
+        ];
+        const processRouteOptions = ["待处理", "已转工单", "已转需求", "已转异常", "已转Q&A", "已直接回复关闭"];
+        const processStateOptions = ["待人工复核", "待处理", "已处理"];
+        const returnOptions = ["否", "退货", "换货", "退货+换货", "待确认"];
+        let currentUser = { key: "admin", name: "管理员", label: "管理员", scope: "all", avatar: "AD" };
+        const roleOptions = [
+          { key: "admin", name: "管理员", label: "管理员", scope: "all", avatar: "AD" },
+          { key: "massagePm", name: "孙工", label: "筋膜枪产品经理", scope: "line:CM", avatar: "CM" },
+          { key: "scalePm", name: "李工", label: "八电极产品经理", scope: "line:CS", avatar: "CS" },
+          { key: "overseasFeedback", name: "张伟", label: "海外反馈人员", scope: "region:海外", avatar: "OS" },
+          { key: "domesticFeedback", name: "王雪", label: "国内反馈人员", scope: "region:国内", avatar: "CN" },
+        ];
+        const userTemplate = {
+          enabled: false,
+          values: {
+            region: "海外",
+            dataSource: "海外电商-退货反馈",
+            deviceType: "八电极",
+            brand: "云康宝",
+            internal: "YL-CS20A-8",
+            model: "CS20A",
+            orderNo: "B0CS20AUS1",
+            expressNo: "",
+            feedbackDate: "2026-06-18",
+            raw: "用户反馈体脂秤无法开机，疑似电池或主板异常。",
+            ai: "The customer reports that the body fat scale cannot power on, possibly due to a battery or mainboard issue.",
+            image: "",
+            video: "",
+            solution: "待产品经理确认处理方案。",
+            level1: "产品质量",
+            level2: "硬件损坏/无法使用",
+            level3: "无法开机/上电",
+            exception: "P2",
+            createMode: "人工录入",
+            processRoute: "待处理",
+            processState: "待处理",
+            feedbackUser: "张伟",
+            note: "",
+          },
+        };
+        const tableHeaders = [
+          "全选",
+          "编号",
+          "地区",
+          "数据来源",
+          "设备类型",
+          "品牌",
+          "内部型号/料号",
+          "销售型号",
+          "订单号",
+          "快递单号（退换货）",
+          "用户反馈（客户对话/退货反馈）",
+          "用户评价翻译（AI自动翻译）",
+          "图片补充",
+          "视频补充",
+          "问题反馈时间",
+          "问题回答/处理方案",
+          "一级职能划分",
+          "二级问题场景分类",
+          "三级具体问题",
+          "异常级别",
+          "创建方式",
+          "处理去向",
+          "状态",
+          "反馈人",
+          "处理人",
+          "操作",
+        ];
+        const templateLibrary = [
+          { name: "默认模板", values: { site: ["Amazon.com (US)"], brand: "云康宝", productType: "体脂秤", source: "商品评论", owner: "李工" } },
+          { name: "APP问题模板", values: { site: ["Amazon.com (US)", "天猫"], brand: "AF", productType: "体脂秤", source: "APP反馈", owner: "刘工" } },
+          { name: "筋膜枪模板", values: { site: ["抖音", "京东"], brand: "LF", productType: "筋膜枪", source: "商品评论", owner: "孙工" } },
+        ];
+        const localFeedbackData = [
+          {
+            id: "CS-20260618-0001",
+            mergeGroup: "CS20A_POWER",
+            source: "商品评论",
+            createMode: "AI自动创建",
+            brand: "云康宝",
+            site: "Amazon.com (US)",
+            productType: "体脂秤",
+            model: "CS20A",
+            internal: "YL-CS20A-8",
+            asin: "B0CS20AUS1",
+            raw: "Scale stopped powering on after two weeks, replacing batteries did not help.",
+            ai: "体脂秤使用两周后无法开机，更换电池无效。",
+            level1: "产品质量",
+            level2: "硬件问题",
+            level3: "无法开机",
+            sentiment: "负向",
+            returned: "退货",
+            exception: "P2",
+            processRoute: "待处理",
+            processState: "待处理",
+            feedbackUser: "张伟",
+            handler: "李工",
+            date: "2026-06-18",
+          },
+          {
+            id: "CS-20260618-0002",
+            mergeGroup: "CS20A_POWER",
+            source: "退货原因",
+            createMode: "AI自动创建",
+            brand: "云康宝",
+            site: "Amazon.com (US)",
+            productType: "体脂秤",
+            model: "CS20A",
+            internal: "YL-CS20A-8",
+            asin: "B0CS20AUS1",
+            raw: "Customer returned the scale because it could not turn on after battery replacement.",
+            ai: "客户因更换电池后仍无法开机而退货。",
+            level1: "产品质量",
+            level2: "硬件问题",
+            level3: "无法开机",
+            sentiment: "负向",
+            returned: "退货",
+            exception: "P2",
+            processRoute: "已转工单",
+            processState: "已处理",
+            feedbackUser: "李娜",
+            handler: "系统",
+            date: "2026-06-18",
+          },
+          {
+            id: "CS-20260617-0003",
+            source: "APP反馈",
+            createMode: "AI自动创建",
+            brand: "AF",
+            site: "Amazon.com (US)",
+            productType: "体脂秤",
+            model: "AF-30B",
+            internal: "AF-CS30B-CN",
+            asin: "B0AF30BUS1",
+            raw: "用户反馈体脂率数据与健身房设备差异较大，希望确认算法。",
+            ai: "体脂率数据偏差较大，需要复核算法或测量引导。",
+            level1: "产品体验",
+            level2: "数据准确性",
+            level3: "测脂不准",
+            sentiment: "负向",
+            returned: "否",
+            exception: "待确认",
+            processRoute: "待处理",
+            processState: "待人工复核",
+            feedbackUser: "陈晨",
+            handler: "刘工",
+            date: "2026-06-17",
+          },
+          {
+            id: "CS-20260616-0004",
+            source: "客服沟通",
+            createMode: "人工录入",
+            brand: "云康宝",
+            site: "京东",
+            productType: "血压计",
+            model: "BP-02",
+            internal: "YK-BP02-CN",
+            asin: "-",
+            raw: "用户咨询袖带尺寸是否适合上臂围 42cm，需要客服跟进配件建议。",
+            ai: "咨询大臂围用户的袖带适配问题。",
+            level1: "咨询服务",
+            level2: "配件适配",
+            level3: "袖带尺寸",
+            sentiment: "中性",
+            returned: "否",
+            exception: "否",
+            processRoute: "已直接回复关闭",
+            processState: "已处理",
+            feedbackUser: "王雪",
+            handler: "王工",
+            date: "2026-06-16",
+          },
+          {
+            id: "CM-20260615-0005",
+            mergeGroup: "MG20_NOISE",
+            source: "商品评论",
+            createMode: "AI自动创建",
+            brand: "LF",
+            site: "抖音",
+            productType: "筋膜枪",
+            model: "MG20",
+            internal: "LF-MG20-DY",
+            asin: "-",
+            raw: "三档运行时噪音明显，夜间使用会影响家人休息。",
+            ai: "筋膜枪高档位噪音明显，影响夜间使用体验。",
+            level1: "产品体验",
+            level2: "功能效果",
+            level3: "噪音偏大",
+            sentiment: "负向",
+            returned: "否",
+            exception: "P3",
+            processRoute: "待处理",
+            processState: "待处理",
+            feedbackUser: "赵敏",
+            handler: "孙工",
+            date: "2026-06-15",
+          },
+          {
+            id: "CM-20260615-0006",
+            mergeGroup: "MG20_NOISE",
+            source: "客服沟通",
+            createMode: "人工录入",
+            brand: "LF",
+            site: "京东",
+            productType: "筋膜枪",
+            model: "MG20",
+            internal: "LF-MG20-JD",
+            asin: "-",
+            raw: "用户反馈使用高档位时声音偏尖，询问是否属于正常现象。",
+            ai: "高档位声音偏尖，需确认电机和结构噪音表现。",
+            level1: "产品体验",
+            level2: "功能效果",
+            level3: "噪音偏大",
+            sentiment: "负向",
+            returned: "否",
+            exception: "P3",
+            processRoute: "已转异常",
+            processState: "已处理",
+            feedbackUser: "周杰",
+            handler: "孙工",
+            date: "2026-06-15",
+          },
+        ];
+        const localWorkOrders = [
+          { id: "TK-20260611-0342", relatedFeedback: "FB-20260611-00122", status: "处理中", owner: "王工", dept: "产品部", sla: "18h 22m", result: "分析测量日志", closeReason: "-", exception: "否", requirement: "预留", step: 3 },
+          { id: "TK-20260611-0339", relatedFeedback: "FB-20260611-00121", status: "待确认", owner: "刘工", dept: "研发部", sla: "31h 10m", result: "APP版本兼容排查", closeReason: "-", exception: "否", requirement: "否", step: 4 },
+          { id: "TK-20260610-0318", relatedFeedback: "FB-20260610-00117", status: "已闭环", owner: "孙工", dept: "产品部", sla: "完成", result: "补充使用指导与Listing说明", closeReason: "已回复", exception: "否", requirement: "预留", step: 5 },
+        ];
+        const localEmergencyExceptions = [
+          { id: "P1-20260611-008", level: "P1", region: "海外", site: "Amazon", productLine: "八电极秤", internal: "GE31002B1-CS", creator: "陈晨", dimension: "平台合规", source: "投诉/舆情", deadline: "已超时 2h", reminderLimit: "2h", reminderDeadline: "2026-06-05 12:00", overdue: true, owner: "陈总", team: "海外运营+产品经理", status: "临时方案超时", issue: "玻璃碎裂投诉连续上升", impactScope: "GE31002B1-CS 批次 2026Q1，约500台", action: "隔离相关批次，检查包装防护", feedback: "CS-20260618-合并（2条数据）", tempPlan: "", rootCause: "待根因分析", fixPlan: "待整改措施", verifyResult: "待验证", step: 0 },
+          { id: "P0-20260611-007", level: "P0", region: "国内", site: "京东", productLine: "体脂秤", internal: "FT31002A2", creator: "张伟", dimension: "客户伤害", source: "退货原因", deadline: "剩余 1h 30m", reminderLimit: "2h", reminderDeadline: "2026-06-05 08:45", overdue: false, owner: "刘海州", team: "售后负责人+质量负责人", status: "临时方案输出", issue: "测脂不准导致退货率升高", impactScope: "FT31002A2 全批次，约2000台", action: "暂停相关投放，输出说明书修订", feedback: "CS-20260617-0003", tempPlan: "售后先行解释并补发测量指引", rootCause: "传感器数据与说明书口径不一致", fixPlan: "优化测量引导和算法提示", verifyResult: "待验证", step: 2 },
+        ];
+        const localCompetitors = [
+          { name: "Withings Body Scan", asin: "B0WITHINGS", line: "八电极秤", price: "$349.95", channels: "Amazon / 独立站", params: "分段身体成分 / 心率 / 血管年龄 / 高端健康管理" },
+          { name: "RENPHO Elis 1 Smart Scale", asin: "B0RENPHO1", line: "体脂秤", price: "$39.99", channels: "Amazon / Walmart", params: "低价高评价 / App趋势 / 家庭多人" },
+          { name: "华为 智能体脂秤 3 Pro", asin: "HW-SCALE3P", line: "八电极秤", price: "¥399", channels: "天猫 / 京东 / 抖音", params: "华为生态 / 八电极分段测量 / 大促流量强" },
+        ];
+
+        const addStyles = () => {
+          if (document.getElementById("local-feedback-enhancer-style")) return;
+          const style = document.createElement("style");
+          style.id = "local-feedback-enhancer-style";
+          style.textContent = `
+            .local-feedback-hidden { display: none !important; }
+            .local-feedback-group { background: #f8fbff; }
+            .local-feedback-child td { background: #fcfdff; color: #475467; }
+            .local-feedback-indent { display: inline-flex; align-items: center; gap: 8px; }
+            .local-feedback-indent .source-chip { margin-right: 0; }
+            .local-feedback-name { font-weight: 800; color: #101828; }
+            .local-feedback-sub { display: block; color: #667085; font-size: 12px; font-weight: 600; margin-top: 2px; }
+            .local-feedback-popup-trigger { margin-left: 8px; }
+            .local-merge-parent td { background: #f2f7ff; border-top: 1px solid #d7e7ff; border-bottom: 1px solid #d7e7ff; font-weight: 700; }
+            .local-merge-topic { display: block; color: #101828; font-size: 14px; font-weight: 800; line-height: 1.25; }
+            .local-merge-meta { display: block; margin-top: 3px; color: #667085; font-size: 12px; font-weight: 600; line-height: 1.35; }
+            .local-id-chip { display: inline-flex; align-items: center; max-width: 118px; min-height: 20px; margin-top: 5px; padding: 0 7px; border-radius: 999px; background: #eef2f7; color: #475467; font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .local-child-title { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 6px; align-items: start; padding-left: 18px; }
+            .local-child-branch { color: #667085; font-weight: 800; }
+            .local-child-index { display: block; color: #667085; font-size: 12px; font-weight: 600; }
+            .local-template-panel { display: grid; gap: 10px; margin-bottom: 14px; }
+            .local-template-save-row { display: flex; gap: 10px; align-items: center; }
+            .local-template-save-row input { flex: 1; }
+            .local-template-set { margin-top: 8px; }
+            .feedback-table { min-width: 3000px; }
+            .local-feedback-tabs { display: flex; align-items: center; gap: 6px; margin: 12px 0 10px; border-bottom: 1px solid #d7deea; }
+            .local-feedback-tab { min-height: 38px; padding: 0 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #475467; font-size: 14px; font-weight: 800; }
+            .local-feedback-tab.active { color: #1f73e8; border-bottom-color: #1f73e8; }
+            .local-fixed-filter-panel { display: grid; grid-template-columns: repeat(6, minmax(128px, 1fr)); gap: 8px; margin: 6px 0 12px; padding: 12px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-fixed-filter-panel[hidden] { display: none; }
+            .local-fixed-filter-panel label { display: grid; gap: 5px; color: #475467; font-size: 12px; font-weight: 700; }
+            .local-fixed-filter-panel input,
+            .local-fixed-filter-panel select { width: 100%; min-width: 0; height: 34px; padding: 0 9px; border: 1px solid #c8d2df; border-radius: 6px; background: #fff; color: #1d2939; outline: none; }
+            .local-fixed-filter-panel input:focus,
+            .local-fixed-filter-panel select:focus { border-color: #1f73e8; box-shadow: 0 0 0 3px #1f73e81f; }
+            .local-filter-wide { grid-column: span 2; }
+            .local-filter-actions { display: flex; align-items: end; gap: 8px; }
+            .local-filter-actions button { min-height: 34px; }
+            .local-filter-toggle { min-width: 72px; }
+            .local-filter-toggle.active { border-color: #1f73e8; color: #1f73e8; background: #f5f9ff; }
+            .local-row-actions { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+            .local-row-actions button { min-height: 26px; padding: 0 8px; border: 1px solid #c8d2df; border-radius: 6px; background: #fff; color: #1f73e8; font-size: 12px; font-weight: 800; }
+            .local-row-actions button.review { color: #b42318; border-color: #fecdca; background: #fff5f5; }
+            .local-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+            .local-detail-grid article,
+            .local-detail-block { padding: 10px; border: 1px solid #e4eaf3; border-radius: 8px; background: #f8fafc; }
+            .local-detail-grid span,
+            .local-detail-block span { display: block; color: #667085; font-size: 12px; font-weight: 700; }
+            .local-detail-grid strong,
+            .local-detail-block strong { display: block; margin-top: 5px; color: #101828; font-size: 14px; line-height: 1.35; }
+            .local-detail-section { display: grid; gap: 10px; margin-top: 12px; }
+            .local-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+            .local-progress step,
+            .local-progress div { min-height: 58px; padding: 9px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-progress b { display: block; color: #101828; font-size: 13px; }
+            .local-progress em { display: block; margin-top: 3px; color: #667085; font-size: 12px; font-style: normal; }
+            .local-reply-box { width: 100%; min-height: 86px; padding: 10px; border: 1px solid #c8d2df; border-radius: 8px; resize: vertical; }
+            .local-reply-panel { display: none; gap: 8px; padding: 10px; border: 1px solid #d7deea; border-radius: 8px; background: #f8fafc; }
+            .local-reply-panel.active { display: grid; }
+            .local-reply-panel span { color: #667085; font-size: 12px; font-weight: 700; }
+            .local-detail-edit { width: 100%; min-height: 34px; margin-top: 5px; padding: 7px 9px; border: 1px solid #c8d2df; border-radius: 7px; background: #fff; color: #101828; font-weight: 800; }
+            .local-detail-editarea { width: 100%; min-height: 78px; margin-top: 6px; padding: 9px; border: 1px solid #c8d2df; border-radius: 8px; resize: vertical; font-weight: 700; color: #101828; }
+            .local-merge-detail-list { display: grid; gap: 10px; margin-top: 8px; }
+            .local-merge-detail-card { display: grid; gap: 7px; padding: 10px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-merge-detail-card h3 { margin: 0; color: #101828; font-size: 14px; }
+            .local-merge-detail-card p { margin: 0; color: #344054; font-size: 13px; line-height: 1.45; }
+            .local-merge-card-actions { display: flex; justify-content: flex-end; gap: 8px; }
+            .local-workorder-steps { display: inline-grid; grid-template-columns: repeat(5, 18px); gap: 5px; align-items: center; min-width: 116px; }
+            .local-workorder-steps span { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #c8d2df; color: #667085; background: #fff; font-size: 11px; font-weight: 800; }
+            .local-workorder-steps span.done { border-color: #1f73e8; background: #1f73e8; color: #fff; }
+            .local-workorder-step-label { display: block; margin-top: 4px; color: #475467; font-size: 12px; font-weight: 700; }
+            .local-workorder-flow-panel { display: none !important; }
+            .local-workorder-detail-page { display: grid; gap: 18px; padding: 18px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-workorder-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid #d7deea; }
+            .local-workorder-detail-head h2 { margin: 0; color: #101828; font-size: 26px; line-height: 1.2; }
+            .local-workorder-detail-head p { margin: 8px 0 0; color: #475467; font-size: 14px; }
+            .local-workorder-detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding-top: 14px; border-top: 1px solid #d7deea; }
+            .local-workorder-detail-page .local-workorder-steps { grid-template-columns: repeat(5, 42px); gap: 10px; }
+            .local-workorder-detail-page .local-workorder-steps span { width: 34px; height: 34px; font-size: 13px; }
+            .local-emergency-flow-panel { display: none !important; }
+            .local-emergency-countdown { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; background: #ecfdf3; color: #067647; font-size: 12px; font-weight: 800; white-space: nowrap; }
+            .local-emergency-countdown.overdue { min-height: 28px; padding: 0 11px; border: 1px solid #b42318; background: #d92d20; color: #fff; box-shadow: 0 0 0 3px #fee4e2; }
+            .local-emergency-row-overdue td { background: #fff6f5 !important; color: #912018; }
+            .local-emergency-row-overdue td:first-child { border-left: 3px solid #f04438; }
+            .local-emergency-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; align-items: center; margin: 8px 0 12px; }
+            .local-emergency-steps span { display: flex; align-items: center; justify-content: center; min-height: 34px; border-radius: 999px; border: 1px solid #d7deea; background: #f8fafc; color: #667085; font-size: 12px; font-weight: 800; }
+            .local-emergency-steps span.done { border-color: #12b76a; background: #ecfdf3; color: #027a48; }
+            .local-emergency-reminder-card { display: grid; place-items: center; gap: 10px; min-height: 136px; margin: 8px 0 14px; padding: 20px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px #1018281a; text-align: center; }
+            .local-emergency-reminder-card .local-reminder-title { display: inline-flex; align-items: center; gap: 7px; justify-self: start; width: 100%; color: #344054; font-size: 16px; font-weight: 800; }
+            .local-emergency-reminder-card .local-reminder-clock { display: grid; place-items: center; width: 17px; height: 17px; border: 1.8px solid #5b6f91; border-radius: 50%; color: #5b6f91; font-size: 12px; line-height: 1; }
+            .local-emergency-reminder-card strong { color: #f59e0b; font-size: 34px; line-height: 1; }
+            .local-emergency-reminder-card span:last-child { color: #5b6f91; font-size: 14px; }
+            .local-emergency-dashboard { display: grid; gap: 18px; }
+            .local-emergency-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+            .local-emergency-head h2 { margin: 0; color: #101828; font-size: 26px; line-height: 1.2; }
+            .local-emergency-head p { margin: 8px 0 0; color: #475467; font-size: 14px; }
+            .local-emergency-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; padding: 14px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-emergency-filters label { display: grid; gap: 6px; color: #475467; font-size: 12px; font-weight: 800; }
+            .local-emergency-filters select,
+            .local-emergency-filters input { width: 100%; height: 36px; padding: 0 10px; border: 1px solid #c8d2df; border-radius: 7px; background: #fff; color: #101828; font-size: 13px; font-weight: 700; outline: none; }
+            .local-emergency-filters select:focus,
+            .local-emergency-filters input:focus { border-color: #1f73e8; box-shadow: 0 0 0 3px #1f73e81f; }
+            .local-emergency-filters .wide { grid-column: span 2; }
+            .local-emergency-filter-reset { height: 36px; white-space: nowrap; }
+            .local-emergency-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+            .local-emergency-stat { min-height: 94px; padding: 18px 20px; border: 1px solid #d7deea; border-left: 3px solid var(--accent); border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-emergency-stat span { color: #475467; font-size: 14px; }
+            .local-emergency-stat strong { display: block; margin-top: 12px; color: var(--accent); font-size: 30px; line-height: 1; }
+            .local-emergency-card-list { display: grid; gap: 16px; }
+            .local-emergency-card { position: relative; display: grid; gap: 16px; padding: 22px 22px 24px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-emergency-card.overdue { border-color: #f04438; border-left: 6px solid #d92d20; background: #fff6f5; box-shadow: 0 0 0 2px #fee4e2, 0 10px 24px #f0443824; }
+            .local-emergency-card.overdue::before { content: "超时"; position: absolute; top: 14px; right: 148px; min-height: 24px; padding: 0 10px; border-radius: 999px; background: #b42318; color: #fff; font-size: 12px; font-weight: 900; display: inline-flex; align-items: center; }
+            .local-emergency-card-main { display: grid; grid-template-columns: minmax(0, 1fr) 128px; gap: 18px; }
+            .local-emergency-card-actions { display: grid; align-content: start; gap: 8px; }
+            .local-emergency-card-actions button { min-height: 34px; border-radius: 7px; font-weight: 800; }
+            .local-emergency-card-actions .primary-button { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+            .local-emergency-tags { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+            .local-emergency-code { display: inline-flex; min-height: 32px; align-items: center; padding: 0 10px; border: 1px solid #fecaca; border-radius: 6px; background: #fff7ed; color: #dc2626; font-family: Consolas, monospace; font-weight: 800; }
+            .local-emergency-level { display: inline-flex; min-height: 28px; align-items: center; padding: 0 10px; border-radius: 6px; background: #fff7ed; color: #dc2626; font-weight: 900; }
+            .local-emergency-status { display: inline-flex; min-height: 28px; align-items: center; padding: 0 10px; border-radius: 999px; background: #fff7ed; color: #ea580c; font-size: 12px; font-weight: 800; }
+            .local-emergency-status.verify { background: #eff6ff; color: #2563eb; }
+            .local-emergency-card h3 { margin: 0; color: #101828; font-size: 18px; }
+            .local-emergency-card p { margin: 0; color: #475467; font-size: 14px; line-height: 1.6; }
+            .local-emergency-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; color: #475467; font-size: 13px; }
+            .local-emergency-plan { padding: 12px; border-radius: 8px; background: #f8fafc; color: #344054; font-size: 14px; }
+            .local-emergency-plan b { color: #f59e0b; }
+            .local-emergency-card .local-emergency-steps { margin: 4px 0 0; grid-template-columns: repeat(5, minmax(80px, 1fr)); }
+            .local-emergency-card .local-emergency-steps span { justify-content: flex-start; min-height: 28px; border: 0; border-radius: 0; background: linear-gradient(90deg, #d7deea 0, #d7deea 100%) left center/100% 2px no-repeat; color: #98a2b3; }
+            .local-emergency-card .local-emergency-steps span.done { background: linear-gradient(90deg, #12b76a 0, #12b76a 100%) left center/100% 2px no-repeat; color: #027a48; }
+            @media (max-width: 980px) {
+              .local-emergency-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .local-emergency-filters .wide { grid-column: span 2; }
+              .local-emergency-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .local-emergency-card-main { grid-template-columns: 1fr; }
+              .local-emergency-meta { grid-template-columns: 1fr; }
+            }
+            .local-competitor-add { margin-left: auto; }
+            .local-competitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 14px 0 16px; }
+            .local-competitor-card { position: relative; display: grid; gap: 10px; min-height: 220px; padding: 18px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; align-content: start; overflow: hidden; }
+            .local-competitor-card .competitor-badge { position: static; display: inline-flex; justify-self: start; min-height: 24px; align-items: center; padding: 0 8px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 12px; font-weight: 800; }
+            .local-competitor-card h3 { margin: 0; color: #101828; font-size: 17px; line-height: 1.25; }
+            .local-competitor-card p { margin: 0; color: #475467; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+            .local-competitor-card strong { display: block; color: #101828; font-size: 18px; line-height: 1.2; }
+            .local-competitor-card > span { color: #344054; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+            .local-competitor-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+            .local-competitor-tags span { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 12px; font-weight: 800; }
+            .local-check-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; min-height: 38px; padding: 8px 10px; border: 1px solid #c8d2df; border-radius: 8px; background: #fff; }
+            .local-check-row label { display: inline-flex; grid-template-columns: none; gap: 7px; align-items: center; color: #344054; font-size: 13px; font-weight: 800; }
+            .local-check-row input { width: 16px; height: 16px; }
+            .local-competitor-param-grid { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px; border: 1px solid #d7deea; border-radius: 8px; background: #f8fafc; }
+            .local-competitor-param-grid h3 { grid-column: 1 / -1; margin: 0; color: #101828; font-size: 14px; }
+            .local-form-error { grid-column: 1 / -1; display: none; min-height: 34px; align-items: center; padding: 8px 10px; border: 1px solid #fecdca; border-radius: 8px; background: #fff6f5; color: #b42318; font-size: 13px; font-weight: 800; }
+            .local-form-error.active { display: flex; }
+            .local-attachment-drop { min-height: 74px; padding: 10px; border: 1px dashed #94a3b8; border-radius: 8px; background: #f8fafc; color: #475467; font-size: 13px; outline: none; }
+            .local-attachment-drop:focus { border-color: #1f73e8; box-shadow: 0 0 0 3px #1f73e81f; }
+            .local-user-select { height: 34px; min-width: 150px; border: 0; background: transparent; color: #344054; font-weight: 700; outline: none; }
+            .local-detail-drawer { position: relative; min-height: calc(100vh - 58px); border-left: 1px solid #d7deea; background: #fff; overflow: auto; }
+            .local-detail-drawer .local-modal { width: 100%; max-height: none; min-height: 100%; padding-bottom: 28px; border: 0; border-radius: 0; box-shadow: none; }
+            .local-detail-drawer .local-modal-actions { justify-content: stretch; }
+            .local-detail-drawer .local-modal-actions button { flex: 1 1 calc(50% - 6px); min-width: 128px; white-space: nowrap; }
+            .local-detail-drawer .local-modal-actions [data-local-direct-close] { flex-basis: 100%; }
+            .split-page.local-detail-page-open { display: block; }
+            .split-page.local-detail-page-open > section.content-main { display: none !important; }
+            .local-detail-page { min-height: calc(100vh - 58px); padding: 24px 28px 32px; background: #f5f7fb; }
+            .local-detail-page .local-modal { width: 100%; max-width: none; max-height: none; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+            .local-detail-page .local-modal-head { align-items: flex-start; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid #d7deea; }
+            .local-detail-page .local-modal-head h2 { font-size: 28px; line-height: 1.2; }
+            .local-detail-page .local-detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .local-detail-page .local-detail-section { display: grid; gap: 16px; }
+            .local-detail-page .local-modal-actions { position: sticky; bottom: 0; justify-content: flex-end; margin-top: 18px; padding: 14px 0 0; border-top: 1px solid #d7deea; background: #f5f7fb; }
+          `;
+          document.head.appendChild(style);
+        };
+
+        const domReady = () => document.readyState !== "loading";
+        const waitFor = (selector, timeoutMs = 8000) => new Promise((resolve) => {
+          const found = document.querySelector(selector);
+          if (found) return resolve(found);
+          const start = Date.now();
+          const timer = setInterval(() => {
+            const node = document.querySelector(selector);
+            if (node) {
+              clearInterval(timer);
+              resolve(node);
+            } else if (Date.now() - start > timeoutMs) {
+              clearInterval(timer);
+              resolve(null);
+            }
+          }, 120);
+        });
+
+        const getFeedbackRows = () => Array.from(document.querySelectorAll(".feedback-table tbody tr")).filter((row) => !row.dataset.localBuilt);
+
+        const normalize = (value) => String(value || "").trim().toLowerCase();
+
+        const getRowData = (row) => ({
+          id: row.querySelector(".feedback-id-cell")?.textContent.trim() || row.children[1]?.textContent.trim() || "",
+          source: row.children[2]?.textContent.trim() || "",
+          brand: row.children[3]?.textContent.trim() || "",
+          site: row.children[4]?.textContent.trim() || "",
+          productType: row.children[5]?.textContent.trim() || "",
+          model: row.children[6]?.textContent.trim() || "",
+          internal: row.children[7]?.textContent.trim() || "",
+          asin: row.children[8]?.textContent.trim() || "",
+          raw: row.children[9]?.textContent.trim() || row.querySelector(".truncate")?.textContent.trim() || "",
+          ai: row.children[10]?.textContent.trim() || "",
+          level1: row.children[11]?.textContent.trim() || "",
+          level2: row.children[12]?.textContent.trim() || "",
+          level3: row.children[13]?.textContent.trim() || "",
+          sentiment: row.children[14]?.textContent.trim() || "",
+          returned: row.children[15]?.textContent.trim() || "",
+          exception: row.children[16]?.textContent.trim() || "",
+          processRoute: row.children[17]?.textContent.trim() || "待处理",
+          processState: row.children[17]?.textContent.includes("已") ? "已处理" : "待处理",
+          feedbackUser: row.children[18]?.textContent.trim() || "",
+          handler: row.children[19]?.textContent.trim() || "",
+          date: row.children[20]?.textContent.trim() || "",
+        });
+
+        const scoreConfidence = (row) => {
+          const source = row.children[2]?.textContent.trim();
+          const raw = row.querySelector(".truncate")?.textContent.trim() || "";
+          const model = row.children[6]?.textContent.trim() || "";
+          let confidence = source === "APP反馈" ? 0.54 : 0.74;
+          if (/crash|闪退|无法|不准|broken|裂/.test(raw.toLowerCase())) confidence -= 0.08;
+          if (/CS20A|CS30B|MG20/.test(model)) confidence += 0.04;
+          if (source === "商品评论" && /not|stopped|very different|cracked/i.test(raw)) confidence -= 0.03;
+          return Math.max(0.34, Math.min(0.96, confidence));
+        };
+
+        const getDemoConfidence = (data) => data.processState === "待人工复核" ? 0.54 : 0.78;
+
+        const rowSimilarity = (a, b) => {
+          const sameModel = a.model === b.model || a.internal === b.internal;
+          const sameBrand = a.brand === b.brand;
+          const sameSource = a.source === b.source;
+          const rawA = normalize(a.raw);
+          const rawB = normalize(b.raw);
+          const shared = [a.model, a.internal, a.brand].filter(Boolean).some((token) => rawA.includes(normalize(token)) && rawB.includes(normalize(token)));
+          return (sameModel ? 0.5 : 0) + (sameBrand ? 0.15 : 0) + (sameSource ? 0.15 : 0) + (shared ? 0.2 : 0);
+        };
+
+        const buildMergedFeedback = (rows) => {
+          const seedRows = localFeedbackData.length ? localFeedbackData : rows.map(getRowData);
+          const items = seedRows.map((data) => ({ data: normalizeExceptionRoute(data), confidence: getDemoConfidence(data) }));
+          const groups = [];
+          items.forEach((item) => {
+            if (isExceptionPoolItem(item.data)) {
+              groups.push({ mergeGroup: "", lead: item, members: [item], expanded: false });
+              return;
+            }
+            let bucket = item.data.mergeGroup
+              ? groups.find((group) => group.mergeGroup === item.data.mergeGroup && getProductLineCode(group.lead.data) === getProductLineCode(item.data))
+              : null;
+            if (!bucket) {
+              bucket = { mergeGroup: item.data.mergeGroup || "", lead: item, members: [item], expanded: false };
+              groups.push(bucket);
+            } else {
+              bucket.members.push(item);
+            }
+          });
+          return groups;
+        };
+
+        const getCreateMode = (data, confidence, index = 0) => {
+          if (data.source === "站内信" || data.source === "客服沟通") return "manual";
+          if (confidence < 0.6 && index % 2 === 1) return "manual";
+          return "ai";
+        };
+
+        const getMergeTitle = (group) => {
+          const data = group.lead.data;
+          const issue = data.level3 || data.level2 || data.raw || "相似反馈";
+          return `${data.model || data.internal || data.productType} ${issue}合并反馈`;
+        };
+
+        const getModeBadge = (mode, confidence) => {
+          if (mode === "manual") return '<span class="local-badge manual">人工录入</span>';
+          return '<span class="local-badge ai">AI自动创建</span>';
+        };
+
+        const getModeLabel = (data, confidence, index = 0) => {
+          if (data.createMode === "人工录入") return "人工录入";
+          if (data.createMode === "AI自动创建") return "AI自动创建";
+          const mode = getCreateMode(data, confidence, index);
+          if (mode === "manual") return "人工录入";
+          return "AI自动创建";
+        };
+
+        const getRegion = (data) => data.site === "Amazon.com (US)" ? "海外" : "国内";
+        const getDataSource = (data) => {
+          if (data.source === "退货原因") return getRegion(data) === "海外" ? "海外电商-退货反馈" : "国内电商-退货反馈";
+          if (data.source === "商品评论") return getRegion(data) === "海外" ? "海外电商-商品评论" : "国内电商-商品评论";
+          return data.source;
+        };
+        const getDeviceType = (data) => data.productType === "体脂秤" ? "八电极" : data.productType;
+        const getProductLineCode = (data) => {
+          const deviceType = getDeviceType(data);
+          if (deviceType === "筋膜枪") return "CM";
+          if (deviceType === "八电极" || deviceType === "体脂秤") return "CS";
+          return "CS";
+        };
+        const isExceptionPoolItem = (data) => ["P0", "P1"].includes(String(data.exception || "").toUpperCase());
+        const normalizeExceptionRoute = (data) => {
+          if (!isExceptionPoolItem(data)) return data;
+          data.mergeGroup = "";
+          data.processRoute = "已转异常";
+          data.processState = "已处理";
+          data.handler = "系统";
+          return data;
+        };
+        const getMergeDisplayId = (group) => {
+          const data = group.lead.data;
+          const date = (data.id.match(/\d{8}/)?.[0] || (data.date || "").replace(/-/g, "") || "20260618");
+          return `${getProductLineCode(data)}-${date}-合并（${group.members.length}条数据）`;
+        };
+        const getGroupField = (group, key, mixedLabel) => {
+          const values = Array.from(new Set(group.members.map((member) => member.data[key]).filter(Boolean)));
+          return values.length <= 1 ? (values[0] || "") : mixedLabel;
+        };
+        const matchesUserScope = (data) => {
+          if (currentUser.scope === "all") return true;
+          if (currentUser.scope === "line:CM") return getProductLineCode(data) === "CM";
+          if (currentUser.scope === "line:CS") return getProductLineCode(data) === "CS";
+          if (currentUser.scope === "region:海外") return getRegion(data) === "海外";
+          if (currentUser.scope === "region:国内") return getRegion(data) === "国内";
+          return true;
+        };
+        const getSolution = (data) => {
+          if (data.processRoute === "待处理") return "待产品经理确认处理方案";
+          if (data.processRoute === "已转工单") return "已转工单跟进质量排查";
+          if (data.processRoute === "已转需求") return "已转需求池评审";
+          if (data.processRoute === "已转异常") return "已转异常处理流程";
+          if (data.processRoute === "已转Q&A") return "已沉淀至Q&A案例库";
+          return "已直接回复并关闭";
+        };
+        const getExpressNo = (data) => data.returned === "退货" || data.returned === "换货" || data.returned === "退货+换货" ? `RT-${data.id.replace(/[^0-9]/g, "").slice(-8)}` : "";
+        const getExcelRow = (data) => ({
+          region: getRegion(data),
+          dataSource: getDataSource(data),
+          deviceType: getDeviceType(data),
+          orderNo: data.asin && data.asin !== "-" ? data.asin : data.id.replace("FB-", "ORD-"),
+          expressNo: getExpressNo(data),
+          image: "",
+          video: "",
+          solution: getSolution(data),
+          addedAt: data.date,
+        });
+
+        const allFeedbackItems = () => localFeedbackData;
+        const findFeedbackById = (id) => allFeedbackItems().find((item) => item.id === id) || localFeedbackData[0];
+        const getCurrentGroups = () => buildMergedFeedback([]);
+        const findMergeGroupById = (id) => getCurrentGroups().find((group) => group.members.length > 1 && group.members.some((member) => member.data.id === id));
+        const getWorkOrderId = (data) => `TK-${(data.id.match(/\d{8}/)?.[0] || "20260618")}-${data.id.replace(/\D/g, "").slice(-4)}`;
+        const addWorkOrderFromFeedback = (data) => {
+          if (!data || localWorkOrders.some((item) => item.relatedFeedback === data.id)) return;
+          localWorkOrders.unshift({
+            id: getWorkOrderId(data),
+            relatedFeedback: data.id,
+            status: "转工单",
+            owner: data.handler || "待分派",
+            dept: getProductLineCode(data) === "CM" ? "筋膜枪产品线" : "八电极产品线",
+            sla: "48h 00m",
+            result: data.level3 || "待补充处理方案",
+            closeReason: "-",
+            exception: "否",
+            requirement: "否",
+            step: 1,
+          });
+        };
+        const updateWorkOrderFromFeedback = (data) => {
+          if (data?.processRoute !== "已转工单") return;
+          addWorkOrderFromFeedback(data);
+          const order = localWorkOrders.find((item) => item.relatedFeedback === data.id);
+          if (order) {
+            order.owner = data.handler || order.owner;
+            order.result = data.level3 || order.result;
+          }
+        };
+        localFeedbackData.forEach(updateWorkOrderFromFeedback);
+        const unmergeFeedback = (id) => {
+          const item = allFeedbackItems().find((data) => data.id === id);
+          if (!item) return;
+          item.mergeGroup = "";
+          refreshFeedbackTable();
+          closeDetailDrawer();
+        };
+        const getReturnProgress = (data) => {
+          if (!data.returned || data.returned === "否") {
+            return [
+              ["售后状态", "未触发退换货"],
+              ["PMS单号", "无"],
+              ["当前节点", "无需售后处理"],
+              ["更新时间", data.date],
+            ];
+          }
+          return [
+            ["售后状态", `${data.returned}处理中`],
+            ["PMS单号", getExpressNo(data) || `AS-${data.id.replace(/[^0-9]/g, "").slice(-8)}`],
+            ["当前节点", data.processState === "已处理" ? "已完成售后闭环" : "PMS售后模块处理中"],
+            ["更新时间", data.date],
+          ];
+        };
+
+        const needsManualReview = (data) => data?.processState === "待人工复核";
+        const actionCell = (data, context = {}) => `
+          <td>
+            <span class="local-row-actions">
+              <button type="button" data-local-action="detail" data-id="${data.id}">详情</button>
+              ${context.canUnmerge ? `<button type="button" data-local-action="unmerge" data-id="${data.id}">移出合并</button>` : ""}
+              ${needsManualReview(data) ? `<button type="button" class="review" data-local-action="review" data-id="${data.id}">人工复核</button>` : ""}
+            </span>
+          </td>
+        `;
+
+        const buildFilterText = (items) => items.map(({ data, confidence }, index) => [
+          data.id,
+          getDataSource(data),
+          getModeLabel(data, confidence, index),
+          data.brand,
+          data.site,
+          getDeviceType(data),
+          data.model,
+          data.internal,
+          data.asin,
+          data.raw,
+          data.ai,
+          data.level1,
+          data.level2,
+          data.level3,
+          data.returned,
+          data.exception,
+          data.processRoute,
+          data.processState,
+          data.feedbackUser,
+          data.handler,
+          data.date,
+        ].filter(Boolean).join(" ")).join(" ");
+
+        const setRowFilterData = (row, data, confidence, index = 0, members = null) => {
+          const items = members || [{ data, confidence }];
+          row.dataset.localSearch = buildFilterText(items).toLowerCase();
+          row.dataset.localSource = getDataSource(data) || "";
+          row.dataset.localMode = getModeLabel(data, confidence, index);
+          row.dataset.localBrand = data.brand || "";
+          row.dataset.localSite = data.site || "";
+          row.dataset.localProductType = getDeviceType(data) || "";
+          row.dataset.localModel = data.model || "";
+          row.dataset.localInternal = data.internal || "";
+          row.dataset.localContent = `${data.raw || ""} ${data.ai || ""}`;
+          row.dataset.localFeedbackUser = data.feedbackUser || "";
+          row.dataset.localDate = data.date || "";
+          row.dataset.localProcessState = data.processState || "待处理";
+          row.dataset.localProcessRoute = data.processRoute || "待处理";
+          row.dataset.localException = data.exception || "";
+          row.dataset.localReturned = data.returned || "";
+        };
+
+        const renderRowCells = (row, data, confidence, childIndex = null, context = {}) => {
+          const mode = data.createMode === "人工录入" ? "manual" : data.createMode === "AI自动创建" ? "ai" : getCreateMode(data, confidence, childIndex || 0);
+          const idCell = childIndex == null
+            ? `<span class="feedback-id-button">${data.id}</span>`
+            : `<div class="local-child-title"><span class="local-child-branch">└</span><span><span class="feedback-id-button">${data.id}</span><span class="local-child-index">第 ${childIndex + 1} 条明细</span></span></div>`;
+          const excel = getExcelRow(data);
+          row.dataset.localBuilt = "true";
+          row.dataset.localId = data.id;
+          row.dataset.localConfidence = confidence.toFixed(2);
+          setRowFilterData(row, data, confidence, childIndex || 0);
+          row.innerHTML = `
+            <td class="select-column"><input type="checkbox" /></td>
+            <td class="id-cell">${idCell}</td>
+            <td>${excel.region}</td>
+            <td><span class="source-chip">${excel.dataSource}</span></td>
+            <td>${excel.deviceType}</td>
+            <td>${data.brand}</td>
+            <td>${data.internal}</td>
+            <td>${data.model}</td>
+            <td>${excel.orderNo}</td>
+            <td>${excel.expressNo}</td>
+            <td class="truncate">${data.raw}</td>
+            <td class="truncate">${data.ai}</td>
+            <td>${excel.image}</td>
+            <td>${excel.video}</td>
+            <td>${data.date}</td>
+            <td class="truncate">${excel.solution}</td>
+            <td>${data.level1}</td>
+            <td>${data.level2}</td>
+            <td>${data.level3}</td>
+            <td>${data.exception}</td>
+            <td><span class="local-feedback-indent">${getModeBadge(mode, confidence)}</span></td>
+            <td>${data.processRoute}</td>
+            <td>${data.processState}</td>
+            <td>${data.feedbackUser}</td>
+            <td>${data.handler}</td>
+            ${actionCell(data, context)}
+          `;
+        };
+
+        const ensureFeedbackColumns = (table) => {
+          const headerRow = table.querySelector("thead tr");
+          if (!headerRow || headerRow.dataset.localColumnsReady === "true") return;
+          headerRow.dataset.localColumnsReady = "true";
+          headerRow.innerHTML = tableHeaders.map((label, index) => {
+            if (index === 0) {
+              return '<th class="select-column"><span class="select-all-cell"><input type="checkbox" /> 全选</span></th>';
+            }
+            return `<th>${label}</th>`;
+          }).join("");
+          headerRow.querySelector('.select-column input[type="checkbox"]')?.addEventListener("change", (event) => {
+            table.querySelectorAll('tbody tr:not(.local-feedback-hidden) .select-column input[type="checkbox"]').forEach((box) => {
+              box.checked = event.target.checked;
+            });
+            updateBatchSelectedCount();
+          });
+        };
+
+        const buildSiteMulti = (bar) => {
+          const siteLabel = Array.from(bar.querySelectorAll(".select-control")).find((node) => node.querySelector("span")?.textContent.includes("站点"));
+          if (!siteLabel || siteLabel.dataset.localMultiReady === "true") return;
+          siteLabel.dataset.localMultiReady = "true";
+          const select = siteLabel.querySelector("select");
+          const panel = document.createElement("div");
+          panel.className = "local-site-multi-panel";
+          panel.hidden = true;
+          panel.innerHTML = `
+            <div class="local-site-multi-list">
+              ${siteOptions.map((site) => `<label><input type="checkbox" value="${site}" /> ${site}</label>`).join("")}
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+              <button type="button" class="secondary-button" data-local-site-close>关闭</button>
+            </div>
+          `;
+          const wrap = document.createElement("div");
+          wrap.className = "local-site-multi";
+          const display = document.createElement("button");
+          display.type = "button";
+          display.className = "filter-trigger";
+          display.innerHTML = `<span class="filter-label">全部站点</span><span class="filter-caret"></span>`;
+          siteLabel.innerHTML = "";
+          siteLabel.appendChild(display);
+          siteLabel.appendChild(panel);
+          siteLabel.appendChild(select);
+          select.style.display = "none";
+          const sync = () => {
+            const values = Array.from(panel.querySelectorAll('input[type="checkbox"]')).filter((box) => box.checked).map((box) => box.value);
+            const label = display.querySelector(".filter-label");
+            if (label) label.textContent = values.length ? values.join(" / ") : "全部站点";
+            select.value = values[0] || "";
+            select.dataset.localMultiValues = JSON.stringify(values);
+            applyFeedbackFilters();
+          };
+          display.addEventListener("click", () => {
+            panel.hidden = !panel.hidden;
+          });
+          panel.addEventListener("click", (event) => {
+            const target = event.target;
+            if (target?.matches('input[type="checkbox"]')) sync();
+          });
+          panel.querySelector("[data-local-site-close]")?.addEventListener("click", () => { panel.hidden = true; });
+          sync();
+        };
+
+        const optionList = (items, placeholder = "全部") => `<option value="">${placeholder}</option>${items.map((item) => `<option value="${item}">${item}</option>`).join("")}`;
+
+        const buildFixedFilters = (toolbar) => {
+          if (document.querySelector(".local-fixed-filter-panel")) return;
+          const panel = document.createElement("div");
+          panel.className = "local-fixed-filter-panel";
+          panel.hidden = true;
+          panel.innerHTML = `
+            <label>数据来源<select data-filter-key="source">${optionList(["海外电商-退货反馈", "国内电商-退货反馈", "海外电商-商品评论", "国内电商-商品评论", "站内信", "客服沟通", "APP反馈"])}</select></label>
+            <label>创建方式<select data-filter-key="mode">${optionList(["AI自动创建", "人工录入"])}</select></label>
+            <label>品牌<input data-filter-key="brand" placeholder="输入品牌" /></label>
+            <label>站点<select data-filter-key="site">${optionList(siteOptions)}</select></label>
+            <label>设备类型<input data-filter-key="productType" placeholder="输入设备类型" /></label>
+            <label>销售型号<input data-filter-key="model" placeholder="输入销售型号" /></label>
+            <label>内部型号/料号<input data-filter-key="internal" placeholder="输入内部型号/料号" /></label>
+            <label>反馈人<input data-filter-key="feedbackUser" placeholder="输入反馈人" /></label>
+            <label>反馈开始时间<input type="date" data-filter-key="dateFrom" /></label>
+            <label>反馈结束时间<input type="date" data-filter-key="dateTo" /></label>
+            <label>状态<select data-filter-key="processState">${optionList(processStateOptions)}</select></label>
+            <label>异常等级<select data-filter-key="exception">${optionList(["P0", "P1", "P2", "P3", "待确认", "否"])}</select></label>
+            <label>退换货<select data-filter-key="returned">${optionList(returnOptions)}</select></label>
+            <label>处理去向<select data-filter-key="processRoute">${optionList(processRouteOptions)}</select></label>
+            <div class="local-filter-actions"><button type="button" class="secondary-button" data-local-filter-reset>重置筛选</button></div>
+          `;
+          toolbar.insertAdjacentElement("afterend", panel);
+          panel.addEventListener("input", applyFeedbackFilters);
+          panel.addEventListener("change", applyFeedbackFilters);
+          panel.querySelector("[data-local-filter-reset]")?.addEventListener("click", () => {
+            panel.querySelectorAll("[data-filter-key]").forEach((field) => { field.value = ""; });
+            document.querySelectorAll(".local-feedback-tab").forEach((button) => button.classList.toggle("active", button.dataset.tabKey === "all"));
+            applyFeedbackFilters();
+          });
+        };
+
+        const toggleFixedFilters = () => {
+          const panel = document.querySelector(".local-fixed-filter-panel");
+          const button = document.querySelector("[data-local-filter-toggle]");
+          if (!panel || !button) return;
+          panel.hidden = !panel.hidden;
+          button.classList.toggle("active", !panel.hidden);
+          button.textContent = panel.hidden ? "筛选" : "收起筛选";
+        };
+
+        const buildFeedbackTabs = () => {
+          const tableWrap = document.querySelector(".feedback-table")?.closest(".table-scroll");
+          if (!tableWrap || document.querySelector(".local-feedback-tabs")) return;
+          const tabs = document.createElement("div");
+          tabs.className = "local-feedback-tabs";
+          tabs.innerHTML = feedbackTabOptions.map((tab, index) => `<button type="button" class="local-feedback-tab ${index === 0 ? "active" : ""}" data-tab-key="${tab.key}">${tab.label}</button>`).join("");
+          tableWrap.insertAdjacentElement("beforebegin", tabs);
+          tabs.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-tab-key]");
+            if (!button) return;
+            tabs.querySelectorAll(".local-feedback-tab").forEach((node) => node.classList.remove("active"));
+            button.classList.add("active");
+            applyFeedbackFilters();
+          });
+        };
+
+        const enhanceToolbar = () => {
+          const toolbar = document.querySelector(".split-page > section.content-main > .toolbar");
+          if (!toolbar || toolbar.dataset.localToolbarReady === "true") return;
+          toolbar.dataset.localToolbarReady = "true";
+          const search = toolbar.querySelector("input");
+          if (search) {
+            const box = search.closest(".search-box");
+            box?.remove();
+          }
+          buildFixedFilters(toolbar);
+          buildFeedbackTabs();
+          if (!toolbar.querySelector("[data-local-filter-toggle]")) {
+            const filterToggle = document.createElement("button");
+            filterToggle.type = "button";
+            filterToggle.className = "secondary-button local-filter-toggle";
+            filterToggle.dataset.localFilterToggle = "true";
+            filterToggle.textContent = "筛选";
+            filterToggle.addEventListener("click", toggleFixedFilters);
+            const syncSummary = toolbar.querySelector(".sync-summary");
+            if (syncSummary) syncSummary.insertAdjacentElement("beforebegin", filterToggle);
+            else toolbar.appendChild(filterToggle);
+          }
+          toolbar.querySelector("[data-local-review-btn]")?.remove();
+          const addButton = toolbar.querySelector("button.primary-button");
+          if (addButton && !toolbar.querySelector("[data-local-template-btn]")) {
+            const templateButton = document.createElement("button");
+            templateButton.type = "button";
+            templateButton.className = "secondary-button";
+            templateButton.dataset.localTemplateBtn = "true";
+            templateButton.textContent = "我的模板设置";
+            templateButton.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              openTemplateSettings();
+            });
+            addButton.insertAdjacentElement("afterend", templateButton);
+          }
+        };
+
+        const setupUserSwitcher = () => {
+          const button = document.querySelector(".profile-button");
+          if (!button || button.dataset.localUserReady === "true") return;
+          button.dataset.localUserReady = "true";
+          const render = () => {
+            button.innerHTML = `
+              <span class="avatar">${currentUser.avatar}</span>
+              <select class="local-user-select" aria-label="切换用户">
+                ${roleOptions.map((role) => `<option value="${role.key}" ${role.key === currentUser.key ? "selected" : ""}>${role.label}</option>`).join("")}
+              </select>
+            `;
+            button.querySelector("select")?.addEventListener("change", (event) => {
+              currentUser = roleOptions.find((role) => role.key === event.target.value) || roleOptions[0];
+              render();
+              applyFeedbackFilters();
+            });
+          };
+          render();
+        };
+        const syncNavLabels = () => {
+          document.querySelectorAll(".side-nav .nav-item span, .sidebar .nav-item span").forEach((span) => {
+            const text = span.textContent.trim();
+            if (text === "首页") span.textContent = "仪表盘";
+            if (text === "异常处理") span.textContent = "紧急异常处理";
+          });
+        };
+
+        const openModal = (html) => {
+          closeModal();
+          const backdrop = document.createElement("div");
+          backdrop.className = "local-modal-backdrop";
+          backdrop.innerHTML = html;
+          backdrop.addEventListener("click", (event) => {
+            if (event.target === backdrop) closeModal();
+          });
+          document.body.appendChild(backdrop);
+          document.body.dataset.localModalOpen = "true";
+        };
+
+        const closeModal = () => {
+          document.querySelectorAll(".local-modal-backdrop").forEach((node) => node.remove());
+          delete document.body.dataset.localModalOpen;
+        };
+
+        const openTemplateSettings = () => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>我的模板设置</span><h2>我的模板设置</h2><p>每个用户仅维护自己的一个录入模板。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-template-panel">
+                <label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#344054;">
+                  <input type="checkbox" data-local-template-enabled ${userTemplate.enabled ? "checked" : ""} />
+                  启用我的模板，新增反馈时自动导入默认字段
+                </label>
+              </div>
+              <div class="local-modal-grid" data-local-template-form></div>
+              <div class="local-modal-actions">
+                <button type="button" class="primary-button" data-local-template-save>保存模板</button>
+                <button type="button" class="secondary-button" data-local-close>关闭</button>
+              </div>
+            </div>
+          `);
+          const form = document.querySelector("[data-local-template-form]");
+          const render = () => {
+            const v = (key, fallback = "") => escapeHtml(userTemplate.values[key] ?? fallback);
+            const selected = (key, value) => userTemplate.values[key] === value ? "selected" : "";
+            form.innerHTML = `
+              <label>地区<select name="region"><option ${selected("region", "海外")}>海外</option><option ${selected("region", "国内")}>国内</option></select></label>
+              <label>数据来源<select name="dataSource">${["海外电商-退货反馈", "海外电商-商品评论", "国内电商-退货反馈", "国内电商-商品评论", "站内信", "客服沟通", "APP反馈"].map((item) => `<option ${item === userTemplate.values.dataSource ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>设备类型<input name="deviceType" value="${v("deviceType")}" /></label>
+              <label>品牌<input name="brand" value="${v("brand")}" /></label>
+              <label>内部型号/料号<input name="internal" value="${v("internal")}" /></label>
+              <label>销售型号<input name="model" value="${v("model")}" /></label>
+              <label>订单号<input name="orderNo" value="${v("orderNo")}" /></label>
+              <label>快递单号（退换货）<input name="expressNo" value="${v("expressNo")}" placeholder="退换货时填写" /></label>
+              <label>问题反馈时间<input type="date" name="feedbackDate" value="${v("feedbackDate")}" /></label>
+              <label>图片补充<input name="image" value="${v("image")}" placeholder="图片链接或附件说明" /></label>
+              <label>视频补充<input name="video" value="${v("video")}" placeholder="视频链接或附件说明" /></label>
+              <label>创建方式<select name="createMode"><option ${selected("createMode", "人工录入")}>人工录入</option><option ${selected("createMode", "AI自动创建")}>AI自动创建</option></select></label>
+              <label>异常级别<select name="exception">${["否", "待确认", "P0", "P1", "P2", "P3"].map((item) => `<option ${item === userTemplate.values.exception ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>处理去向<select name="processRoute">${processRouteOptions.map((item) => `<option ${item === userTemplate.values.processRoute ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>状态<select name="processState">${processStateOptions.map((item) => `<option ${item === userTemplate.values.processState ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>反馈人<input name="feedbackUser" value="${v("feedbackUser")}" /></label>
+              <label>一级职能划分<input name="level1" value="${v("level1")}" /></label>
+              <label>二级问题场景分类<input name="level2" value="${v("level2")}" /></label>
+              <label>三级具体问题<input name="level3" value="${v("level3")}" /></label>
+              <label class="wide">用户反馈（客户对话/退货反馈）<textarea name="raw">${v("raw")}</textarea></label>
+              <label class="wide">用户评价翻译（AI自动翻译）<textarea name="ai">${v("ai")}</textarea></label>
+              <label class="wide">问题回答/处理方案<textarea name="solution">${v("solution")}</textarea></label>
+              <label class="wide">备注<textarea name="note" placeholder="可保存固定话术、默认标签、备注字段">${v("note")}</textarea></label>
+            `;
+          };
+          render();
+          document.querySelector("[data-local-close]")?.addEventListener("click", closeModal);
+          document.querySelector("[data-local-template-save]")?.addEventListener("click", () => {
+            userTemplate.enabled = Boolean(document.querySelector("[data-local-template-enabled]")?.checked);
+            userTemplate.values = Object.fromEntries(Array.from(form.querySelectorAll("[name]")).map((field) => [field.name, field.value]));
+            closeModal();
+          });
+        };
+
+        const openBatchImportModal = () => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>批量导入</span><h2>批量导入</h2><p>上传 Excel 表格后批量创建反馈单。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-modal-grid">
+                <label class="wide">上传Excel表格<input type="file" accept=".xlsx,.xls" /></label>
+                <label>导入模式<select><option>按模板字段导入</option><option>自动匹配表头</option></select></label>
+                <label>去重方式<select><option>按内容+型号</option><option>按反馈ID</option></select></label>
+                <label class="wide">说明<textarea placeholder="请上传 .xlsx 或 .xls 文件。系统会读取表格字段并批量创建反馈，需人工确认的记录会进入复核队列。"></textarea></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-submit>开始导入</button>
+              </div>
+            </div>
+          `);
+          document.querySelector("[data-local-close]")?.addEventListener("click", closeModal);
+          document.querySelector("[data-local-submit]")?.addEventListener("click", closeModal);
+        };
+
+        const bindModalClose = () => {
+          document.querySelectorAll("[data-local-close]").forEach((button) => button.addEventListener("click", closeModal));
+        };
+
+        const closeDetailDrawer = () => {
+          document.querySelectorAll(".local-detail-drawer, aside.drawer").forEach((node) => node.remove());
+          document.querySelectorAll(".local-detail-page").forEach((node) => node.remove());
+          document.querySelectorAll(".split-page.local-detail-page-open").forEach((split) => split.classList.remove("local-detail-page-open"));
+          document.querySelector(".split-page")?.classList.remove("with-drawer");
+        };
+
+        const openDrawer = (html) => {
+          closeDetailDrawer();
+          closeModal();
+          const split = document.querySelector(".split-page");
+          if (!split) return openModal(html);
+          split.classList.remove("with-drawer");
+          split.classList.add("local-detail-page-open");
+          const page = document.createElement("section");
+          page.className = "local-detail-page";
+          page.innerHTML = html;
+          split.appendChild(page);
+          page.scrollIntoView({ block: "start" });
+        };
+
+        const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        }[char]));
+        const optionMarkup = (items, current) => items.map((item) => `<option value="${escapeHtml(item)}" ${item === current ? "selected" : ""}>${escapeHtml(item)}</option>`).join("");
+
+        const openFeedbackDetail = (data) => {
+          const group = findMergeGroupById(data.id);
+          const members = group?.members || [{ data, confidence: getDemoConfidence(data) }];
+          const excel = getExcelRow(data);
+          const progressHtml = (item) => `<div class="local-progress">${getReturnProgress(item).map(([label, value]) => `<div><b>${label}</b><em>${value}</em></div>`).join("")}</div>`;
+          const title = group ? getMergeDisplayId(group) : data.id;
+          const memberDetails = group ? `
+            <div class="local-detail-block">
+              <span>合并明细</span>
+              <div class="local-merge-detail-list">
+                ${members.map((member, index) => {
+                  const item = member.data;
+                  return `
+                    <div class="local-merge-detail-card">
+                      <h3>${escapeHtml(item.id)} / 第 ${index + 1} 条明细</h3>
+                      <p><b>来源：</b>${escapeHtml(getDataSource(item))} / ${escapeHtml(item.brand)} / ${escapeHtml(item.model)}</p>
+                      <p><b>用户反馈：</b>${escapeHtml(item.raw)}</p>
+                      <p><b>AI翻译：</b>${escapeHtml(item.ai)}</p>
+                      <p><b>分类：</b>${escapeHtml(item.level1)} / ${escapeHtml(item.level2)} / ${escapeHtml(item.level3)}</p>
+                      <p><b>退换货进度（PMS售后模块）：</b></p>
+                      ${progressHtml(item)}
+                      <div class="local-merge-card-actions">
+                        <button type="button" class="secondary-button" data-local-detail-item="${escapeHtml(item.id)}">查看</button>
+                        <button type="button" class="secondary-button" data-local-unmerge-id="${escapeHtml(item.id)}">移出合并</button>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          ` : "";
+          openDrawer(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>反馈详情</span><h2>${title}</h2><p>${group ? `合并反馈 / ${group.members.length} 条明细` : `${excel.dataSource} / ${data.brand} / ${data.model}`}</p></div>
+                <button type="button" class="secondary-button" data-local-close>返回列表</button>
+              </div>
+              <div class="local-detail-grid">
+                <article><span>地区</span><select class="local-detail-edit" data-detail-edit="region">${optionMarkup(["海外", "国内"], excel.region)}</select></article>
+                <article><span>设备类型</span><select class="local-detail-edit" data-detail-edit="deviceType">${optionMarkup(["八电极", "筋膜枪", "血压计"], excel.deviceType)}</select></article>
+                <article><span>异常级别</span><select class="local-detail-edit" data-detail-edit="exception">${optionMarkup(["否", "待确认", "P0", "P1", "P2", "P3"], data.exception)}</select></article>
+                <article><span>处理去向</span><select class="local-detail-edit" data-detail-edit="processRoute">${optionMarkup(processRouteOptions, data.processRoute)}</select></article>
+                <article><span>状态</span><select class="local-detail-edit" data-detail-edit="processState">${optionMarkup(processStateOptions, data.processState)}</select></article>
+                <article><span>处理人</span><input class="local-detail-edit" data-detail-edit="handler" value="${escapeHtml(data.handler)}" /></article>
+              </div>
+              <div class="local-detail-section">
+                <div class="local-detail-block"><span>用户反馈（客户对话/退货反馈）</span><textarea class="local-detail-editarea" data-detail-edit="raw">${escapeHtml(data.raw)}</textarea></div>
+                <div class="local-detail-block"><span>用户评价翻译（AI自动翻译）</span><textarea class="local-detail-editarea" data-detail-edit="ai">${escapeHtml(data.ai)}</textarea></div>
+                ${group ? "" : `<div class="local-detail-grid">
+                  <article><span>一级职能划分</span><input class="local-detail-edit" data-detail-edit="level1" value="${escapeHtml(data.level1)}" /></article>
+                  <article><span>二级问题场景分类</span><input class="local-detail-edit" data-detail-edit="level2" value="${escapeHtml(data.level2)}" /></article>
+                  <article><span>三级具体问题</span><input class="local-detail-edit" data-detail-edit="level3" value="${escapeHtml(data.level3)}" /></article>
+                </div>`}
+                ${memberDetails}
+                ${group ? "" : `<div class="local-detail-block">
+                  <span>退换货进度（PMS售后模块）</span>
+                  ${progressHtml(data)}
+                </div>`}
+                <div class="local-detail-block">
+                  <span>问题回答/处理方案</span>
+                  <strong>${excel.solution}</strong>
+                </div>
+                <div class="local-reply-panel" data-local-reply-panel>
+                  <span>直接回复内容</span>
+                  <textarea class="local-reply-box" data-local-reply placeholder="由操作人输入给用户的直接回复内容。"></textarea>
+                  <button type="button" class="primary-button" data-local-confirm-direct-close>确认回复并关闭</button>
+                </div>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>关闭</button>
+                <button type="button" class="secondary-button" data-local-save-detail>保存修改</button>
+                <button type="button" class="secondary-button" data-local-action="route-workorder">转工单</button>
+                <button type="button" class="warning-button" data-local-action="route-exception">转异常</button>
+                <button type="button" class="success-button" data-local-action="route-requirement">转需求</button>
+                <button type="button" class="primary-button" data-local-direct-close>直接回复并关闭</button>
+              </div>
+            </div>
+          `);
+          document.querySelectorAll("[data-local-close]").forEach((button) => button.addEventListener("click", closeDetailDrawer));
+          document.querySelector("[data-local-save-detail]")?.addEventListener("click", () => {
+            const valueOf = (key) => document.querySelector(`[data-detail-edit="${key}"]`)?.value || "";
+            const region = valueOf("region");
+            const deviceType = valueOf("deviceType");
+            data.site = region === "海外" ? "Amazon.com (US)" : "京东";
+            data.productType = deviceType === "八电极" ? "体脂秤" : deviceType;
+            data.exception = valueOf("exception");
+            data.processRoute = valueOf("processRoute");
+            data.processState = valueOf("processState");
+            data.handler = valueOf("handler");
+            data.raw = valueOf("raw");
+            data.ai = valueOf("ai");
+            if (document.querySelector('[data-detail-edit="level1"]')) data.level1 = valueOf("level1");
+            if (document.querySelector('[data-detail-edit="level2"]')) data.level2 = valueOf("level2");
+            if (document.querySelector('[data-detail-edit="level3"]')) data.level3 = valueOf("level3");
+            normalizeExceptionRoute(data);
+            closeDetailDrawer();
+            refreshFeedbackTable();
+          });
+          document.querySelectorAll("[data-local-detail-item]").forEach((button) => button.addEventListener("click", () => {
+            openFeedbackDetail(findFeedbackById(button.dataset.localDetailItem));
+          }));
+          document.querySelectorAll("[data-local-unmerge-id]").forEach((button) => button.addEventListener("click", () => {
+            unmergeFeedback(button.dataset.localUnmergeId);
+          }));
+          const applyDetailRoute = (route, handler = "陈晨") => {
+            const targets = group ? group.members.map((member) => member.data) : [data];
+            targets.forEach((item) => {
+              item.processRoute = route;
+              item.processState = "已处理";
+              item.handler = handler;
+              if (route === "已转工单") addWorkOrderFromFeedback(item);
+              if (route === "已转异常") item.mergeGroup = "";
+            });
+            closeDetailDrawer();
+            refreshFeedbackTable();
+          };
+          document.querySelector("[data-local-action='route-workorder']")?.addEventListener("click", () => {
+            applyDetailRoute("已转工单");
+          });
+          document.querySelector("[data-local-action='route-exception']")?.addEventListener("click", () => {
+            applyDetailRoute("已转异常");
+          });
+          document.querySelector("[data-local-action='route-requirement']")?.addEventListener("click", () => {
+            applyDetailRoute("已转需求");
+          });
+          document.querySelector("[data-local-direct-close]")?.addEventListener("click", () => {
+            const panel = document.querySelector("[data-local-reply-panel]");
+            if (panel && !panel.classList.contains("active")) {
+              panel.classList.add("active");
+              panel.querySelector("textarea")?.focus();
+              return;
+            }
+          });
+          document.querySelector("[data-local-confirm-direct-close]")?.addEventListener("click", () => {
+            applyDetailRoute("已直接回复关闭");
+          });
+        };
+
+        const openManualMergeModal = (data) => {
+          const lineCode = getProductLineCode(data);
+          const candidates = allFeedbackItems().filter((item) => (
+            item.id !== data.id
+            && getProductLineCode(item) === lineCode
+            && !isExceptionPoolItem(item)
+            && item.mergeGroup !== data.mergeGroup
+          ));
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>人工合并</span><h2>${escapeHtml(data.id)}</h2><p>只能合并同一产品线下的反馈，P0/P1 异常不参与合并。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-detail-section">
+                <div class="local-detail-block">
+                  <span>当前反馈</span>
+                  <strong>${escapeHtml(data.raw)}</strong>
+                </div>
+                <div class="local-merge-detail-list">
+                  ${candidates.length ? candidates.map((item) => `
+                    <label class="local-merge-detail-card">
+                      <span><input type="checkbox" data-merge-candidate value="${escapeHtml(item.id)}" /> ${escapeHtml(item.id)} / ${escapeHtml(getDataSource(item))} / ${escapeHtml(item.model)}</span>
+                      <p>${escapeHtml(item.raw)}</p>
+                    </label>
+                  `).join("") : '<div class="local-detail-block"><span>可合并数据</span><strong>暂无同产品线、可合并的反馈。</strong></div>'}
+                </div>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-confirm-merge ${candidates.length ? "" : "disabled"}>确认合并</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-local-confirm-merge]")?.addEventListener("click", () => {
+            const selected = Array.from(document.querySelectorAll("[data-merge-candidate]:checked")).map((box) => box.value);
+            if (!selected.length) return;
+            const date = (data.id.match(/\d{8}/)?.[0] || (data.date || "").replace(/-/g, "") || "20260618");
+            const groupId = data.mergeGroup || `manual-${lineCode}-${date}-${Date.now()}`;
+            data.mergeGroup = groupId;
+            selected.forEach((id) => {
+              const item = allFeedbackItems().find((row) => row.id === id);
+              if (item) item.mergeGroup = groupId;
+            });
+            closeModal();
+            refreshFeedbackTable();
+          });
+        };
+
+        const openReviewModal = (data) => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>人工复核</span><h2>${data.id}</h2><p>人工修改 AI 录入内容、翻译、分类和异常级别。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-modal-grid">
+                <label>数据来源<select><option>${getDataSource(data)}</option><option>海外电商-退货反馈</option><option>海外电商-商品评论</option><option>客服沟通</option><option>APP反馈</option></select></label>
+                <label>品牌<input value="${data.brand}" /></label>
+                <label>内部型号/料号<input value="${data.internal}" /></label>
+                <label>销售型号<input value="${data.model}" /></label>
+                <label class="wide">用户反馈（客户对话/退货反馈）<textarea>${data.raw}</textarea></label>
+                <label class="wide">用户评价翻译（AI自动翻译）<textarea>${data.ai}</textarea></label>
+                <label>一级职能划分<select><option>${data.level1}</option><option>产品质量</option><option>产品体验</option><option>咨询服务</option></select></label>
+                <label>二级问题场景分类<input value="${data.level2}" /></label>
+                <label>三级具体问题<input value="${data.level3}" /></label>
+                <label>异常级别<select><option>${data.exception}</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option><option>待确认</option><option>否</option></select></label>
+                <label>处理去向<select data-review-route>${processRouteOptions.map((item) => `<option ${item === data.processRoute ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                <label>处理人<input data-review-handler value="${data.handler}" /></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-review-save>保存复核</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-local-review-save]")?.addEventListener("click", () => {
+            const route = document.querySelector("[data-review-route]")?.value || data.processRoute;
+            const handler = document.querySelector("[data-review-handler]")?.value.trim() || "陈晨";
+            data.createMode = "人工录入";
+            data.processRoute = route;
+            data.processState = route === "待处理" ? "待处理" : "已处理";
+            data.handler = handler;
+            closeModal();
+            refreshFeedbackTable();
+          });
+        };
+
+        const openFeedbackModal = () => {
+          const template = userTemplate.enabled ? userTemplate.values : {};
+          const tv = (key, fallback = "") => escapeHtml(template[key] || fallback);
+          const lineCode = template.deviceType === "筋膜枪" ? "CM" : "CS";
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>新增反馈</span><h2>新增反馈</h2><p>编号规则：产品线简码-创建时间年月日-流水号。CS：八电极/体脂秤，CM：筋膜枪。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-modal-grid">
+                <label>编号<input value="${lineCode}-20260618-0007" /></label>
+                <label>地区<select><option ${template.region === "海外" ? "selected" : ""}>海外</option><option ${template.region === "国内" ? "selected" : ""}>国内</option></select></label>
+                <label>数据来源<select><option ${template.dataSource === "海外电商-退货反馈" ? "selected" : ""}>海外电商-退货反馈</option><option ${template.dataSource === "海外电商-商品评论" ? "selected" : ""}>海外电商-商品评论</option><option ${template.dataSource === "客服沟通" ? "selected" : ""}>客服沟通</option><option ${template.dataSource === "APP反馈" ? "selected" : ""}>APP反馈</option></select></label>
+                <label>设备类型<input value="${template.deviceType || "八电极"}" /></label>
+                <label>品牌<input value="${template.brand || "云康宝"}" /></label>
+                <label>内部型号/料号<input value="${template.internal || "YL-CS20A-8"}" /></label>
+                <label>销售型号<input value="${template.model || "CS20A"}" /></label>
+                <label>订单号<input value="${tv("orderNo", "B0CS20AUS1")}" /></label>
+                <label>快递单号（退换货）<input value="${tv("expressNo")}" placeholder="退换货时填写" /></label>
+                <label>问题反馈时间<input type="date" value="${tv("feedbackDate", "2026-06-18")}" /></label>
+                <label class="wide">用户反馈（客户对话/退货反馈）<textarea>${tv("raw", "用户反馈体脂秤无法开机，疑似电池或主板异常。")}</textarea></label>
+                <label class="wide">用户评价翻译（AI自动翻译）<textarea>${tv("ai", "The customer reports that the body fat scale cannot power on, possibly due to a battery or mainboard issue.")}</textarea></label>
+                <label>图片补充<input type="file" accept="image/*" multiple data-local-attachment /></label>
+                <label>视频补充<input type="file" accept="video/*" multiple data-local-attachment /></label>
+                <label class="wide">粘贴图片/视频<div class="local-attachment-drop" contenteditable="true" data-local-paste>可直接 Ctrl+V 粘贴截图、图片、视频文件或附件链接。</div></label>
+                <label class="wide">问题回答/处理方案<textarea>${tv("solution", "待产品经理确认处理方案。")}</textarea></label>
+                <label>一级职能划分<select>${["产品质量", "产品体验", "咨询服务"].map((item) => `<option ${item === template.level1 ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                <label>二级问题场景分类<input value="${tv("level2", "硬件损坏/无法使用")}" /></label>
+                <label>三级具体问题<input value="${tv("level3", "无法开机/上电")}" /></label>
+                <label>异常级别<select>${["P2", "P1", "P3", "P0", "待确认", "否"].map((item) => `<option ${item === (template.exception || "P2") ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-submit>创建反馈</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-local-paste]")?.addEventListener("paste", (event) => {
+            const files = Array.from(event.clipboardData?.files || []);
+            if (files.length) {
+              event.preventDefault();
+              event.currentTarget.textContent = `已粘贴 ${files.length} 个附件，提交后上传。`;
+            }
+          });
+          document.querySelectorAll("[data-local-attachment]").forEach((input) => input.addEventListener("change", (event) => {
+            const count = event.target.files?.length || 0;
+            if (count) event.target.insertAdjacentHTML("afterend", `<span class="local-feedback-sub">已选择 ${count} 个文件，提交后上传。</span>`);
+          }));
+          document.querySelector("[data-local-submit]")?.addEventListener("click", closeModal);
+        };
+
+        const applyFeedbackFilters = () => {
+          const table = document.querySelector(".feedback-table");
+          if (!table) return;
+          const filters = {};
+          document.querySelectorAll("[data-filter-key]").forEach((field) => {
+            filters[field.dataset.filterKey] = String(field.value || "").trim();
+          });
+          const activeTab = document.querySelector(".local-feedback-tab.active")?.dataset.tabKey || "all";
+          const selectedSites = JSON.parse(document.querySelector(".local-site-multi-panel")?.parentElement?.querySelector("select")?.dataset.localMultiValues || "[]");
+          const rows = Array.from(table.querySelectorAll("tbody tr"));
+          let reviewCount = 0;
+          let visibleCount = 0;
+          rows.forEach((row) => {
+            const confidence = Number(row.dataset.localConfidence || "0.75");
+            const rowText = (row.dataset.localSearch || row.textContent).toLowerCase();
+            const site = row.dataset.localSite || "";
+            let parent = row.previousElementSibling;
+            while (parent && !parent.dataset.localGroup) parent = parent.previousElementSibling;
+            const collapsedChild = row.dataset.localGroupChild === "true" && parent?.querySelector(".local-merge-toggle")?.getAttribute("aria-expanded") !== "true";
+            const matchTab = activeTab === "all"
+              || (activeTab === "pending" && ["待人工复核", "待处理"].includes(row.dataset.localProcessState))
+              || (activeTab === "review" && row.dataset.localProcessState === "待人工复核")
+              || (activeTab === "done" && row.dataset.localProcessState === "已处理")
+              || (activeTab === "mine" && row.dataset.localFeedbackUser === currentUser.name);
+            const date = row.dataset.localDate || "";
+            const matchFixedFields = [
+              ["source", "localSource"],
+              ["mode", "localMode"],
+              ["brand", "localBrand"],
+              ["site", "localSite"],
+              ["productType", "localProductType"],
+              ["model", "localModel"],
+              ["internal", "localInternal"],
+              ["feedbackUser", "localFeedbackUser"],
+              ["processState", "localProcessState"],
+              ["processRoute", "localProcessRoute"],
+              ["exception", "localException"],
+              ["returned", "localReturned"],
+            ].every(([key, dataKey]) => !filters[key] || String(row.dataset[dataKey] || "").toLowerCase().includes(filters[key].toLowerCase()))
+              && (!filters.dateFrom || date >= filters.dateFrom)
+              && (!filters.dateTo || date <= filters.dateTo);
+            const matchSite = !selectedSites.length || selectedSites.includes(site);
+            const sourceItem = findFeedbackById(row.dataset.localId || row.querySelector(".feedback-id-button")?.textContent.trim());
+            const matchUserScope = !sourceItem || matchesUserScope(sourceItem);
+            const visible = matchTab && matchFixedFields && matchSite && matchUserScope && !collapsedChild;
+            row.classList.toggle("local-feedback-hidden", !visible);
+            if (visible && row.dataset.localGroup) {
+              visibleCount += Number(row.dataset.localMemberCount || "1");
+            } else if (visible && !row.dataset.localGroupChild) {
+              visibleCount += 1;
+              if (row.dataset.localProcessState === "待人工复核") reviewCount += 1;
+            } else if (visible && row.dataset.localGroupChild && parent?.querySelector(".local-merge-toggle")?.getAttribute("aria-expanded") === "true") {
+              if (row.dataset.localProcessState === "待人工复核") reviewCount += 1;
+            }
+          });
+          const countNode = document.querySelector(".local-review-count");
+          if (countNode) countNode.textContent = String(reviewCount);
+        };
+
+        const refreshFeedbackTable = () => {
+          const table = document.querySelector(".feedback-table");
+          if (!table) return;
+          delete table.dataset.localMergedReady;
+          rebuildFeedbackTable();
+        };
+
+        const getSelectedFeedbackIds = () => Array.from(document.querySelectorAll(".feedback-table tbody tr:not(.local-feedback-hidden) .select-column input:checked"))
+          .map((box) => box.closest("tr")?.dataset.localId)
+          .filter(Boolean);
+
+        const updateBatchSelectedCount = () => {
+          const count = getSelectedFeedbackIds().length;
+          const node = document.querySelector(".batch-action-card strong, .batch-action-card b");
+          if (node) node.textContent = `${count} 条已选`;
+        };
+
+        const applyBatchRoute = (route) => {
+          const ids = getSelectedFeedbackIds();
+          if (!ids.length) return;
+          ids.forEach((id) => {
+            const group = findMergeGroupById(id);
+            const targets = group ? group.members.map((member) => member.data) : [findFeedbackById(id)];
+            targets.forEach((data) => {
+              if (!data) return;
+              data.processRoute = route;
+              data.processState = "已处理";
+              data.handler = currentUser.name === "管理员" ? "管理员" : currentUser.name;
+              if (route === "已转工单") addWorkOrderFromFeedback(data);
+              if (route === "已转异常") data.mergeGroup = "";
+            });
+          });
+          closeDetailDrawer();
+          refreshFeedbackTable();
+          enhanceWorkOrderPage();
+        };
+
+        const workOrderSteps = ["转工单", "分派责任人", "处理中", "待确认", "已闭环"];
+        const workOrderProgressHtml = (order) => `
+          <div>
+            <div class="local-workorder-steps">
+              ${workOrderSteps.map((_, index) => `<span class="${index + 1 <= order.step ? "done" : ""}">${index + 1}</span>`).join("")}
+            </div>
+            <span class="local-workorder-step-label">${workOrderSteps[Math.max(0, Math.min(order.step - 1, workOrderSteps.length - 1))]}</span>
+          </div>
+        `;
+        const getWorkOrderRoute = (order) => {
+          if (order.status === "已关闭") return "直接关闭";
+          if (order.exception === "是") return "已转异常";
+          if (order.requirement === "是" || order.requirement === "预留") return "已转需求";
+          if (order.qa === "是") return "已转Q&A";
+          return "继续处理";
+        };
+        const closeWorkOrderDetail = () => {
+          const pageBody = document.querySelector(".page-body");
+          pageBody?.querySelector("[data-local-workorder-detail]")?.remove();
+          pageBody?.querySelectorAll("[data-local-workorder-list-hidden]").forEach((node) => {
+            node.hidden = false;
+            delete node.dataset.localWorkorderListHidden;
+          });
+        };
+        const openWorkOrderDetail = (order) => {
+          const pageBody = document.querySelector(".page-body");
+          if (!pageBody) return;
+          closeWorkOrderDetail();
+          Array.from(pageBody.children).forEach((node) => {
+            node.hidden = true;
+            node.dataset.localWorkorderListHidden = "true";
+          });
+          const detail = document.createElement("section");
+          detail.className = "local-workorder-detail-page";
+          detail.dataset.localWorkorderDetail = order.id;
+          detail.innerHTML = `
+            <div class="local-workorder-detail-head">
+              <div>
+                <h2>${escapeHtml(order.id)}</h2>
+                <p>关联反馈 ${escapeHtml(order.relatedFeedback)} / ${escapeHtml(order.status)} / ${escapeHtml(order.owner)}</p>
+              </div>
+              <button type="button" class="secondary-button" data-local-workorder-back>返回列表</button>
+            </div>
+            <div class="local-detail-grid">
+              <article><span>当前处理人</span><strong>${escapeHtml(order.owner)}</strong></article>
+              <article><span>责任部门</span><strong>${escapeHtml(order.dept)}</strong></article>
+              <article><span>SLA剩余时间</span><strong>${escapeHtml(order.sla)}</strong></article>
+              <article><span>处理状态</span><strong>${escapeHtml(order.status)}</strong></article>
+              <article><span>处理去向</span><strong>${escapeHtml(getWorkOrderRoute(order))}</strong></article>
+              <article><span>关闭原因</span><strong>${escapeHtml(order.closeReason)}</strong></article>
+            </div>
+            <div class="local-detail-block">
+              <span>工单流程</span>
+              ${workOrderProgressHtml(order)}
+            </div>
+            <div class="local-detail-block">
+              <span>处理结果</span>
+              <strong>${escapeHtml(order.result)}</strong>
+            </div>
+            <div class="local-workorder-detail-actions">
+              <button type="button" class="warning-button" data-local-workorder-route="exception">转异常</button>
+              <button type="button" class="secondary-button" data-local-workorder-route="qa">转Q&A</button>
+              <button type="button" class="success-button" data-local-workorder-route="requirement">转需求</button>
+              <button type="button" class="primary-button" data-local-workorder-route="close">直接关闭</button>
+            </div>
+          `;
+          pageBody.appendChild(detail);
+          detail.scrollIntoView({ block: "start" });
+          detail.querySelector("[data-local-workorder-back]")?.addEventListener("click", closeWorkOrderDetail);
+          detail.querySelectorAll("[data-local-workorder-route]").forEach((button) => button.addEventListener("click", () => {
+            const route = button.dataset.localWorkorderRoute;
+            if (route === "exception") {
+              order.exception = "是";
+              order.status = "转异常";
+              order.step = Math.max(order.step, 3);
+            } else if (route === "qa") {
+              order.qa = "是";
+              order.status = "转Q&A";
+              order.step = Math.max(order.step, 4);
+            } else if (route === "requirement") {
+              order.requirement = "是";
+              order.status = "转需求";
+              order.step = Math.max(order.step, 4);
+            } else if (route === "close") {
+              order.status = "已关闭";
+              order.closeReason = order.closeReason && order.closeReason !== "-" ? order.closeReason : "直接关闭";
+              order.sla = "完成";
+              order.step = 5;
+            }
+            const table = document.querySelector(".page-body table, table.data-table");
+            if (table) delete table.dataset.localWorkOrderSignature;
+            enhanceWorkOrderPage();
+            openWorkOrderDetail(order);
+          }));
+        };
+        const enhanceWorkOrderPage = () => {
+          const title = document.querySelector("h1")?.textContent.trim();
+          if (title !== "工单池") return false;
+          addStyles();
+          document.querySelectorAll(".page-body .panel, .page-body section").forEach((panel) => {
+            if (panel.textContent.includes("工单处理流程")) panel.classList.add("local-workorder-flow-panel");
+          });
+          const table = document.querySelector(".page-body table, table.data-table");
+          const tbody = table?.querySelector("tbody");
+          const theadRow = table?.querySelector("thead tr");
+          if (!table || !tbody || !theadRow) return false;
+          const signature = localWorkOrders.map((order) => `${order.id}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|");
+          if (table.dataset.localWorkOrderSignature === signature) return true;
+          table.dataset.localWorkOrderSignature = signature;
+          theadRow.innerHTML = ["工单ID", "关联反馈", "处理状态", "当前处理人", "责任部门", "SLA剩余时间", "处理结果", "关闭原因", "处理去向", "操作"].map((label) => `<th>${label}</th>`).join("");
+          tbody.innerHTML = localWorkOrders.map((order) => `
+            <tr>
+              <td>${order.id}</td>
+              <td>${order.relatedFeedback}</td>
+              <td>${order.status}</td>
+              <td>${order.owner}</td>
+              <td>${order.dept}</td>
+              <td>${order.sla}</td>
+              <td>${order.result}</td>
+              <td>${order.closeReason}</td>
+              <td>${getWorkOrderRoute(order)}</td>
+              <td><button type="button" class="secondary-button" data-local-workorder-detail="${escapeHtml(order.id)}">详情</button></td>
+            </tr>
+          `).join("");
+          tbody.querySelectorAll("[data-local-workorder-detail]").forEach((button) => button.addEventListener("click", () => {
+            const order = localWorkOrders.find((item) => item.id === button.dataset.localWorkorderDetail);
+            if (order) openWorkOrderDetail(order);
+          }));
+          return true;
+        };
+
+        const emergencySteps = ["临时方案处理", "根因分析", "整改措施", "验证结果", "关闭归档"];
+        const emergencyStepsHtml = (item) => `
+          <div class="local-emergency-steps">
+            ${emergencySteps.map((step, index) => `<span class="${index + 1 <= item.step ? "done" : ""}">${index + 1}. ${step}</span>`).join("")}
+          </div>
+        `;
+        const emergencyReminderHtml = (item) => `
+          <article class="local-emergency-reminder-card">
+            <span class="local-reminder-title"><i class="local-reminder-clock">◷</i>时限提醒</span>
+            <strong>${escapeHtml(item.reminderLimit || "2h")}</strong>
+            <span>截止: ${escapeHtml(item.reminderDeadline || "待确认")}</span>
+          </article>
+        `;
+        const emergencyStats = [
+          { label: "P0 致命/封店", value: 1, color: "#f04438" },
+          { label: "P1 高危/下架", value: 3, color: "#f59e0b" },
+          { label: "P2 中危/体验", value: 8, color: "#2970ff" },
+          { label: "P3 低危/常规", value: 21, color: "#12b76a" },
+        ];
+        const emergencyFilters = { region: "", productLine: "", site: "", creator: "", level: "", state: "", timeType: "", timeValue: "", keyword: "" };
+        const uniqueEmergencyOptions = (key) => Array.from(new Set(localEmergencyExceptions.map((item) => item[key]).filter(Boolean)));
+        const emergencyFilterOptions = (key, placeholder) => `<option value="">${placeholder}</option>${uniqueEmergencyOptions(key).map((value) => `<option value="${escapeHtml(value)}" ${emergencyFilters[key] === value ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}`;
+        const getEmergencyDateCode = (item) => item.id.match(/\d{8}/)?.[0] || item.reminderDeadline?.replace(/-/g, "").slice(0, 8) || "";
+        const getEmergencyTimeKey = (item, type) => {
+          const code = getEmergencyDateCode(item);
+          if (!code) return "";
+          const year = code.slice(0, 4);
+          const month = code.slice(4, 6);
+          const quarter = `Q${Math.ceil(Number(month) / 3)}`;
+          if (type === "year") return year;
+          if (type === "quarter") return `${year} ${quarter}`;
+          if (type === "month") return `${year}-${month}`;
+          return "";
+        };
+        const emergencyTimeOptions = () => {
+          if (!emergencyFilters.timeType) return '<option value="">全部时间</option>';
+          const values = Array.from(new Set(localEmergencyExceptions.map((item) => getEmergencyTimeKey(item, emergencyFilters.timeType)).filter(Boolean))).sort().reverse();
+          return `<option value="">全部时间</option>${values.map((value) => `<option value="${escapeHtml(value)}" ${emergencyFilters.timeValue === value ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}`;
+        };
+        const getEmergencyState = (item) => {
+          if (item.status === "关闭归档" || item.step >= 5) return "已归档";
+          if (!item.tempPlan || item.status.includes("待") || item.status.includes("超时")) return "待响应";
+          return "处理中";
+        };
+        const emergencyStateOptions = () => ["待响应", "处理中", "已归档"].map((value) => `<option value="${value}" ${emergencyFilters.state === value ? "selected" : ""}>${value}</option>`).join("");
+        const emergencySearchText = (item) => [
+          item.id,
+          item.level,
+          item.region,
+          item.site,
+          item.productLine,
+          item.internal,
+          item.creator,
+          item.owner,
+          item.team,
+          item.dimension,
+          item.source,
+          item.status,
+          item.issue,
+          item.impactScope,
+          item.feedback,
+          item.tempPlan,
+          item.rootCause,
+          item.fixPlan,
+          item.verifyResult,
+        ].filter(Boolean).join(" ").toLowerCase();
+        const matchesEmergencyFilters = (item) => {
+          const keyword = emergencyFilters.keyword.trim().toLowerCase();
+          const state = getEmergencyState(item);
+          return (!emergencyFilters.region || item.region === emergencyFilters.region)
+            && (!emergencyFilters.productLine || item.productLine === emergencyFilters.productLine)
+            && (!emergencyFilters.site || item.site === emergencyFilters.site)
+            && (!emergencyFilters.creator || item.creator === emergencyFilters.creator)
+            && (!emergencyFilters.level || item.level === emergencyFilters.level)
+            && (emergencyFilters.state ? state === emergencyFilters.state : state !== "已归档")
+            && (!emergencyFilters.timeType || !emergencyFilters.timeValue || getEmergencyTimeKey(item, emergencyFilters.timeType) === emergencyFilters.timeValue)
+            && (!keyword || emergencySearchText(item).includes(keyword));
+        };
+        const emergencyFiltersHtml = () => `
+          <div class="local-emergency-filters">
+            <label>地区<select data-emergency-filter="region">${emergencyFilterOptions("region", "全部地区")}</select></label>
+            <label>产品线<select data-emergency-filter="productLine">${emergencyFilterOptions("productLine", "全部产品线")}</select></label>
+            <label>站点<select data-emergency-filter="site">${emergencyFilterOptions("site", "全部站点")}</select></label>
+            <label>创建人<select data-emergency-filter="creator">${emergencyFilterOptions("creator", "全部创建人")}</select></label>
+            <label>异常等级<select data-emergency-filter="level">${emergencyFilterOptions("level", "全部等级")}</select></label>
+            <label>状态<select data-emergency-filter="state"><option value="" ${emergencyFilters.state === "" ? "selected" : ""}>未归档</option>${emergencyStateOptions()}</select></label>
+            <label>时间类型<select data-emergency-filter="timeType"><option value="" ${emergencyFilters.timeType === "" ? "selected" : ""}>全部时间</option><option value="year" ${emergencyFilters.timeType === "year" ? "selected" : ""}>年度</option><option value="quarter" ${emergencyFilters.timeType === "quarter" ? "selected" : ""}>季度</option><option value="month" ${emergencyFilters.timeType === "month" ? "selected" : ""}>月度</option></select></label>
+            <label>时间范围<select data-emergency-filter="timeValue">${emergencyTimeOptions()}</select></label>
+            <label class="wide">其他相关信息<input data-emergency-filter="keyword" value="${escapeHtml(emergencyFilters.keyword)}" placeholder="搜索编号、处理人、来源、型号、问题、影响范围" /></label>
+            <button type="button" class="secondary-button local-emergency-filter-reset" data-emergency-filter-reset>重置</button>
+          </div>
+        `;
+        const renderEmergencyCard = (item) => {
+          const overdue = item.overdue && !item.tempPlan;
+          const title = item.level === "P0" ? "钢化玻璃爆裂致用户受伤" : "称重数据系统性偏差";
+          const desc = item.level === "P0"
+            ? "用户正常使用时玻璃面板碎裂，造成脚部割伤，已上传伤口照片和碎裂产品照片。"
+            : "多个用户反馈称重数据偏高5-8磅，疑似传感器校准问题。本周已累计多例相似反馈。";
+          const impact = item.impactScope || (item.level === "P0" ? "GE31002B1-CS 批次 2026Q1，约500台" : "FT31002A2 全批次，约2000台");
+          const due = item.level === "P0" ? "2026-06-05 08:45" : "2026-06-04 12:30";
+          const statusClass = item.status.includes("验证") ? "verify" : "";
+          return `
+            <article class="local-emergency-card ${overdue ? "overdue" : ""}" data-emergency-card="${item.id}">
+              <div class="local-emergency-card-main">
+                <div>
+                  <div class="local-emergency-tags">
+                    <span class="local-emergency-code">${escapeHtml(item.id)}</span>
+                    <span class="local-emergency-level">${escapeHtml(item.level)}</span>
+                    <span class="local-emergency-status ${statusClass}">${escapeHtml(item.status)}</span>
+                    <span class="local-emergency-status ${getEmergencyState(item) === "已归档" ? "verify" : ""}">${escapeHtml(getEmergencyState(item))}</span>
+                    ${overdue ? `<span class="local-emergency-countdown overdue">临时方案已超时</span>` : `<span class="local-emergency-countdown">${escapeHtml(item.deadline)}</span>`}
+                  </div>
+                  <h3>${escapeHtml(item.dimension)} ${escapeHtml(title)}</h3>
+                  <p>${escapeHtml(desc)}</p>
+                </div>
+                <div class="local-emergency-card-actions">
+                  <button type="button" class="secondary-button" data-emergency-detail="${item.id}">查看详情</button>
+                  <button type="button" class="primary-button" data-emergency-dispose="${item.id}">添加处置</button>
+                </div>
+              </div>
+              <div class="local-emergency-meta">
+                <span>触发来源: ${escapeHtml(item.feedback)}</span>
+                <span>负责人: ${escapeHtml(item.owner)}</span>
+                <span>创建人: ${escapeHtml(item.creator || "待补充")}</span>
+                <span>地区/站点: ${escapeHtml(item.region || "待补充")} / ${escapeHtml(item.site || "待补充")}</span>
+                <span>产品线/型号: ${escapeHtml(item.productLine || "待补充")} / ${escapeHtml(item.internal || "待补充")}</span>
+                <span>影响范围: ${escapeHtml(impact)}</span>
+                <span>响应时限: ${escapeHtml(due)}</span>
+              </div>
+              <div class="local-emergency-plan"><b>临时处置:</b> ${escapeHtml(item.tempPlan || "待输出临时方案，超时后系统标红并置顶。")}</div>
+              ${emergencyStepsHtml(item)}
+            </article>
+          `;
+        };
+        const openEmergencyCreateModal = () => {
+          const dateCode = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>紧急异常</span><h2>新建异常</h2><p>录入 P0/P1 紧急异常事项。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-modal-grid">
+                <label>异常ID<input data-emergency-new-id value="P0-${dateCode}-0003" /></label>
+                <label>P级<select data-emergency-new-level><option>P0</option><option>P1</option></select></label>
+                <label>地区<select data-emergency-new-region><option>国内</option><option>海外</option></select></label>
+                <label>处理人<input data-emergency-new-owner value="刘海州" /></label>
+                <label>站点<select data-emergency-new-site><option>京东</option><option>天猫</option><option>抖音</option><option>Amazon</option><option>Walmart</option><option>独立站</option></select></label>
+                <label>产品线<select data-emergency-new-line><option>八电极秤</option><option>体脂秤</option><option>筋膜枪</option></select></label>
+                <label>内部型号<input data-emergency-new-internal placeholder="填写内部型号/料号" /></label>
+                <label>触发来源<input data-emergency-new-source placeholder="关联反馈/工单/投诉来源" /></label>
+                <label class="wide">影响范围<textarea data-emergency-new-impact placeholder="填写受影响批次、数量、站点、用户范围"></textarea></label>
+                <label class="wide">异常问题<textarea data-emergency-new-issue placeholder="描述异常情况、风险和当前表现"></textarea></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-create-emergency>保存</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          const levelField = document.querySelector("[data-emergency-new-level]");
+          const idField = document.querySelector("[data-emergency-new-id]");
+          const regionField = document.querySelector("[data-emergency-new-region]");
+          const ownerField = document.querySelector("[data-emergency-new-owner]");
+          const siteField = document.querySelector("[data-emergency-new-site]");
+          const syncId = () => {
+            if (idField && levelField) idField.value = `${levelField.value}-${dateCode}-0003`;
+          };
+          const syncRegionOwner = () => {
+            if (!regionField || !ownerField || !siteField) return;
+            ownerField.value = regionField.value === "海外" ? "陈总" : "刘海州";
+            siteField.value = regionField.value === "海外" ? "Amazon" : "京东";
+          };
+          levelField?.addEventListener("change", syncId);
+          regionField?.addEventListener("change", syncRegionOwner);
+          document.querySelector("[data-local-create-emergency]")?.addEventListener("click", () => {
+            const getValue = (selector) => document.querySelector(selector)?.value?.trim() || "";
+            const level = getValue("[data-emergency-new-level]") || "P0";
+            const region = getValue("[data-emergency-new-region]") || "国内";
+            const owner = getValue("[data-emergency-new-owner]") || (region === "海外" ? "陈总" : "刘海州");
+            const source = getValue("[data-emergency-new-source]") || "手动录入";
+            const item = {
+              id: getValue("[data-emergency-new-id]") || `${level}-${dateCode}-0003`,
+              level,
+              region,
+              site: getValue("[data-emergency-new-site]") || (region === "海外" ? "Amazon" : "京东"),
+              productLine: getValue("[data-emergency-new-line]") || "八电极秤",
+              internal: getValue("[data-emergency-new-internal]") || "待补充",
+              dimension: level === "P0" ? "客户伤害" : "平台合规",
+              source,
+              deadline: "剩余 2h",
+              reminderLimit: "2h",
+              reminderDeadline: "待确认",
+              overdue: false,
+              owner,
+              team: region === "海外" ? "海外运营+产品经理" : "售后负责人+质量负责人",
+              status: "待临时方案",
+              issue: getValue("[data-emergency-new-issue]") || "待补充异常问题",
+              impactScope: getValue("[data-emergency-new-impact]") || "待补充影响范围",
+              creator: currentUser.name || "管理员",
+              action: "待补充处置方案",
+              feedback: source,
+              tempPlan: "",
+              rootCause: "待根因分析",
+              fixPlan: "待整改措施",
+              verifyResult: "待验证",
+              step: 0,
+            };
+            localEmergencyExceptions.unshift(item);
+            closeModal();
+            enhanceEmergencyPage();
+          });
+        };
+        const openEmergencyDisposeModal = (item) => {
+          openEmergencyDetail(item);
+        };
+        const openEmergencyDetail = (item) => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>紧急异常详情</span><h2>${item.id}</h2><p>${item.level} / ${item.region} / ${item.dimension}</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              ${emergencyStepsHtml(item)}
+              ${emergencyReminderHtml(item)}
+              <div class="local-detail-grid">
+                <article><span>当前处理人</span><strong>${item.owner}</strong></article>
+                <article><span>处理团队</span><strong>${item.team}</strong></article>
+                <article><span>临时方案倒计时</span><strong><span class="local-emergency-countdown ${item.overdue && !item.tempPlan ? "overdue" : ""}">${item.deadline}</span></strong></article>
+                <article><span>状态</span><strong>${item.status}</strong></article>
+                <article><span>反馈来源</span><strong>${item.feedback}</strong></article>
+                <article><span>触发来源</span><strong>${item.source}</strong></article>
+                <article><span>创建人</span><strong>${item.creator || "待补充"}</strong></article>
+                <article><span>站点</span><strong>${item.site || "待补充"}</strong></article>
+                <article><span>产品线</span><strong>${item.productLine || "待补充"}</strong></article>
+                <article><span>内部型号</span><strong>${item.internal || "待补充"}</strong></article>
+              </div>
+              <div class="local-detail-section">
+                <label class="local-detail-block"><span>异常问题</span><textarea class="local-detail-editarea" data-ex-field="issue">${item.issue}</textarea></label>
+                <label class="local-detail-block"><span>影响范围</span><textarea class="local-detail-editarea" data-ex-field="impactScope">${item.impactScope || ""}</textarea></label>
+                <label class="local-detail-block"><span>临时处置</span><textarea class="local-detail-editarea" data-ex-field="tempPlan">${item.tempPlan}</textarea></label>
+                <label class="local-detail-block"><span>根因分析</span><textarea class="local-detail-editarea" data-ex-field="rootCause">${item.rootCause}</textarea></label>
+                <label class="local-detail-block"><span>整改措施</span><textarea class="local-detail-editarea" data-ex-field="fixPlan">${item.fixPlan}</textarea></label>
+                <label class="local-detail-block"><span>验证结果</span><textarea class="local-detail-editarea" data-ex-field="verifyResult">${item.verifyResult}</textarea></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>关闭</button>
+                <button type="button" class="primary-button" data-local-save-emergency>保存流程</button>
+                <button type="button" class="success-button" data-local-close-emergency>关闭归档</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-local-save-emergency]")?.addEventListener("click", () => {
+            ["issue", "impactScope", "tempPlan", "rootCause", "fixPlan", "verifyResult"].forEach((key) => {
+              item[key] = document.querySelector(`[data-ex-field="${key}"]`)?.value || item[key];
+            });
+            item.step = item.verifyResult && item.verifyResult !== "待验证" ? 4 : item.fixPlan && item.fixPlan !== "待整改措施" ? 3 : item.rootCause && item.rootCause !== "待根因分析" ? 2 : item.tempPlan ? 1 : item.step;
+            item.status = item.tempPlan ? "临时方案输出" : item.status;
+            closeModal();
+            enhanceEmergencyPage();
+          });
+          document.querySelector("[data-local-close-emergency]")?.addEventListener("click", () => {
+            item.step = 5;
+            item.status = "关闭归档";
+            item.verifyResult = item.verifyResult || "验证完成";
+            closeModal();
+            enhanceEmergencyPage();
+          });
+        };
+
+        const enableEmergencyEnhancer = true;
+        let emergencyEnhanceRunning = false;
+        const enhanceEmergencyPage = () => {
+          if (!enableEmergencyEnhancer) return false;
+          if (emergencyEnhanceRunning) return false;
+          const titleNode = document.querySelector("h1");
+          const title = titleNode?.textContent.trim();
+          if (title !== "异常处理" && title !== "紧急异常处理") return false;
+          emergencyEnhanceRunning = true;
+          try {
+          addStyles();
+          if (titleNode && titleNode.textContent.trim() !== "紧急异常处理") titleNode.textContent = "紧急异常处理";
+          const pageBody = document.querySelector(".page-body");
+          if (pageBody) {
+            const firstTextBlock = Array.from(pageBody.children).find((node) => node.textContent.includes("引用外贸电商异常级别判定标准"));
+            if (firstTextBlock && firstTextBlock.childNodes.length === 1) {
+              firstTextBlock.textContent = "仅展示 P0/P1 紧急异常，按临时方案处理、根因分析、整改措施、验证结果、关闭归档推进。";
+            }
+          }
+          syncNavLabels();
+          document.querySelectorAll(".page-body .panel, .page-body section").forEach((panel) => {
+            if (panel.textContent.includes("异常处理流程")) panel.classList.add("local-emergency-flow-panel");
+          });
+          const items = localEmergencyExceptions
+            .filter((item) => ["P0", "P1"].includes(item.level))
+            .filter(matchesEmergencyFilters)
+            .sort((a, b) => Number(b.overdue && !b.tempPlan) - Number(a.overdue && !a.tempPlan));
+          const signature = `${JSON.stringify(emergencyFilters)}::${localEmergencyExceptions.length}::${items.map((item) => `${item.id}:${item.status}:${item.step}:${item.tempPlan}:${item.owner}:${item.overdue}:${item.creator}`).join("|")}`;
+          if (pageBody?.dataset.localEmergencySignature === signature) return true;
+          if (!pageBody) return false;
+          pageBody.dataset.localEmergencySignature = signature;
+          pageBody.innerHTML = `
+            <section class="local-emergency-dashboard">
+              <div class="local-emergency-head">
+                <div>
+                  <h2>紧急异常处理</h2>
+                  <p>P0/P1 紧急异常事项跟踪与闭环处理，P2/P3 仅纳入统计观察。</p>
+                </div>
+                <button type="button" class="primary-button" data-local-new-emergency>+ 新建异常</button>
+              </div>
+              ${emergencyFiltersHtml()}
+              <div class="local-emergency-stats">
+                ${emergencyStats.map((stat) => `<article class="local-emergency-stat" style="--accent:${stat.color}"><span>${stat.label}</span><strong>${stat.value}</strong></article>`).join("")}
+              </div>
+              <div class="local-emergency-card-list">
+                ${items.length ? items.map(renderEmergencyCard).join("") : '<article class="local-detail-block"><span>筛选结果</span><strong>暂无匹配的紧急异常。</strong></article>'}
+              </div>
+            </section>
+          `;
+          pageBody.querySelector("[data-local-new-emergency]")?.addEventListener("click", openEmergencyCreateModal);
+          pageBody.querySelectorAll("[data-emergency-filter]").forEach((field) => {
+            field.addEventListener("change", () => {
+              emergencyFilters[field.dataset.emergencyFilter] = field.value.trim();
+              if (field.dataset.emergencyFilter === "timeType") emergencyFilters.timeValue = "";
+              pageBody.dataset.localEmergencySignature = "";
+              enhanceEmergencyPage();
+            });
+            if (field.tagName === "INPUT") {
+              field.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter") return;
+                emergencyFilters[field.dataset.emergencyFilter] = field.value.trim();
+                pageBody.dataset.localEmergencySignature = "";
+                enhanceEmergencyPage();
+              });
+            }
+          });
+          pageBody.querySelector("[data-emergency-filter-reset]")?.addEventListener("click", () => {
+            Object.keys(emergencyFilters).forEach((key) => { emergencyFilters[key] = ""; });
+            pageBody.dataset.localEmergencySignature = "";
+            enhanceEmergencyPage();
+          });
+          if (pageBody.dataset.localEmergencyActionsReady !== "true") {
+            pageBody.dataset.localEmergencyActionsReady = "true";
+            pageBody.addEventListener("click", (event) => {
+              const detailButton = event.target.closest("[data-emergency-detail]");
+              const disposeButton = event.target.closest("[data-emergency-dispose]");
+              if (!detailButton && !disposeButton) return;
+              event.preventDefault();
+              event.stopPropagation();
+              const id = detailButton?.dataset.emergencyDetail || disposeButton?.dataset.emergencyDispose;
+              const item = localEmergencyExceptions.find((row) => row.id === id);
+              if (!item) return;
+              if (detailButton) openEmergencyDetail(item);
+              if (disposeButton) openEmergencyDisposeModal(item);
+            });
+          }
+          return true;
+          } catch (error) {
+            console.error("local emergency enhancer failed", error);
+            window.__localFeedbackError = error?.message || String(error);
+            return false;
+          } finally {
+            emergencyEnhanceRunning = false;
+          }
+        };
+
+        const renderCompetitorCard = (item) => `
+          <article class="competitor-card local-competitor-card">
+            <div class="competitor-badge">新增竞品</div>
+            <h3>${escapeHtml(item.name)}</h3>
+            <p>${escapeHtml(item.line)} / ${escapeHtml(item.channelType || "未分区")} / ${escapeHtml(item.asin)}</p>
+            <div class="local-competitor-tags">${(item.tags || ["品牌竞品"]).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+            <strong>${escapeHtml(item.price)}</strong>
+            <span>${escapeHtml(item.channels)}</span>
+            <p>${escapeHtml(item.params)}</p>
+          </article>
+        `;
+        const competitorProductTypeOptions = {
+          "八电极秤": ["八电极体脂秤", "四电极体脂秤", "体重秤"],
+          "体脂秤": ["体脂秤", "体重秤", "智能健康秤"],
+          "筋膜枪": ["迷你筋膜枪", "专业筋膜枪", "热敷筋膜枪"],
+        };
+        const competitorBaseFields = [
+          { category: "基础信息", name: "竞品类型", type: "select", required: true, options: ["直接竞争产品", "间接竞争产品"] },
+          { category: "基础信息", name: "内部竞品", type: "select", required: false, options: ["否", "是"] },
+          { category: "基础信息", name: "品牌", type: "text", required: true, placeholder: "Withings" },
+          { category: "基础信息", name: "产品名称", type: "text", required: true, placeholder: "Body Comp" },
+          { category: "基础信息", name: "产品型号", type: "text", required: true, placeholder: "WBS08" },
+          { category: "基础信息", name: "产品类型", type: "lineSelect", required: true },
+          { category: "基础信息", name: "产品定位", type: "select", required: true, options: ["入门级", "大众级", "中端", "高端"] },
+          { category: "基础信息", name: "上市时间", type: "text", required: false, placeholder: "YYYY-MM 或 2023年10月" },
+          { category: "基础信息", name: "销售平台", type: "text", required: true, placeholder: "Amazon / 天猫 / 京东" },
+          { category: "基础信息", name: "销售区域", type: "text", required: true, placeholder: "中国 / 美国 / 加拿大 / 欧洲" },
+          { category: "基础信息", name: "竞品链接", type: "url", required: true, placeholder: "商品链接或官网链接" },
+          { category: "基础信息", name: "信息来源", type: "text", required: true, placeholder: "平台详情页 / 品牌官网 / 实物样机" },
+          { category: "基础信息", name: "信息采集日期", type: "date", required: true },
+          { category: "基础信息", name: "信息采集人", type: "text", required: true, placeholder: "填写采集人" },
+          { category: "基础信息", name: "信息状态", type: "select", required: true, options: ["正常监控", "待补充", "待校验", "已归档"] },
+          { category: "销售信息", name: "官方售价", type: "number", required: false, placeholder: "399.95" },
+          { category: "销售信息", name: "到手价", type: "number", required: true, placeholder: "349.95" },
+          { category: "销售信息", name: "币种", type: "select", required: true, options: ["USD", "CNY", "EUR", "JPY", "GBP"] },
+        ];
+        const competitorParamFields = {
+          "八电极秤": competitorBaseFields,
+          "体脂秤": competitorBaseFields,
+          "筋膜枪": competitorBaseFields,
+        };
+        const openCompetitorModal = () => {
+          const fieldControlHtml = (field, line) => {
+            const required = field.required ? "必填" : "选填";
+            if (field.type === "select") {
+              return `<label>${field.name}<select data-comp-param="${field.name}" data-required="${field.required ? "true" : "false"}">${field.options.map((option) => `<option>${option}</option>`).join("")}</select><span class="local-feedback-sub">${field.category} / ${required}</span></label>`;
+            }
+            if (field.type === "lineSelect") {
+              return `<label>${field.name}<select data-comp-param="${field.name}" data-required="true">${competitorProductTypeOptions[line].map((option) => `<option>${option}</option>`).join("")}</select><span class="local-feedback-sub">${field.category} / 必填</span></label>`;
+            }
+            return `<label>${field.name}<input type="${field.type === "date" ? "date" : field.type === "number" ? "number" : field.type === "url" ? "url" : "text"}" data-comp-param="${field.name}" data-required="${field.required ? "true" : "false"}" placeholder="${field.placeholder || `填写${field.name}`}" /><span class="local-feedback-sub">${field.category} / ${required}</span></label>`;
+          };
+          const paramFieldsHtml = (line) => `
+            <div class="local-competitor-param-grid" data-comp-param-group="${line}">
+              <h3>${line}竞品信息登记表字段</h3>
+              ${competitorParamFields[line].map((field) => fieldControlHtml(field, line)).join("")}
+            </div>
+          `;
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>竞品信息</span><h2>增加竞品</h2><p>按竞品信息登记表填写，海外渠道必须补充 ASIN。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-modal-grid">
+                <label>竞品名称<input data-comp-field="name" placeholder="例如 Withings Body Scan" /></label>
+                <label>渠道类型<select data-comp-field="channelType"><option>海外</option><option>国内</option></select></label>
+                <label>ASIN<input data-comp-field="asin" placeholder="海外渠道必填，国内可不填" /></label>
+                <label>产品线<select data-comp-field="line"><option>八电极秤</option><option>体脂秤</option><option>筋膜枪</option></select></label>
+                <label>价格<input data-comp-field="price" placeholder="$39.99 / ¥399" /></label>
+                <label class="wide">渠道<input data-comp-field="channels" placeholder="Amazon / 天猫 / 京东 / 抖音" /></label>
+                <div class="wide">
+                  <span style="display:block;margin-bottom:6px;color:#475467;font-size:12px;font-weight:800;">竞品标签</span>
+                  <div class="local-check-row">
+                    <label><input type="checkbox" data-comp-tag value="品牌竞品" checked /> 品牌竞品</label>
+                    <label><input type="checkbox" data-comp-tag value="ODM竞品" /> ODM竞品</label>
+                  </div>
+                </div>
+                <div class="local-form-error" data-comp-error></div>
+                ${Object.keys(competitorParamFields).map(paramFieldsHtml).join("")}
+                <label class="wide">备注<textarea data-comp-field="params" placeholder="补充核心卖点、功能差异、价格策略等备注信息"></textarea></label>
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-local-save-competitor>保存竞品</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          const lineField = document.querySelector('[data-comp-field="line"]');
+          const channelTypeField = document.querySelector('[data-comp-field="channelType"]');
+          const asinField = document.querySelector('[data-comp-field="asin"]');
+          const syncParamGroups = () => {
+            document.querySelectorAll("[data-comp-param-group]").forEach((group) => {
+              group.style.display = group.dataset.compParamGroup === lineField?.value ? "grid" : "none";
+            });
+          };
+          const syncAsinRequirement = () => {
+            if (!asinField || !channelTypeField) return;
+            asinField.placeholder = channelTypeField.value === "海外" ? "海外渠道必填 ASIN" : "国内渠道可不填写";
+          };
+          lineField?.addEventListener("change", syncParamGroups);
+          channelTypeField?.addEventListener("change", syncAsinRequirement);
+          syncParamGroups();
+          syncAsinRequirement();
+          document.querySelector("[data-local-save-competitor]")?.addEventListener("click", () => {
+            const value = (key) => document.querySelector(`[data-comp-field="${key}"]`)?.value.trim() || "";
+            const error = document.querySelector("[data-comp-error]");
+            const channelType = value("channelType") || "海外";
+            const asin = value("asin");
+            if (channelType === "海外" && !asin) {
+              if (error) {
+                error.textContent = "海外竞品渠道必须填写 ASIN。";
+                error.classList.add("active");
+              }
+              asinField?.focus();
+              return;
+            }
+            const tags = Array.from(document.querySelectorAll("[data-comp-tag]:checked")).map((box) => box.value);
+            const line = value("line") || "八电极秤";
+            const missingRequired = [];
+            const tableParams = competitorParamFields[line].map((fieldConfig) => {
+              const field = Array.from(document.querySelectorAll(`[data-comp-param="${fieldConfig.name}"]`)).find((node) => node.closest("[data-comp-param-group]")?.dataset.compParamGroup === line);
+              const fieldValue = field?.value.trim() || "";
+              if (fieldConfig.required && !fieldValue) missingRequired.push(fieldConfig.name);
+              return `${fieldConfig.name}: ${fieldValue || "待补充"}`;
+            });
+            if (missingRequired.length) {
+              if (error) {
+                error.textContent = `请补充必填字段：${missingRequired.join("、")}。`;
+                error.classList.add("active");
+              }
+              return;
+            }
+            const item = {
+              name: value("name") || "未命名竞品",
+              asin: asin || "国内渠道未填写",
+              line,
+              channelType,
+              tags: tags.length ? tags : ["品牌竞品"],
+              price: value("price") || "待补充",
+              channels: value("channels") || "待补充",
+              params: [...tableParams, value("params")].filter(Boolean).join("；"),
+            };
+            localCompetitors.unshift(item);
+            closeModal();
+            enhanceCompetitionPage(true);
+          });
+        };
+
+        const enhanceCompetitionPage = (force = false) => {
+          const title = document.querySelector("h1")?.textContent.trim();
+          if (title !== "竞争分析") return false;
+          const tabsText = document.querySelector(".tabs-row")?.textContent || "";
+          if (!tabsText.includes("竞品信息")) return false;
+          addStyles();
+          const tabs = document.querySelector(".tabs-row.compact-tabs, .tabs-row");
+          if (tabs && !document.querySelector("[data-local-add-competitor]")) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "primary-button local-competitor-add";
+            button.dataset.localAddCompetitor = "true";
+            button.textContent = "增加竞品";
+            tabs.appendChild(button);
+          }
+          if (tabs && tabs.dataset.localCompetitorActionsReady !== "true") {
+            tabs.dataset.localCompetitorActionsReady = "true";
+            tabs.addEventListener("click", (event) => {
+              const button = event.target.closest("[data-local-add-competitor]");
+              if (!button) return;
+              event.preventDefault();
+              event.stopPropagation();
+              openCompetitorModal();
+            });
+          }
+          document.querySelectorAll("[data-local-competitor-grid]").forEach((node) => node.remove());
+          return true;
+        };
+
+        const rebuildFeedbackTable = () => {
+          const table = document.querySelector(".feedback-table");
+          if (!table || table.dataset.localMergedReady === "true") return;
+          table.dataset.localMergedReady = "true";
+          ensureFeedbackColumns(table);
+          const originalRows = getFeedbackRows();
+          if (!originalRows.length && !localFeedbackData.length) return;
+          const groups = buildMergedFeedback(originalRows);
+          const tbody = table.querySelector("tbody");
+          tbody.innerHTML = "";
+          if (tbody && tbody.dataset.localActionsReady !== "true") {
+            tbody.dataset.localActionsReady = "true";
+            tbody.addEventListener("change", (event) => {
+              if (event.target.matches('.select-column input[type="checkbox"]')) updateBatchSelectedCount();
+            });
+            tbody.addEventListener("click", (event) => {
+              const button = event.target.closest("[data-local-action][data-id]");
+              const row = event.target.closest("tr[data-local-id]");
+              if (!button && !row) return;
+              if (event.target.closest(".local-merge-toggle, input, select, textarea")) return;
+              event.preventDefault();
+              event.stopPropagation();
+              const data = findFeedbackById(button?.dataset.id || row?.dataset.localId);
+              if (!button || button.dataset.localAction === "detail") openFeedbackDetail(data);
+              if (button?.dataset.localAction === "merge") openManualMergeModal(data);
+              if (button?.dataset.localAction === "unmerge") unmergeFeedback(data.id);
+              if (button?.dataset.localAction === "review") openReviewModal(data);
+            });
+          }
+          groups.forEach((group) => {
+            if (group.members.length === 1) {
+              const row = document.createElement("tr");
+              renderRowCells(row, group.lead.data, group.lead.confidence, null, { canMerge: true });
+              tbody.appendChild(row);
+              return;
+            }
+            const data = group.lead.data;
+            const lead = document.createElement("tr");
+            lead.dataset.localGroup = "true";
+            lead.dataset.localBuilt = "true";
+            lead.dataset.localId = data.id;
+            lead.dataset.localConfidence = group.lead.confidence.toFixed(2);
+            lead.dataset.localMemberCount = String(group.members.length);
+            lead.className = "local-merge-parent";
+            setRowFilterData(lead, data, group.lead.confidence, 0, group.members);
+            const excel = getExcelRow(data);
+            const mergeTitle = getMergeTitle(group);
+            const mergeDisplayId = getMergeDisplayId(group);
+            const mode = group.members.some((member) => member.data.createMode === "人工录入") ? "manual" : "ai";
+            const groupRoute = getGroupField(group, "processRoute", "多去向");
+            const groupHandler = getGroupField(group, "handler", "多人");
+            lead.innerHTML = `
+              <td class="select-column"><input type="checkbox" /></td>
+              <td class="id-cell"><button type="button" class="local-merge-toggle" aria-expanded="false">+</button><span class="feedback-id-button">${mergeDisplayId}</span></td>
+              <td></td>
+              <td></td>
+              <td>${excel.deviceType}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td class="truncate"></td>
+              <td class="truncate"></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td class="truncate"></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>${groupRoute}</td>
+              <td></td>
+              <td></td>
+              <td>${groupHandler}</td>
+              ${actionCell(data)}
+            `;
+            tbody.appendChild(lead);
+            group.members.forEach((member, memberIndex) => {
+              const child = document.createElement("tr");
+              child.dataset.localBuilt = "true";
+              child.dataset.localGroupChild = "true";
+              child.className = "local-feedback-child local-feedback-hidden";
+              renderRowCells(child, member.data, member.confidence, memberIndex, { canUnmerge: true });
+              tbody.appendChild(child);
+            });
+            const toggle = lead.querySelector(".local-merge-toggle");
+            toggle?.addEventListener("click", () => {
+              const isOpen = toggle.getAttribute("aria-expanded") === "true";
+              toggle.setAttribute("aria-expanded", String(!isOpen));
+              toggle.textContent = isOpen ? "+" : "−";
+              let open = !isOpen;
+              let sibling = lead.nextElementSibling;
+              while (sibling && sibling.classList.contains("local-feedback-child")) {
+                sibling.classList.toggle("local-feedback-hidden", !open);
+                sibling = sibling.nextElementSibling;
+              }
+              applyFeedbackFilters();
+            });
+          });
+          applyFeedbackFilters();
+          updateBatchSelectedCount();
+        };
+
+        const bindActions = async () => {
+          const toolbar = document.querySelector(".split-page > section.content-main > .toolbar");
+          if (!toolbar) return false;
+          if (toolbar.dataset.localFeedbackReady === "true") return true;
+          toolbar.dataset.localFeedbackReady = "true";
+          addStyles();
+          enhanceToolbar();
+          buildSiteMulti(toolbar);
+          const addBtn = toolbar.querySelector("button.primary-button");
+          addBtn?.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setTimeout(openFeedbackModal, 0);
+          });
+          const templateBtn = Array.from(toolbar.querySelectorAll("button")).find((button) => button.textContent.includes("批量导入"));
+          templateBtn?.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setTimeout(openBatchImportModal, 0);
+          });
+          const syncBtn = Array.from(toolbar.querySelectorAll("button")).find((button) => button.textContent.includes("同步"));
+          syncBtn?.addEventListener("click", applyFeedbackFilters);
+          document.querySelectorAll(".batch-action-buttons button").forEach((button) => {
+            if (button.dataset.localBatchReady === "true") return;
+            button.dataset.localBatchReady = "true";
+            button.disabled = false;
+            button.removeAttribute("disabled");
+            button.setAttribute("aria-disabled", "false");
+            button.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const text = button.textContent.trim();
+              const route = text.includes("工单") ? "已转工单"
+                : text.includes("异常") ? "已转异常"
+                : text.includes("需求") ? "已转需求"
+                : text.includes("Q&A") ? "已转Q&A"
+                : "";
+              if (route) applyBatchRoute(route);
+            });
+          });
+          let feedbackObserverScheduled = false;
+          const observer = new MutationObserver(() => {
+            if (feedbackObserverScheduled) return;
+            feedbackObserverScheduled = true;
+            requestAnimationFrame(() => {
+              feedbackObserverScheduled = false;
+            try {
+              rebuildFeedbackTable();
+              enhanceToolbar();
+              enhanceWorkOrderPage();
+              enhanceEmergencyPage();
+              enhanceCompetitionPage();
+              setupUserSwitcher();
+              syncNavLabels();
+              const nativeDrawer = document.querySelector("aside.drawer");
+              if (nativeDrawer && !document.querySelector(".local-detail-drawer") && !document.querySelector(".local-detail-page")) {
+                const firstVisible = Array.from(document.querySelectorAll("tbody tr[data-local-id]")).find((row) => !row.classList.contains("local-feedback-hidden"));
+                nativeDrawer.remove();
+                document.querySelector(".split-page")?.classList.remove("with-drawer");
+                if (firstVisible) openFeedbackDetail(findFeedbackById(firstVisible.dataset.localId));
+              }
+            } catch (error) {
+              console.error("local feedback observer failed", error);
+              window.__localFeedbackError = error?.message || String(error);
+            }
+            });
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          rebuildFeedbackTable();
+          enhanceWorkOrderPage();
+          enhanceEmergencyPage();
+          enhanceCompetitionPage();
+          setupUserSwitcher();
+          syncNavLabels();
+          document.addEventListener("click", (event) => {
+            if (!event.target.closest(".local-site-multi")) {
+              document.querySelectorAll(".local-site-multi-panel").forEach((panel) => { panel.hidden = true; });
+            }
+            if (!event.target.closest(".local-modal")) closeModal();
+          });
+          window.__localFeedbackEnhancerReady = true;
+          return true;
+        };
+
+        const tryBind = () => {
+          try {
+            enhanceWorkOrderPage();
+            enhanceEmergencyPage();
+            enhanceCompetitionPage();
+            syncNavLabels();
+            return bindActions();
+          } catch (error) {
+            console.error("local feedback enhancer failed", error);
+            window.__localFeedbackError = error?.message || String(error);
+            return false;
+          }
+        };
+        let rootObserverScheduled = false;
+        const observer = new MutationObserver(() => {
+          if (rootObserverScheduled) return;
+          rootObserverScheduled = true;
+          requestAnimationFrame(() => {
+            rootObserverScheduled = false;
+            tryBind();
+          });
+        });
+
+        const start = () => {
+          tryBind();
+          observer.observe(document.body, { childList: true, subtree: true });
+        };
+
+        if (domReady()) start();
+        else document.addEventListener("DOMContentLoaded", start, { once: true });
+      })();
+    </script>
   </body>
 </html>
 
