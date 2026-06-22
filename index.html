@@ -767,7 +767,6 @@
           { key: "pending", label: "待处理" },
           { key: "review", label: "待人工复核" },
           { key: "done", label: "已处理" },
-          { key: "mine", label: "我反馈的" },
         ];
         const processRouteOptions = ["待处理", "已转工单", "已转需求", "已转异常", "已转Q&A", "已直接回复关闭"];
         const processStateOptions = ["待人工复核", "待处理", "已处理"];
@@ -1034,6 +1033,8 @@
             .local-feedback-tabs { display: flex; align-items: center; gap: 6px; margin: 12px 0 10px; border-bottom: 1px solid #d7deea; }
             .local-feedback-tab { min-height: 38px; padding: 0 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #475467; font-size: 14px; font-weight: 800; }
             .local-feedback-tab.active { color: #1f73e8; border-bottom-color: #1f73e8; }
+            .local-text-button { padding: 0; border: 0; background: transparent; color: #175cd3; font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+            .local-text-button:hover { text-decoration: underline; }
             .local-fixed-filter-panel { display: grid; grid-template-columns: repeat(6, minmax(128px, 1fr)); gap: 8px; margin: 6px 0 12px; padding: 12px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
             .local-fixed-filter-panel[hidden] { display: none; }
             .local-fixed-filter-panel label { display: grid; gap: 5px; color: #475467; font-size: 12px; font-weight: 700; }
@@ -1157,6 +1158,53 @@
             .local-check-row input { width: 16px; height: 16px; }
             .local-competitor-param-grid { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px; border: 1px solid #d7deea; border-radius: 8px; background: #f8fafc; }
             .local-competitor-param-grid h3 { grid-column: 1 / -1; margin: 0; color: #101828; font-size: 14px; }
+            .local-competition-workbench { display: grid; gap: 16px; }
+            .local-competition-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1.12fr; gap: 12px; align-items: stretch; }
+            .local-flow-lane { display: grid; gap: 10px; min-width: 0; }
+            .local-flow-node { display: grid; gap: 8px; min-height: 104px; padding: 14px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-flow-node.primary { border-color: #9ec5fe; background: #f5f9ff; }
+            .local-flow-node.warn { border-color: #fedf89; background: #fffbeb; }
+            .local-flow-node.done { border-color: #abefc6; background: #f0fdf4; }
+            .local-flow-node h3 { margin: 0; color: #101828; font-size: 15px; line-height: 1.3; }
+            .local-flow-node p { margin: 0; color: #475467; font-size: 13px; line-height: 1.45; }
+            .local-flow-node ul { margin: 0; padding-left: 16px; color: #475467; font-size: 13px; line-height: 1.55; }
+            .local-flow-arrow { display: grid; place-items: center; color: #1f73e8; font-size: 20px; font-weight: 900; }
+            .local-flow-branch { display: grid; gap: 8px; }
+            .local-flow-branch-title { color: #344054; font-size: 13px; font-weight: 900; }
+            .local-mini-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+            .local-mini-tags span { display: inline-flex; align-items: center; min-height: 22px; padding: 0 7px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 11px; font-weight: 800; }
+            .local-competition-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+            .local-competition-stat { min-height: 94px; padding: 16px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-competition-stat span { color: #667085; font-size: 13px; font-weight: 800; }
+            .local-competition-stat strong { display: block; margin-top: 10px; color: #101828; font-size: 26px; line-height: 1; }
+            .local-competition-stat em { display: block; margin-top: 8px; color: #475467; font-size: 12px; font-style: normal; }
+            .local-competition-table { width: 100%; border-collapse: collapse; border: 1px solid #d7deea; border-radius: 8px; overflow: hidden; background: #fff; }
+            .local-competition-table th,
+            .local-competition-table td { padding: 12px; border-bottom: 1px solid #edf1f7; color: #344054; font-size: 13px; text-align: left; vertical-align: top; }
+            .local-competition-table th { background: #f8fafc; color: #475467; font-weight: 900; }
+            .local-competition-table tr:last-child td { border-bottom: 0; }
+            .local-competition-table b { display: block; color: #101828; font-size: 14px; }
+            .local-status-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 12px; font-weight: 900; white-space: nowrap; }
+            .local-status-pill.warn { background: #fffaeb; color: #b54708; }
+            .local-status-pill.done { background: #ecfdf3; color: #067647; }
+            .local-report-card-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+            .local-report-card-list .local-module-card { min-height: 132px; }
+            .local-competition-workbench .product-info-layout { grid-template-columns: minmax(0, 1fr); align-items: start; }
+            .local-competition-workbench .product-info-layout .product-card-grid { grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+            .local-competition-workbench .product-compare-drawer { position: static; grid-column: 1 / -1; width: auto; max-height: none; border: 1px solid #d7deea; border-radius: 8px; box-shadow: 0 1px 2px #10182814; overflow: auto; }
+            .local-competition-workbench .product-catalog { position: relative; z-index: 1; }
+            .local-competitor-detail-page { display: grid; gap: 16px; }
+            .local-competitor-detail-page .local-page-head { margin: 0; }
+            @media (max-width: 1120px) {
+              .local-competition-flow { grid-template-columns: 1fr; }
+              .local-flow-arrow { min-height: 20px; transform: rotate(90deg); }
+              .local-competition-stats,
+              .local-report-card-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            }
+            @media (max-width: 720px) {
+              .local-competition-stats,
+              .local-report-card-list { grid-template-columns: 1fr; }
+            }
             .local-form-error { grid-column: 1 / -1; display: none; min-height: 34px; align-items: center; padding: 8px 10px; border: 1px solid #fecdca; border-radius: 8px; background: #fff6f5; color: #b42318; font-size: 13px; font-weight: 800; }
             .local-form-error.active { display: flex; }
             .local-attachment-drop { min-height: 74px; padding: 10px; border: 1px dashed #94a3b8; border-radius: 8px; background: #f8fafc; color: #475467; font-size: 13px; outline: none; }
@@ -1176,6 +1224,31 @@
             .local-detail-page .local-detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .local-detail-page .local-detail-section { display: grid; gap: 16px; }
             .local-detail-page .local-modal-actions { position: sticky; bottom: 0; justify-content: flex-end; margin-top: 18px; padding: 14px 0 0; border-top: 1px solid #d7deea; background: #f5f7fb; }
+            .local-workspace-page { display: grid; gap: 16px; }
+            .local-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-page-head h2 { margin: 0; color: #101828; font-size: 24px; line-height: 1.2; }
+            .local-page-head p { margin: 8px 0 0; color: #475467; font-size: 14px; }
+            .local-page-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+            .local-page-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+            .local-page-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .local-module-card { display: grid; gap: 12px; min-height: 148px; padding: 18px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-module-card h3 { margin: 0; color: #101828; font-size: 18px; }
+            .local-module-card p { margin: 0; color: #475467; font-size: 13px; line-height: 1.5; }
+            .local-module-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+            .local-module-meta span { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 12px; font-weight: 800; }
+            .local-report-list { display: grid; gap: 10px; }
+            .local-report-row { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(90px, .45fr)) auto; gap: 12px; align-items: center; padding: 14px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-report-row b { display: block; color: #101828; font-size: 14px; }
+            .local-report-row span { color: #667085; font-size: 12px; }
+            .local-config-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-config-table th, .local-config-table td { padding: 12px; border-bottom: 1px solid #edf1f7; color: #344054; font-size: 13px; text-align: left; }
+            .local-config-table th { background: #f8fafc; color: #475467; font-weight: 800; }
+            .local-config-table tr:last-child td { border-bottom: 0; }
+            @media (max-width: 980px) {
+              .local-page-grid,
+              .local-page-grid.three { grid-template-columns: 1fr; }
+              .local-report-row { grid-template-columns: 1fr; }
+            }
           `;
           document.head.appendChild(style);
         };
@@ -1356,7 +1429,7 @@
         });
 
         const allFeedbackItems = () => localFeedbackData;
-        const findFeedbackById = (id) => allFeedbackItems().find((item) => item.id === id) || localFeedbackData[0];
+        const findFeedbackById = (id) => allFeedbackItems().find((item) => item.id === id) || null;
         const getCurrentGroups = () => buildMergedFeedback([]);
         const findMergeGroupById = (id) => getCurrentGroups().find((group) => group.members.length > 1 && group.members.some((member) => member.data.id === id));
         const getWorkOrderId = (data) => `TK-${(data.id.match(/\d{8}/)?.[0] || "20260618")}-${data.id.replace(/\D/g, "").slice(-4)}`;
@@ -2129,8 +2202,7 @@
             const matchTab = activeTab === "all"
               || (activeTab === "pending" && ["待人工复核", "待处理"].includes(row.dataset.localProcessState))
               || (activeTab === "review" && row.dataset.localProcessState === "待人工复核")
-              || (activeTab === "done" && row.dataset.localProcessState === "已处理")
-              || (activeTab === "mine" && row.dataset.localFeedbackUser === currentUser.name);
+              || (activeTab === "done" && row.dataset.localProcessState === "已处理");
             const date = row.dataset.localDate || "";
             const matchFixedFields = [
               ["source", "localSource"],
@@ -2212,6 +2284,36 @@
             <span class="local-workorder-step-label">${workOrderSteps[Math.max(0, Math.min(order.step - 1, workOrderSteps.length - 1))]}</span>
           </div>
         `;
+        const feedbackDetailFields = (feedback) => feedback ? [
+          ["反馈编号", feedback.id],
+          ["来源/站点", `${feedback.source || "-"} / ${feedback.site || "-"}`],
+          ["设备类型", feedback.productType],
+          ["品牌", feedback.brand],
+          ["内部型号/料号", feedback.internal],
+          ["销售型号", feedback.model],
+          ["订单号/ASIN", feedback.asin],
+          ["问题反馈时间", feedback.date],
+          ["用户反馈原文", feedback.raw],
+          ["AI翻译/归纳", feedback.ai],
+          ["一级职能划分", feedback.level1],
+          ["二级问题场景", feedback.level2],
+          ["三级具体问题", feedback.level3],
+          ["异常级别", feedback.exception],
+          ["处理去向", feedback.processRoute],
+          ["状态", feedback.processState],
+          ["反馈人", feedback.feedbackUser],
+          ["处理人", feedback.handler],
+        ] : [];
+        const feedbackDetailHtml = (feedback) => `
+          <section class="panel">
+            <div class="panel-title">关联反馈单详细信息</div>
+            ${feedback ? `
+              <div class="local-detail-grid">
+                ${feedbackDetailFields(feedback).map((row) => `<article><span>${escapeHtml(row[0])}</span><strong>${escapeHtml(row[1] || "-")}</strong></article>`).join("")}
+              </div>
+            ` : `<p class="local-feedback-sub">未在当前反馈清单中匹配到关联反馈，可返回反馈清单按编号查询。</p>`}
+          </section>
+        `;
         const getWorkOrderRoute = (order) => {
           if (order.status === "已关闭") return "直接关闭";
           if (order.exception === "是") return "已转异常";
@@ -2230,6 +2332,7 @@
         const openWorkOrderDetail = (order) => {
           const pageBody = document.querySelector(".page-body");
           if (!pageBody) return;
+          const relatedFeedback = findFeedbackById(order.relatedFeedback);
           closeWorkOrderDetail();
           Array.from(pageBody.children).forEach((node) => {
             node.hidden = true;
@@ -2262,6 +2365,7 @@
               <span>处理结果</span>
               <strong>${escapeHtml(order.result)}</strong>
             </div>
+            ${feedbackDetailHtml(relatedFeedback)}
             <div class="local-workorder-detail-actions">
               <button type="button" class="warning-button" data-local-workorder-route="exception">转异常</button>
               <button type="button" class="secondary-button" data-local-workorder-route="qa">转Q&A</button>
@@ -2274,6 +2378,41 @@
           detail.querySelector("[data-local-workorder-back]")?.addEventListener("click", closeWorkOrderDetail);
           detail.querySelectorAll("[data-local-workorder-route]").forEach((button) => button.addEventListener("click", () => {
             const route = button.dataset.localWorkorderRoute;
+            if (route === "close") {
+              openModal(`
+                <div class="local-modal">
+                  <div class="local-modal-head">
+                    <div><span>工单关闭</span><h2>直接关闭备注</h2><p>直接关闭工单前，需要填写关闭说明，便于后续追溯。</p></div>
+                    <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                  </div>
+                  <div class="local-modal-grid">
+                    <label class="wide"><span>关闭说明</span><textarea rows="4" data-workorder-close-note placeholder="说明直接关闭原因、已确认信息和无需继续处理的依据"></textarea></label>
+                  </div>
+                  <div class="local-modal-actions">
+                    <button type="button" class="secondary-button" data-local-close>取消</button>
+                    <button type="button" class="primary-button" data-confirm-workorder-close>确认关闭</button>
+                  </div>
+                </div>
+              `);
+              bindModalClose();
+              document.querySelector("[data-confirm-workorder-close]")?.addEventListener("click", () => {
+                const note = document.querySelector("[data-workorder-close-note]")?.value.trim();
+                if (!note) {
+                  document.querySelector("[data-workorder-close-note]")?.focus();
+                  return;
+                }
+                order.status = "已关闭";
+                order.closeReason = note;
+                order.sla = "完成";
+                order.step = 5;
+                closeModal();
+                const table = document.querySelector(".page-body table, table.data-table");
+                if (table) delete table.dataset.localWorkOrderSignature;
+                enhanceWorkOrderPage();
+                openWorkOrderDetail(order);
+              });
+              return;
+            }
             if (route === "exception") {
               order.exception = "是";
               order.status = "转异常";
@@ -2286,11 +2425,6 @@
               order.requirement = "是";
               order.status = "转需求";
               order.step = Math.max(order.step, 4);
-            } else if (route === "close") {
-              order.status = "已关闭";
-              order.closeReason = order.closeReason && order.closeReason !== "-" ? order.closeReason : "直接关闭";
-              order.sla = "完成";
-              order.step = 5;
             }
             const table = document.querySelector(".page-body table, table.data-table");
             if (table) delete table.dataset.localWorkOrderSignature;
@@ -2316,7 +2450,7 @@
           tbody.innerHTML = localWorkOrders.map((order) => `
             <tr>
               <td>${order.id}</td>
-              <td>${order.relatedFeedback}</td>
+              <td><button type="button" class="local-text-button" data-local-open-feedback="${escapeHtml(order.relatedFeedback)}">${escapeHtml(order.relatedFeedback)}</button></td>
               <td>${order.status}</td>
               <td>${order.owner}</td>
               <td>${order.dept}</td>
@@ -2330,6 +2464,10 @@
           tbody.querySelectorAll("[data-local-workorder-detail]").forEach((button) => button.addEventListener("click", () => {
             const order = localWorkOrders.find((item) => item.id === button.dataset.localWorkorderDetail);
             if (order) openWorkOrderDetail(order);
+          }));
+          tbody.querySelectorAll("[data-local-open-feedback]").forEach((button) => button.addEventListener("click", () => {
+            const feedback = findFeedbackById(button.dataset.localOpenFeedback);
+            if (feedback) openDetailDrawer(feedback);
           }));
           return true;
         };
@@ -2855,29 +2993,940 @@
         const enhanceCompetitionPage = (force = false) => {
           const title = document.querySelector("h1")?.textContent.trim();
           if (title !== "竞争分析") return false;
-          const tabsText = document.querySelector(".tabs-row")?.textContent || "";
-          if (!tabsText.includes("竞品信息")) return false;
           addStyles();
-          const tabs = document.querySelector(".tabs-row.compact-tabs, .tabs-row");
-          if (tabs && !document.querySelector("[data-local-add-competitor]")) {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "primary-button local-competitor-add";
-            button.dataset.localAddCompetitor = "true";
-            button.textContent = "增加竞品";
-            tabs.appendChild(button);
-          }
-          if (tabs && tabs.dataset.localCompetitorActionsReady !== "true") {
-            tabs.dataset.localCompetitorActionsReady = "true";
-            tabs.addEventListener("click", (event) => {
-              const button = event.target.closest("[data-local-add-competitor]");
-              if (!button) return;
+          const pageBody = document.querySelector(".page-body");
+          if (!pageBody) return false;
+          if (pageBody.dataset.localCompetitionReady === "true" && !force) return true;
+          pageBody.dataset.localCompetitionReady = "true";
+          document.querySelectorAll("[data-local-competitor-grid]").forEach((node) => node.remove());
+
+          const competitorRows = [
+            ["Withings Body Scan", "品牌竞品", "Amazon", "价格 -12% / BSR 进入TOP20", "需要处理", "补充差评TOP与功能证据，启动产品体验报告"],
+            ["RENPHO Elis 1", "品牌竞品", "Amazon / Walmart", "差评集中：连接失败、测量波动", "继续观察", "纳入日常监控，月报汇总趋势"],
+            ["京东 ODM A12", "ODM竞品", "京东", "成交价下探 / 页面新增八电极卖点", "需要处理", "产品经理补充竞品信息，判断是否转需求"],
+            ["筋膜枪 Mini Pro", "ODM竞品", "天猫 / 抖音", "新品上市 / 热敷功能", "已归档", "完成拆机分析，结论进入竞争分析月报"],
+          ];
+          const reportCards = [
+            ["竞品收集月报", "按产品线汇总新增竞品、触发提醒、价格/排名/功能变化、差评TOP、品牌影响评估。", "系统月初创建 / 每日刷新", "月报"],
+            ["拆机分析报告", "记录结构、材质、包装、配件、专利/法规风险和可借鉴点，必须上传拆机附件。", "进入实物分析后生成", "拆机报告"],
+            ["产品体验报告", "记录真实使用体验、APP体验、测量/按摩表现、用户痛点和机会点。", "实物体验完成后生成", "体验报告"],
+            ["专项对标报告", "围绕价格、功能、卖点、包装或渠道策略形成可执行结论。", "PM判断后生成", "专项报告"],
+          ];
+          const compareProducts = [
+            {
+              id: "withings",
+              category: "八电极秤",
+              type: "标杆产品",
+              brand: "Withings",
+              name: "Body Scan",
+              model: "WBS08",
+              productType: "八电极体脂秤",
+              position: "旗舰",
+              launch: "2023-10",
+              platform: "Amazon / 独立站",
+              region: "美国 / 欧洲",
+              officialPrice: "$399.95",
+              dealPrice: "$349.95",
+              rating: "4.4",
+              reviews: "8,920",
+              sellingPoints: "分段身体成分 / 心率 / 血管年龄",
+              specs: "8电极；Wi-Fi/Bluetooth；12个月续航",
+              pain: "价格高，部分用户质疑体脂和水分读数波动。",
+              registerFields: {
+                "竞品类型": "标杆产品",
+                "内部竞品": "否",
+                "品牌": "Withings",
+                "产品名称": "Body Scan",
+                "产品型号": "WBS08",
+                "产品类型": "八电极体脂秤",
+                "产品定位": "旗舰",
+                "上市时间": "2023-10",
+                "销售平台": "Amazon / 独立站",
+                "销售区域": "美国 / 欧洲",
+                "竞品链接": "https://www.withings.com/body-scan",
+                "信息来源": "品牌官网 / Amazon详情页",
+                "信息采集日期": "2026-06-18",
+                "信息采集人": "产品经理",
+                "信息状态": "正常监控",
+                "官方售价": "$399.95",
+                "到手价": "$349.95",
+                "币种": "USD",
+              },
+            },
+            {
+              id: "renpho",
+              category: "体脂秤",
+              type: "直接竞争产品",
+              brand: "RENPHO",
+              name: "Elis 1 Smart Scale",
+              model: "ES-CS20M",
+              productType: "四电极体脂秤",
+              position: "大众级",
+              launch: "2024-03",
+              platform: "Amazon / Walmart",
+              region: "美国",
+              officialPrice: "$49.99",
+              dealPrice: "$39.99",
+              rating: "4.6",
+              reviews: "23,400",
+              sellingPoints: "低价高评价 / App趋势 / 家庭多人",
+              specs: "4电极；Bluetooth；AAA电池",
+              pain: "低价促销频繁，压缩入门价格带。",
+              registerFields: {
+                "竞品类型": "直接竞争产品",
+                "内部竞品": "否",
+                "品牌": "RENPHO",
+                "产品名称": "Elis 1 Smart Scale",
+                "产品型号": "ES-CS20M",
+                "产品类型": "四电极体脂秤",
+                "产品定位": "大众级",
+                "上市时间": "2024-03",
+                "销售平台": "Amazon / Walmart",
+                "销售区域": "美国",
+                "竞品链接": "https://www.renpho.com",
+                "信息来源": "Amazon详情页 / Walmart详情页",
+                "信息采集日期": "2026-06-17",
+                "信息采集人": "产品经理",
+                "信息状态": "正常监控",
+                "官方售价": "$49.99",
+                "到手价": "$39.99",
+                "币种": "USD",
+              },
+            },
+            {
+              id: "huawei",
+              category: "八电极秤",
+              type: "直接竞争产品",
+              brand: "华为",
+              name: "智能体脂秤 3 Pro",
+              model: "Scale 3 Pro",
+              productType: "八电极体脂秤",
+              position: "中高端",
+              launch: "2024-05",
+              platform: "天猫 / 京东 / 抖音",
+              region: "中国",
+              officialPrice: "¥499",
+              dealPrice: "¥399",
+              rating: "4.8",
+              reviews: "18,260",
+              sellingPoints: "华为生态 / 八电极分段测量 / 大促流量强",
+              specs: "8电极；HarmonyOS生态；蓝牙连接",
+              pain: "生态绑定强，非华为用户体验优势减弱。",
+              registerFields: {
+                "竞品类型": "直接竞争产品",
+                "内部竞品": "否",
+                "品牌": "华为",
+                "产品名称": "智能体脂秤 3 Pro",
+                "产品型号": "Scale 3 Pro",
+                "产品类型": "八电极体脂秤",
+                "产品定位": "中高端",
+                "上市时间": "2024-05",
+                "销售平台": "天猫 / 京东 / 抖音",
+                "销售区域": "中国",
+                "竞品链接": "https://consumer.huawei.com",
+                "信息来源": "天猫详情页 / 京东详情页",
+                "信息采集日期": "2026-06-16",
+                "信息采集人": "产品经理",
+                "信息状态": "正常监控",
+                "官方售价": "¥499",
+                "到手价": "¥399",
+                "币种": "CNY",
+              },
+            },
+          ];
+          const renderCompetitorAnalysisPanel = () => `
+            <div class="product-info-layout">
+              <section class="product-catalog">
+                <div class="category-tabs">
+                  <button type="button" class="segmented active" data-product-category="全部">全部</button>
+                  <button type="button" class="segmented" data-product-category="八电极秤">八电极秤</button>
+                  <button type="button" class="segmented" data-product-category="体脂秤">体脂秤</button>
+                  <button type="button" class="segmented" data-product-category="筋膜枪">筋膜枪</button>
+                  <button type="button" class="secondary-button" data-open-compare>产品对比</button>
+                  <button type="button" class="secondary-button" data-export-competitors>导出</button>
+                </div>
+                <div class="product-card-grid">
+                  ${compareProducts.map((item, index) => `
+                    <article class="product-card ${index === 0 ? "active" : ""}" data-product-id="${item.id}" data-product-category-value="${item.category}">
+                      <div class="product-card-head">
+                        <span class="source-chip">${item.type}</span>
+                      </div>
+                      <strong>${item.brand} ${item.name}</strong>
+                      <em>${item.productType} / ${item.position}</em>
+                      <div class="product-price-row"><b>${item.dealPrice}</b><span>${item.platform}</span></div>
+                      <p>${item.sellingPoints}</p>
+                    </article>
+                  `).join("")}
+                </div>
+              </section>
+              <aside class="product-compare-drawer panel" hidden>
+                <div class="drawer-head">
+                  <div><h2>产品对比</h2><p>已选 2/4 个产品</p></div>
+                  <button type="button" class="icon-button" data-close-compare aria-label="关闭产品对比">×</button>
+                </div>
+                <div class="compare-picker">
+                  ${compareProducts.slice(0, 2).map((item, index) => `
+                    <label class="compare-slot active">
+                      <span>对比产品 ${index + 1}</span>
+                      <select><option>${item.brand} ${item.name}</option></select>
+                      <em>${item.productType} / ${item.dealPrice}</em>
+                    </label>
+                  `).join("")}
+                  <label class="compare-slot"><span>对比产品 3</span><select><option>请选择产品</option></select><em>未选择</em></label>
+                  <label class="compare-slot"><span>对比产品 4</span><select><option>请选择产品</option></select><em>未选择</em></label>
+                </div>
+                <div class="compare-table-wrap">
+                  <table class="data-table compact">
+                    <thead><tr><th>字段</th>${compareProducts.slice(0, 2).map((item) => `<th>${item.brand} ${item.name}</th>`).join("")}</tr></thead>
+                    <tbody>
+                      ${[
+                        ["基础档案", "竞品类型", "type"],
+                        ["基础档案", "产品类型", "productType"],
+                        ["基础档案", "型号", "model"],
+                        ["基础档案", "定位", "position"],
+                        ["价格与评价", "到手价", "dealPrice"],
+                        ["价格与评价", "评分", "rating"],
+                        ["价格与评价", "评论数", "reviews"],
+                        ["痛点与风险", "核心卖点", "sellingPoints"],
+                        ["痛点与风险", "用户痛点", "pain"],
+                      ].map((row, index, rows) => `
+                        ${index === 0 || rows[index - 1][0] !== row[0] ? `<tr class="compare-group-row"><td colspan="3">${row[0]}</td></tr>` : ""}
+                        <tr><td>${row[1]}</td>${compareProducts.slice(0, 2).map((item) => `<td>${item[row[2]]}</td>`).join("")}</tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>
+              </aside>
+            </div>
+          `;
+          const renderCompetitorDetailPage = (item) => {
+            const scaleRegisterGroups = [
+              ["基础信息", ["竞品类型", "内部竞品", "品牌", "产品名称", "产品型号", "产品类型", "产品定位", "上市时间", "销售平台", "销售区域", "竞品链接", "信息来源", "信息采集日期", "信息采集人", "信息状态"]],
+              ["销售信息", ["官方售价", "到手价", "币种", "价格区间"]],
+              ["外观结构", ["长度(mm)", "宽度(mm)", "厚度(mm)", "产品重量(kg)", "玻璃类型", "玻璃厚度", "底壳结构", "机身材质", "表面工艺", "颜色", "按键类型", "防滑脚垫", "秤面站位引导"]],
+              ["电极系统", ["是否支持测脂", "电极类型", "电极数量", "脚部电极数量", "手部电极数量", "是否有手柄", "手柄类型", "手柄连接方式"]],
+              ["称重系统", ["起称重量", "最大称重", "分度值", "单位切换", "传感器类型", "称重精度说明"]],
+              ["测量系统", ["APP测量指标", "本机测量/显示指标", "测量频率", "运动员模式", "孕妇模式", "婴儿模式", "访客模式", "宠物/抱婴称重模式"]],
+              ["显示系统", ["屏幕类型", "屏幕尺寸", "屏幕位置", "屏幕显示语言", "用户识别显示", "趋势/等级显示"]],
+              ["智能系统", ["APP连接", "APP名称", "连接方式", "OTA升级", "数据同步/生态接入", "多用户识别", "自动用户识别", "历史数据趋势", "家庭成员管理", "数据报告形式"]],
+              ["电源系统", ["供电方式", "电池数量", "Type-C充电", "续航时间", "低电提示"]],
+              ["包装配件", ["包装形式", "包装语言", "说明书", "电池"]],
+            ];
+            const massageRegisterGroups = [
+              ["基础信息", ["竞品类型", "内部竞品", "品牌", "产品名称", "产品型号", "产品类型", "产品定位", "上市时间", "销售平台", "销售区域", "竞品链接", "信息来源", "信息采集日期", "信息采集人", "信息状态"]],
+              ["销售信息", ["官方售价", "到手价", "币种", "价格区间"]],
+              ["外观结构", ["长度(mm)", "宽度(mm)", "厚度/高度(mm)", "产品净重(g)", "机身材质", "表面工艺", "颜色", "握持方式", "防滑设计", "人体工学设计"]],
+              ["动力系统", ["电机类型", "振幅/冲程(mm)", "最大推力", "最低转速(rpm)", "最高转速(rpm)", "噪音(dB)", "档位数量", "力度体验备注"]],
+              ["电源系统", ["电池容量(mAh)", "电池类型", "官方续航时间", "充电接口", "快充功能", "低电提示"]],
+              ["按摩头系统", ["按摩头数量", "按摩头类型", "按摩头连接方式", "按摩头材质"]],
+              ["功能系统", ["压力感应", "智能档位", "档位记忆", "定时保护", "自动模式", "热敷功能", "冷敷功能"]],
+              ["智能系统", ["通信方式", "APP名称", "APP核心功能"]],
+              ["包装配件", ["包装形式", "包装语言", "收纳包", "充电线", "说明书"]],
+            ];
+            const registerGroups = item.category === "筋膜枪" ? massageRegisterGroups : scaleRegisterGroups;
+            const registerFields = {
+              "竞品类型": item.type,
+              "内部竞品": "否",
+              "品牌": item.brand,
+              "产品名称": item.name,
+              "产品型号": item.model,
+              "产品类型": item.productType,
+              "产品定位": item.position,
+              "上市时间": item.launch,
+              "销售平台": item.platform,
+              "销售区域": item.region,
+              "竞品链接": "待补充",
+              "信息来源": "平台详情页 / 品牌官网",
+              "信息采集日期": "2026-06-18",
+              "信息采集人": "产品经理",
+              "信息状态": "正常监控",
+              "官方售价": item.officialPrice,
+              "到手价": item.dealPrice,
+              "币种": item.dealPrice.includes("¥") ? "CNY" : "USD",
+              "价格区间": item.dealPrice.includes("¥") ? "300-499" : "300-499",
+              "长度(mm)": "310",
+              "宽度(mm)": "310",
+              "厚度(mm)": "25",
+              "产品重量(kg)": "2.5",
+              "玻璃类型": "钢化玻璃",
+              "玻璃厚度": "6mm",
+              "底壳结构": "全包底",
+              "机身材质": "ABS / 玻璃",
+              "表面工艺": "丝印 / 镀膜",
+              "颜色": "黑色",
+              "按键类型": "无按键",
+              "防滑脚垫": "有",
+              "秤面站位引导": "有",
+              "是否支持测脂": "支持",
+              "电极类型": item.productType.includes("八电极") ? "ITO膜" : "金属电极",
+              "电极数量": item.productType.includes("八电极") ? "8" : "4",
+              "脚部电极数量": "4",
+              "手部电极数量": item.productType.includes("八电极") ? "4" : "0",
+              "是否有手柄": item.productType.includes("八电极") ? "有" : "无",
+              "手柄类型": item.productType.includes("八电极") ? "分体手柄" : "无",
+              "手柄连接方式": item.productType.includes("八电极") ? "线连" : "无",
+              "起称重量": "0.2kg",
+              "最大称重": "400lb",
+              "分度值": "0.05kg / 0.1lb",
+              "单位切换": "lb / kg / st",
+              "传感器类型": "G型传感器",
+              "称重精度说明": "100kg以下0.05kg，100kg以上0.1kg",
+              "APP测量指标": "体重 / BMI / 体脂率 / 肌肉量 / 水分率 / 心率",
+              "本机测量/显示指标": "体重 / BMI / 体脂率",
+              "测量频率": "双频",
+              "运动员模式": "支持",
+              "孕妇模式": "支持",
+              "婴儿模式": "支持",
+              "访客模式": "支持",
+              "宠物/抱婴称重模式": "不支持",
+              "屏幕类型": "彩色LCD",
+              "屏幕尺寸": "3.5寸",
+              "屏幕位置": "秤面显示",
+              "屏幕显示语言": "英文",
+              "用户识别显示": "有",
+              "趋势/等级显示": "有",
+              "APP连接": "支持",
+              "APP名称": item.brand,
+              "连接方式": "蓝牙 / WiFi",
+              "OTA升级": "支持",
+              "数据同步/生态接入": "Apple Health / Google Fit",
+              "多用户识别": "8人",
+              "自动用户识别": "支持",
+              "历史数据趋势": "支持",
+              "家庭成员管理": "支持",
+              "数据报告形式": "APP图表 / 月报 / 健康报告",
+              "供电方式": "AAA电池",
+              "电池数量": "4节",
+              "Type-C充电": "不支持",
+              "续航时间": "12个月",
+              "低电提示": "支持",
+              "包装形式": "彩盒",
+              "包装语言": "英文",
+              "说明书": "有",
+              "电池": "有",
+              ...(item.registerFields || {}),
+            };
+            const levelRecords = [
+              ["L1", "日常监控", `${item.brand} ${item.name} 页面卖点与价格无明显变化。`, "继续监控", "展示", "2026-06-03"],
+              ["L2", "价格/排名", `${item.name} 价格小幅波动，未形成明确业务影响。`, "继续监控", "展示", "2026-06-09"],
+              ["L3", "触发提醒", `${item.name} 近7天价格、排名或差评趋势变化明显。`, "转入需求", "已提醒产品经理", "2026-06-15"],
+              ["L4", "紧急提醒", `${item.name} 出现关键功能变化，需要实物分析确认。`, "启动实物分析", "处理中", "2026-06-18"],
+            ];
+            return `
+              <section class="local-competitor-detail-page">
+                <div class="local-page-head">
+                  <div>
+                    <h2>竞品详情</h2>
+                    <p>${escapeHtml(item.brand)} ${escapeHtml(item.name)} / ${escapeHtml(item.model)} / ${escapeHtml(item.productType)} / ${escapeHtml(item.platform)}</p>
+                  </div>
+                  <div class="local-page-actions">
+                    <button type="button" class="secondary-button" data-back-competitor-list>返回竞品列表</button>
+                    <button type="button" class="secondary-button" data-archive-competitor="${escapeHtml(item.id)}">${item.archived ? "已归档" : "归档"}</button>
+                    <button type="button" class="primary-button" data-start-physical-analysis="${escapeHtml(item.id)}">启动实物分析</button>
+                  </div>
+                </div>
+                <div class="local-detail-grid">
+                  ${[
+                    ["竞品类型", item.type],
+                    ["产品类型", item.productType],
+                    ["产品定位", item.position],
+                    ["上市时间", item.launch],
+                    ["销售平台", item.platform],
+                    ["销售区域", item.region],
+                    ["官方售价", item.officialPrice],
+                    ["到手价", item.dealPrice],
+                    ["评分", item.rating],
+                    ["评论数", item.reviews],
+                    ["规格参数", item.specs],
+                    ["产品型号", item.model],
+                  ].map((row) => `<div class="field-item"><span>${escapeHtml(row[0])}</span><strong>${escapeHtml(row[1])}</strong></div>`).join("")}
+                </div>
+                <div class="local-page-grid two">
+                  <article class="local-module-card">
+                    <h3>核心卖点</h3>
+                    <p>${escapeHtml(item.sellingPoints.replaceAll(" / ", "、"))}</p>
+                  </article>
+                  <article class="local-module-card">
+                    <h3>用户痛点</h3>
+                    <p>${escapeHtml(item.pain)}</p>
+                  </article>
+                </div>
+                <section class="panel">
+                  <div class="panel-title">竞品信息登记表字段</div>
+                  ${registerGroups.map((group) => `
+                    <div class="local-competitor-param-grid">
+                      <h3>${escapeHtml(group[0])}</h3>
+                      ${group[1].map((fieldName) => `
+                        <div class="field-item">
+                          <span>${escapeHtml(fieldName)}</span>
+                          <strong>${escapeHtml(registerFields[fieldName] || "待补充")}</strong>
+                        </div>
+                      `).join("")}
+                    </div>
+                  `).join("")}
+                </section>
+                <section class="panel">
+                  <div class="panel-title">L1-L4 监控记录</div>
+                  <table class="local-competition-table">
+                    <thead><tr><th>等级</th><th>触发来源</th><th>记录内容</th><th>最新处理方案</th><th>状态</th><th>记录时间</th></tr></thead>
+                    <tbody>
+                      ${levelRecords.map((row) => `
+                        <tr>
+                          <td><span class="pill ${row[0] === "L4" ? "p1" : row[0] === "L3" ? "p2" : "p3"}">${escapeHtml(row[0])}</span></td>
+                          <td>${escapeHtml(row[1])}</td>
+                          <td>${escapeHtml(row[2])}</td>
+                          <td>${escapeHtml(row[3])}</td>
+                          <td>${escapeHtml(row[4])}</td>
+                          <td>${escapeHtml(row[5])}</td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </section>
+                <div data-archive-competitor-slot>${item.archived ? `
+                  <section class="panel">
+                    <div class="panel-title">归档记录</div>
+                    <div class="local-detail-grid">
+                      <article><span>监控状态</span><strong>已解除监控</strong></article>
+                      <article><span>归档时间</span><strong>2026-06-22</strong></article>
+                      <article><span>归档说明</span><strong>保留历史记录，后续如再次出现变化可重新启动日常监控。</strong></article>
+                    </div>
+                  </section>
+                ` : ""}</div>
+                <div data-physical-analysis-slot></div>
+              </section>
+            `;
+          };
+          const renderPhysicalAnalysisSection = (item) => `
+            <section class="panel" data-physical-analysis-section>
+              <div class="panel-title">实物分析信息</div>
+              <div class="local-modal-grid">
+                <label><span>竞品对象</span><input value="${escapeHtml(item.brand)} ${escapeHtml(item.name)}" readonly /></label>
+                <label><span>分析状态</span><select><option>待上传报告</option><option>分析中</option><option>已完成</option><option>已归档</option></select></label>
+                <label><span>负责人</span><input placeholder="填写产品经理或分析负责人" /></label>
+                <label><span>计划完成时间</span><input type="date" /></label>
+                <label><span>触发来源</span><select><option>L4 紧急提醒</option><option>L3 触发提醒</option><option>产品经理主动发起</option></select></label>
+                <label><span>分析类型</span><select><option>实物分析 + 拆机分析 + 产品体验</option><option>仅产品体验</option><option>仅拆机分析</option><option>专项对标</option></select></label>
+                <label class="wide"><span>上传拆机分析报告</span><input type="file" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx" /></label>
+                <label class="wide"><span>上传产品体验报告</span><input type="file" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx" /></label>
+                <label class="wide"><span>重点验证项</span><textarea rows="3" placeholder="填写需要重点验证的结构、功能、体验、包装、APP或风险点"></textarea></label>
+                <label class="wide"><span>分析结论</span><textarea rows="3" placeholder="后续补充分析结论、可借鉴点、风险判断和下一步建议"></textarea></label>
+              </div>
+            </section>
+          `;
+          const renderOpinionPanel = () => `
+            <div class="sentiment-layout">
+              <section class="panel sentiment-hero">
+                <div class="panel-title">本周AI舆情采集</div>
+                <div class="sentiment-summary">
+                  ${[["任务", 5], ["成功", 5], ["失败", 0], ["商品", 45], ["新增评论", 28], ["平均星级", 3.5]].map((item) => `<article><span>${item[0]}</span><strong>${item[1]}</strong></article>`).join("")}
+                </div>
+                <div class="collection-conditions">
+                  ${[
+                    ["品牌", "Withings / RENPHO / 华为"],
+                    ["产品", "体脂秤、八电极秤、筋膜枪"],
+                    ["来源", "Amazon评论、天猫评价、京东问答、主流媒体、社媒"],
+                    ["关键词", "准确性、App、隐私、离线、续航、质量"],
+                    ["采集频率", "每周一 09:00"],
+                  ].map((item) => `<div class="field-item"><span>${item[0]}</span><strong>${item[1]}</strong></div>`).join("")}
+                </div>
+              </section>
+              <section class="panel">
+                <div class="panel-title">星级分布</div>
+                <div class="star-bars">
+                  ${[["5星", 14, "#22a06b"], ["4星", 2, "#1f73e8"], ["3星", 3, "#f2b705"], ["2星", 3, "#ff8a00"], ["1星", 6, "#e5484d"]].map((item) => `<div><span>${item[0]}</span><em><i style="width:${item[1] * 6}%;background:${item[2]}"></i></em><b>${item[1]}</b></div>`).join("")}
+                </div>
+              </section>
+              ${[
+                ["正向观点 Top", "good-text", [["总体满意度", "13次", "我太喜欢这玩意儿了"], ["应用功能", "6次", "通过应用持续提供反馈，并监测健康与体重趋势"], ["身体成分追踪", "5次", "一款有助于追踪进度的好产品"]]],
+                ["负向观点 Top", "bad-text", [["计算不准确", "5次", "体重自然上升后体脂率也随之升高，让我质疑准确性"], ["设备故障", "4次", "不起作用"], ["应用可用性", "3次", "数据被压缩到一个页面内，字体极小"]]],
+                ["未满足需求", "warning-text", [["更高的测量精度", "3次", "用户质疑整体测量结果可信度"], ["更优的质量", "3次", "使用6个月后部件损坏"], ["更好的长期追踪", "2次", "需要更清晰的历史和趋势展示"]]],
+              ].map((group) => `
+                <section class="panel opinion-panel">
+                  <div class="panel-title">${group[0]}</div>
+                  ${group[2].map((row) => `<article><strong class="${group[1]}">${row[0]}</strong><span>${row[1]}</span><em>${row[2]}</em></article>`).join("")}
+                </section>
+              `).join("")}
+              <section class="panel media-stream">
+                <div class="panel-title">典型评论与媒体线索</div>
+                ${[
+                  ["Amazon评论", "Withings", "负向", "体脂率随水分波动明显，用户开始质疑整体准确性。", "准确性"],
+                  ["媒体测评", "RENPHO", "正向", "App趋势功能被多篇测评作为核心优势提及。", "App体验"],
+                  ["京东问答", "华为", "中性", "用户集中询问是否支持多人识别和离线保存。", "离线/多人"],
+                ].map((row) => `<article><div><span class="source-chip">${row[0]}</span><b>${row[1]}</b><em>${row[2]}</em></div><p>${row[3]}</p><strong>${row[4]}</strong></article>`).join("")}
+              </section>
+            </div>
+          `;
+          const renderMarketPanel = () => `
+            <div class="competitor-layout">
+              <div class="market-insight-row">
+                <section class="panel">
+                  <div class="panel-title">关键词/排名变化</div>
+                  <div class="keyword-list">
+                    ${[
+                      ["body fat scale", "Amazon #6", "+4", "RENPHO降价进入广告位"],
+                      ["智能体脂秤", "天猫 第3", "+6", "华为八电极秤预售上升"],
+                      ["筋膜枪低噪音", "抖音 热词", "+9", "达人内容集中放大低噪音卖点"],
+                    ].map((row) => `<div><strong>${row[0]}</strong><span>当前 ${row[1]}</span><b class="good-text">${row[2]}</b><em>${row[3]}</em></div>`).join("")}
+                  </div>
+                </section>
+                <section class="panel">
+                  <div class="panel-title">市场触发提醒</div>
+                  <div class="competitor-alerts">
+                    ${[
+                      ["L4", "Withings 新增心率/血管年龄卖点", "建议进入换代功能机会评估"],
+                      ["L3", "RENPHO 近7天价格下降 18%", "跟进价格带和促销节奏"],
+                      ["L3", "华为八电极秤大促排名上升", "复盘国内高端秤卖点结构"],
+                    ].map((row) => `<article><span class="pill ${row[0] === "L4" ? "p1" : "p2"}">${row[0]}</span><div><strong>${row[1]}</strong><em>${row[2]}</em></div></article>`).join("")}
+                  </div>
+                </section>
+              </div>
+              <section class="panel table-panel wide-market-table">
+                <div class="panel-title">跨平台竞品动态</div>
+                <table class="data-table">
+                  <thead><tr><th>平台</th><th>品牌</th><th>产品</th><th>类别</th><th>排名</th><th>价格</th><th>评分</th><th>评论数</th><th>变化</th><th>事件</th><th>触发</th><th>最新处理方案</th><th>操作</th></tr></thead>
+                  <tbody>
+                    ${[
+                      ["Amazon US", "RENPHO", "Elis 1 Smart Scale", "四电极体脂秤", "#8", "$39.99", "4.6", "23,400", "价格 -18%", "促销", "L3", "转入需求"],
+                      ["Amazon US", "Withings", "Body Scan", "八电极体脂秤", "#24", "$99.00", "4.4", "8,920", "新增心率/血管年龄", "上新", "L4", "启动实物分析"],
+                      ["天猫", "华为", "智能体脂秤 3 Pro", "八电极体脂秤", "类目第3", "¥399", "4.8", "18,260", "618预售上升", "排名", "L3", "转入需求"],
+                      ["京东", "小米", "体脂秤 S400 Pro", "四电极体脂秤", "类目第5", "¥179", "4.7", "52,100", "低价型号放量", "价格", "L2", "继续监控"],
+                      ["独立站", "Wyze", "Scale X", "体脂秤", "自然流量上升", "$33.99", "4.2", "4,700", "套餐包上线", "上新", "L1", "继续监控"],
+                      ["抖音", "倍轻松", "M5 筋膜枪", "筋膜枪", "热销榜第7", "¥499", "4.6", "9,840", "达人视频曝光增加", "内容", "L3", "启动实物分析"],
+                    ].map((row) => {
+                      const needsAction = row[10] === "L3" || row[10] === "L4";
+                      return `<tr><td><span class="source-chip">${row[0]}</span></td><td>${row[1]}</td><td class="model-name">${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td class="${row[8].includes("-") ? "bad-text" : "good-text"}">${row[8]}</td><td>${row[9]}</td><td><span class="pill ${row[10] === "L4" ? "p1" : row[10] === "L3" ? "p2" : "p3"}">${row[10]}</span></td><td>${row[11]}</td><td>${needsAction ? `<button type="button" class="secondary-button" data-market-handle="${row[1]} ${row[2]}">处理</button>` : `<span class="local-status-pill">展示</span>`}</td></tr>`;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </section>
+            </div>
+          `;
+          const renderCompetitionHome = () => `
+            <section class="local-competition-workbench">
+              <div class="local-page-head">
+                <div>
+                  <h2>竞争分析</h2>
+                  <p>整合市场动态、舆情监测和竞品产品档案，支撑需求机会识别与产品策略判断。</p>
+                </div>
+                <div class="local-page-actions">
+                  <button type="button" class="primary-button" data-local-add-competitor>增加竞品</button>
+                </div>
+              </div>
+              <div class="local-competition-stats">
+                <article class="local-competition-stat"><span>本月新增竞品</span><strong>12</strong><em>直接竞争 7 / 间接竞争 5</em></article>
+                <article class="local-competition-stat"><span>触发提醒</span><strong>6</strong><em>价格、排名、差评、功能变化</em></article>
+                <article class="local-competition-stat"><span>实物/拆机分析</span><strong>3</strong><em>2 份体验报告，1 份拆机报告</em></article>
+                <article class="local-competition-stat"><span>转需求/异常</span><strong>4</strong><em>需求 3 / 紧急异常 1</em></article>
+              </div>
+              <div class="local-feedback-tabs" data-competition-tabs>
+                <button type="button" class="local-feedback-tab active" data-competition-tab="competitor">竞品信息</button>
+                <button type="button" class="local-feedback-tab" data-competition-tab="market">市场监控</button>
+                <button type="button" class="local-feedback-tab" data-competition-tab="opinion">舆情监测</button>
+              </div>
+              <div data-competition-panel>${renderCompetitorAnalysisPanel()}</div>
+            </section>
+          `;
+
+          pageBody.innerHTML = renderCompetitionHome();
+
+          pageBody.addEventListener("click", (event) => {
+            const addButton = event.target.closest("[data-local-add-competitor]");
+            if (addButton) {
               event.preventDefault();
               event.stopPropagation();
               openCompetitorModal();
-            });
-          }
-          document.querySelectorAll("[data-local-competitor-grid]").forEach((node) => node.remove());
+              return;
+            }
+            const tab = event.target.closest("[data-competition-tab]");
+            if (tab) {
+              pageBody.querySelectorAll("[data-competition-tab]").forEach((button) => button.classList.toggle("active", button === tab));
+              const panel = pageBody.querySelector("[data-competition-panel]");
+              if (!panel) return;
+              if (tab.dataset.competitionTab === "competitor") panel.innerHTML = renderCompetitorAnalysisPanel();
+              if (tab.dataset.competitionTab === "opinion") panel.innerHTML = renderOpinionPanel();
+              if (tab.dataset.competitionTab === "market") panel.innerHTML = renderMarketPanel();
+              return;
+            }
+            const closeCompareButton = event.target.closest("[data-close-compare]");
+            if (closeCompareButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              closeCompareButton.closest(".product-compare-drawer")?.setAttribute("hidden", "hidden");
+              return;
+            }
+            const openCompareButton = event.target.closest("[data-open-compare]");
+            if (openCompareButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              const panel = openCompareButton.closest(".product-info-layout")?.querySelector(".product-compare-drawer");
+              panel?.removeAttribute("hidden");
+              panel?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              return;
+            }
+            const exportButton = event.target.closest("[data-export-competitors]");
+            if (exportButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              openModal(`
+                <div class="local-modal">
+                  <div class="local-modal-head">
+                    <div><span>竞品信息导出</span><h2>按产品线导出</h2><p>导出竞品信息登记表中的竞品及所有字段。</p></div>
+                    <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                  </div>
+                  <div class="local-page-grid">
+                    ${[
+                      ["全部产品线", "导出当前竞品池内所有产品线、所有字段。"],
+                      ["八电极秤", "导出八电极秤竞品及基础信息、销售信息、参数、卖点、痛点等字段。"],
+                      ["体脂秤", "导出体脂秤竞品及基础信息、销售信息、参数、卖点、痛点等字段。"],
+                      ["筋膜枪", "导出筋膜枪竞品及基础信息、销售信息、参数、卖点、痛点等字段。"],
+                    ].map((item) => `<article class="local-module-card"><h3>${item[0]}</h3><p>${item[1]}</p><button type="button" class="secondary-button" data-local-close>导出</button></article>`).join("")}
+                  </div>
+                </div>
+              `);
+              bindModalClose();
+              return;
+            }
+            const categoryButton = event.target.closest("[data-product-category]");
+            if (categoryButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              const category = categoryButton.dataset.productCategory;
+              pageBody.querySelectorAll("[data-product-category]").forEach((button) => button.classList.toggle("active", button === categoryButton));
+              pageBody.querySelectorAll("[data-product-category-value]").forEach((card) => {
+                card.style.display = category === "全部" || card.dataset.productCategoryValue === category ? "" : "none";
+              });
+              return;
+            }
+            const backCompetitorListButton = event.target.closest("[data-back-competitor-list]");
+            if (backCompetitorListButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              pageBody.innerHTML = renderCompetitionHome();
+              return;
+            }
+            const archiveCompetitorButton = event.target.closest("[data-archive-competitor]");
+            if (archiveCompetitorButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              const item = compareProducts.find((product) => product.id === archiveCompetitorButton.dataset.archiveCompetitor);
+              if (!item) return;
+              item.archived = true;
+              item.registerFields = { ...(item.registerFields || {}), "信息状态": "已归档 / 停止监控" };
+              pageBody.innerHTML = `
+                <section class="local-competition-workbench local-competitor-secondary-page">
+                  ${renderCompetitorDetailPage(item)}
+                </section>
+              `;
+              pageBody.querySelector("[data-archive-competitor-slot]")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              return;
+            }
+            const startPhysicalButton = event.target.closest("[data-start-physical-analysis]");
+            if (startPhysicalButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              const item = compareProducts.find((product) => product.id === startPhysicalButton.dataset.startPhysicalAnalysis);
+              if (!item) return;
+              const slot = pageBody.querySelector("[data-physical-analysis-slot]");
+              if (slot && !slot.querySelector("[data-physical-analysis-section]")) {
+                slot.innerHTML = renderPhysicalAnalysisSection(item);
+              }
+              startPhysicalButton.textContent = "实物分析已启动";
+              startPhysicalButton.classList.add("secondary-button");
+              startPhysicalButton.classList.remove("primary-button");
+              pageBody.querySelector("[data-physical-analysis-section]")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              return;
+            }
+            const productCard = event.target.closest("[data-product-id]");
+            if (productCard) {
+              event.preventDefault();
+              event.stopPropagation();
+              const item = compareProducts.find((product) => product.id === productCard.dataset.productId);
+              if (!item) return;
+              pageBody.innerHTML = `
+                <section class="local-competition-workbench local-competitor-secondary-page">
+                  ${renderCompetitorDetailPage(item)}
+                </section>
+              `;
+              pageBody.scrollTo({ top: 0, behavior: "smooth" });
+              return;
+            }
+            const handleButton = event.target.closest("[data-market-handle]");
+            if (handleButton) {
+              event.preventDefault();
+              event.stopPropagation();
+              const target = handleButton.dataset.marketHandle;
+              openModal(`
+                <div class="local-modal">
+                  <div class="local-modal-head">
+                    <div><span>市场监控处理</span><h2>${escapeHtml(target)}</h2><p>L3/L4 触发提醒后，由产品经理选择处理方案。</p></div>
+                    <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                  </div>
+                  <div class="local-page-grid">
+                    ${[
+                      ["转紧急异常处理", "涉及安全、法规、合规、集中投诉或重大风险时进入紧急异常流程。"],
+                      ["启动实物分析", "线上信息不足或需验证结构、体验、包装、APP、配件时发起实物分析。"],
+                      ["转入需求", "形成明确产品或业务改进方向，进入需求池评审。"],
+                      ["解除监控并归档", "判断无持续价值或已完成跟踪时，保留记录后停止监控。"],
+                    ].map((item) => `<article class="local-module-card"><h3>${item[0]}</h3><p>${item[1]}</p><button type="button" class="secondary-button" data-local-close>选择</button></article>`).join("")}
+                  </div>
+                </div>
+              `);
+              bindModalClose();
+              return;
+            }
+            const previewButton = event.target.closest("[data-competition-preview]");
+            if (!previewButton) return;
+            const name = previewButton.dataset.competitionPreview;
+            openSimplePreviewModal(name, `
+              <div class="local-detail-grid">
+                <article><span>流程节点</span><strong>日常监控 / 触发判断 / 分流处理</strong></article>
+                <article><span>输出物</span><strong>${name.includes("报告") || name.includes("月报") ? name : "竞品处理记录"}</strong></article>
+                <article><span>归档要求</span><strong>保留来源、日期、截图、链接和附件</strong></article>
+              </div>
+              <div class="local-detail-block"><span>内容结构</span><strong>重点结论、竞品动态、用户反馈分析、拆机/体验分析、品牌影响评估、建议动作和下月重点关注。</strong></div>
+            `);
+          });
+          return true;
+        };
+
+        const openSimplePreviewModal = (title, body) => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>预览</span><h2>${escapeHtml(title)}</h2><p>用于原型评审，后续可接入真实导出文件。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-detail-section">${body}</div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>关闭</button>
+                <button type="button" class="primary-button" data-local-close>导出</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+        };
+
+        const enhanceReportPage = () => {
+          const title = document.querySelector("h1")?.textContent.trim();
+          if (title !== "报告中心") return false;
+          addStyles();
+          const pageBody = document.querySelector(".page-body");
+          if (!pageBody || pageBody.dataset.localReportReady === "true") return true;
+          pageBody.dataset.localReportReady = "true";
+          const reportCards = {
+            feedback: {
+              title: "用户反馈月报",
+              desc: "汇总反馈量、反馈率、差评率、问题分类、处理去向、退换货与重点案例。",
+              meta: ["2026-06", "每日 02:00 刷新", "月末冻结"],
+              rows: [["2026-06", "产品经理", "刷新中"], ["2026-05", "管理员", "已冻结"], ["2026-04", "管理员", "已归档"]],
+            },
+            competitor: {
+              title: "竞争分析月报",
+              desc: "汇总竞品新增、价格变化、渠道动向、产品参数对比和可转需求机会。",
+              meta: ["2026-06", "每日 03:00 刷新", "月末冻结"],
+              rows: [["2026-06", "产品经理", "刷新中"], ["2026-05", "产品经理", "已冻结"], ["2026-04", "管理员", "已归档"]],
+            },
+          };
+          const reportPanelHtml = (key) => {
+            const report = reportCards[key];
+            return `
+              <div class="local-page-grid">
+                <article class="local-module-card">
+                  <h3>${report.title}</h3>
+                  <p>${report.desc}</p>
+                  <div class="local-module-meta">${report.meta.map((item) => `<span>${item}</span>`).join("")}</div>
+                  <button type="button" class="secondary-button" data-report-preview="${report.title}">查看当前月报</button>
+                </article>
+                <article class="local-module-card">
+                  <h3>自动生成规则</h3>
+                  <p>系统每月 1 日自动创建当月报告；每日上午刷新数据；月末 24:00 冻结归档。</p>
+                  <div class="local-module-meta"><span>无需手动创建</span><span>自动刷新</span><span>冻结后只读</span></div>
+                </article>
+              </div>
+              <div class="local-report-list">
+                ${report.rows.map((row) => `
+                  <div class="local-report-row">
+                    <div><b>${report.title}</b><span>月度报告 / ${row[0]}</span></div>
+                    <div><b>${row[0]}</b><span>周期</span></div>
+                    <div><b>${row[1]}</b><span>负责人</span></div>
+                    <div><b>${row[2]}</b><span>状态</span></div>
+                    <button type="button" class="secondary-button" data-report-preview="${report.title}">查看</button>
+                  </div>
+                `).join("")}
+              </div>
+            `;
+          };
+          const competitorMonthlyReportHtml = () => `
+            <div class="local-detail-grid">
+              <article><span>报告周期</span><strong>2026-06</strong></article>
+              <article><span>报告类型</span><strong>竞争分析月报</strong></article>
+              <article><span>生成规则</span><strong>按产品线、品牌竞品/ODM竞品自动拆分</strong></article>
+              <article><span>状态</span><strong>每日刷新，月末冻结</strong></article>
+            </div>
+            <div class="local-detail-block"><span>核心摘要</span><strong>本月竞品在价格、渠道、功能组合和实物体验上变化明显；八电极秤重点关注高端功能和手柄电极方案，筋膜枪重点关注低价带、低噪音和冷热敷功能。</strong></div>
+            <table class="local-competition-table">
+              <thead><tr><th>产品线</th><th>竞品类型</th><th>新增/监控</th><th>关键变化</th><th>已触发处理</th><th>月报结论</th></tr></thead>
+              <tbody>
+                ${[
+                  ["八电极秤", "品牌竞品", "Withings / 华为", "新增心率、血管年龄、分段测量卖点；高端价位稳定", "启动实物分析 2；转需求 1", "继续监控高端定位，补充手柄电极、测量指标、APP报告字段对比"],
+                  ["八电极秤", "ODM竞品", "京东 ODM A12", "成交价下探，页面新增八电极卖点", "产品经理判断 1", "作为价格带和供应链方案参考，进入月度参数对比"],
+                  ["体脂秤", "品牌竞品", "RENPHO Elis 1", "近7天价格下降 18%，评论集中在连接与稳定性", "转入需求 1", "跟进入门价格带及APP稳定性机会点"],
+                  ["筋膜枪", "品牌竞品", "倍轻松 M5", "达人视频曝光增加，低噪音卖点上升", "启动实物分析 1", "补充体验报告，验证噪音、推力、档位和按摩头配置"],
+                  ["筋膜枪", "ODM竞品", "Mini Pro", "新品上市，热敷功能成为促销重点", "拆机报告 1", "归档结构和包装参考，形成热敷专项对标"],
+                ].map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}
+              </tbody>
+            </table>
+            <div class="local-page-grid two">
+              <article class="local-module-card"><h3>本月输出物</h3><p>竞品收集月报、实物分析报告、拆机分析报告、产品体验报告、专项对标报告。</p><div class="local-module-meta"><span>月初创建</span><span>每日刷新</span><span>月末冻结</span></div></article>
+              <article class="local-module-card"><h3>后续动作</h3><p>需继续监控 L1/L2；L3/L4 由产品经理选择转异常、启动实物分析、转需求或解除监控归档。</p><div class="local-module-meta"><span>产品经理负责</span><span>保留证据</span><span>结论可承接需求</span></div></article>
+            </div>
+          `;
+          pageBody.innerHTML = `
+            <section class="local-workspace-page">
+              <div class="local-page-head">
+                <div>
+                  <h2>报告中心</h2>
+                  <p>系统每月初自动创建两类月报，每日刷新，月末冻结；默认展示用户反馈月报。</p>
+                </div>
+              </div>
+              <div class="local-feedback-tabs" data-report-tabs>
+                <button type="button" class="local-feedback-tab active" data-report-tab="feedback">用户反馈月报</button>
+                <button type="button" class="local-feedback-tab" data-report-tab="competitor">竞争分析月报</button>
+              </div>
+              <div data-report-panel>${reportPanelHtml("feedback")}</div>
+            </section>
+          `;
+          pageBody.addEventListener("click", (event) => {
+            const tab = event.target.closest("[data-report-tab]");
+            if (tab) {
+              pageBody.querySelectorAll("[data-report-tab]").forEach((button) => button.classList.toggle("active", button === tab));
+              const panel = pageBody.querySelector("[data-report-panel]");
+              if (panel) panel.innerHTML = reportPanelHtml(tab.dataset.reportTab);
+              return;
+            }
+            const button = event.target.closest("[data-report-preview]");
+            if (!button) return;
+            const report = button.dataset.reportPreview;
+            if (report === "竞争分析月报") {
+              openSimplePreviewModal(report, competitorMonthlyReportHtml());
+              return;
+            }
+            openSimplePreviewModal(report, `
+              <div class="local-detail-grid">
+                <article><span>报告周期</span><strong>2026-06</strong></article>
+                <article><span>报告类型</span><strong>${escapeHtml(report)}</strong></article>
+                <article><span>状态</span><strong>已生成</strong></article>
+              </div>
+              <div class="local-detail-block"><span>核心摘要</span><strong>${report === "用户反馈月报" ? "本月重点关注无法开机、测量偏差、APP连接三类问题，建议优先沉淀标准回复和转需求评审。" : "本月竞品在价格、渠道和功能组合上变化明显，建议跟进八电极秤高端定位与筋膜枪低价带竞争。"}</strong></div>
+            `);
+          });
+          return true;
+        };
+
+        const enhanceQaPage = () => {
+          const title = document.querySelector("h1")?.textContent.trim();
+          if (title !== "Q&A/案例库") return false;
+          addStyles();
+          const pageBody = document.querySelector(".page-body");
+          if (!pageBody || pageBody.dataset.localQaReady === "true") return true;
+          pageBody.dataset.localQaReady = "true";
+          pageBody.innerHTML = `
+            <section class="local-workspace-page">
+              <div class="local-page-head">
+                <div><h2>Q&A/案例库</h2><p>沉淀标准回复、异常案例、使用指引和客服培训材料。</p></div>
+                <div class="local-page-actions">
+                  <button type="button" class="primary-button" data-qa-preview="新增Q&A">新增Q&A</button>
+                  <button type="button" class="secondary-button" data-qa-preview="导入材料">导入材料</button>
+                </div>
+              </div>
+              <div class="local-page-grid three">
+                <article class="local-module-card"><h3>常见问题标准回复</h3><p>按产品线、问题分类和渠道维护标准话术。</p><div class="local-module-meta"><span>86 条</span><span>本月新增 12</span></div></article>
+                <article class="local-module-card"><h3>异常案例归档</h3><p>沉淀 P0/P1 异常处理过程、根因、整改和验证结果。</p><div class="local-module-meta"><span>18 个案例</span><span>已归档</span></div></article>
+                <article class="local-module-card"><h3>产品使用视频指引</h3><p>管理视频链接、适用型号和客服可发送版本。</p><div class="local-module-meta"><span>24 个视频</span><span>8 个型号</span></div></article>
+              </div>
+              <table class="local-config-table">
+                <thead><tr><th>标题</th><th>类型</th><th>产品线</th><th>适用场景</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  ${[
+                    ["体脂秤无法开机标准回复", "标准回复", "八电极秤", "无法开机/更换电池无效", "已发布"],
+                    ["测量偏差排查案例", "异常案例", "八电极秤", "称重偏高5-8磅", "待复核"],
+                    ["筋膜枪噪音使用说明", "视频指引", "筋膜枪", "高档位噪音咨询", "已发布"],
+                    ["客服新人培训材料", "培训材料", "全产品线", "入职培训", "草稿"],
+                  ].map((row) => `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td><td><button type="button" class="secondary-button" data-qa-preview="${row[0]}">查看</button></td></tr>`).join("")}
+                </tbody>
+              </table>
+            </section>
+          `;
+          pageBody.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-qa-preview]");
+            if (!button) return;
+            if (button.dataset.qaPreview === "新增Q&A") {
+              openModal(`
+                <div class="local-modal">
+                  <div class="local-modal-head">
+                    <div><span>Q&A/案例库</span><h2>新增Q&A</h2><p>录入标准回复、异常案例、视频指引或培训材料。</p></div>
+                    <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                  </div>
+                  <div class="local-modal-grid">
+                    <label>标题<input data-qa-field="title" placeholder="例如 体脂秤无法开机标准回复" /></label>
+                    <label>类型<select data-qa-field="type"><option>标准回复</option><option>异常案例</option><option>视频指引</option><option>培训材料</option></select></label>
+                    <label>产品线<select data-qa-field="line"><option>八电极秤</option><option>体脂秤</option><option>筋膜枪</option><option>全产品线</option></select></label>
+                    <label>状态<select data-qa-field="status"><option>草稿</option><option>待复核</option><option>已发布</option></select></label>
+                    <label class="wide">适用场景<input data-qa-field="scenario" placeholder="例如 无法开机/更换电池无效" /></label>
+                    <label class="wide">说明<textarea data-qa-field="desc" placeholder="填写标准回复内容、案例过程、视频链接或培训说明"></textarea></label>
+                  </div>
+                  <div class="local-modal-actions">
+                    <button type="button" class="secondary-button" data-local-close>取消</button>
+                    <button type="button" class="primary-button" data-local-save-qa>保存</button>
+                  </div>
+                </div>
+              `);
+              bindModalClose();
+              document.querySelector("[data-local-save-qa]")?.addEventListener("click", closeModal);
+              return;
+            }
+            openSimplePreviewModal(button.dataset.qaPreview, '<div class="local-detail-block"><span>内容预览</span><strong>这里展示标准回复、案例归档或培训材料的详情，后续可接入富文本编辑和附件管理。</strong></div>');
+          });
+          return true;
+        };
+
+        const enhanceSettingsPage = () => {
+          const title = document.querySelector("h1")?.textContent.trim();
+          if (title !== "系统配置") return false;
+          addStyles();
+          const pageBody = document.querySelector(".page-body");
+          if (!pageBody || pageBody.dataset.localSettingsReady === "true") return true;
+          pageBody.dataset.localSettingsReady = "true";
+          pageBody.innerHTML = `
+            <section class="local-workspace-page">
+              <div class="local-page-head">
+                <div><h2>系统配置</h2><p>配置渠道、分类标签、角色权限和 SLA 规则。</p></div>
+                <div class="local-page-actions"><button type="button" class="primary-button" data-settings-preview="保存配置">保存配置</button></div>
+              </div>
+              <div class="local-page-grid three">
+                ${[
+                  ["渠道管理", "维护 Amazon、天猫、京东、抖音、APP、客服沟通等来源。", "7 个渠道"],
+                  ["分类标签", "维护一级职能、二级场景、三级具体问题。", "42 个标签"],
+                  ["角色权限", "配置管理员、产品经理、反馈人员的数据范围。", "4 个角色"],
+                  ["SLA规则", "配置反馈、工单、异常的响应和闭环时限。", "6 条规则"],
+                ].map((item) => `<article class="local-module-card"><h3>${item[0]}</h3><p>${item[1]}</p><div class="local-module-meta"><span>${item[2]}</span></div><button type="button" class="secondary-button" data-settings-preview="${item[0]}">配置</button></article>`).join("")}
+              </div>
+              <table class="local-config-table">
+                <thead><tr><th>配置项</th><th>当前值</th><th>状态</th><th>最近更新</th></tr></thead>
+                <tbody>
+                  <tr><td>异常临时方案时限</td><td>P0/P1 2h</td><td>启用</td><td>2026-06-22</td></tr>
+                  <tr><td>反馈默认去向</td><td>待处理</td><td>启用</td><td>2026-06-22</td></tr>
+                  <tr><td>竞品海外 ASIN 校验</td><td>必填</td><td>启用</td><td>2026-06-22</td></tr>
+                </tbody>
+              </table>
+            </section>
+          `;
+          pageBody.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-settings-preview]");
+            if (!button) return;
+            openSimplePreviewModal(button.dataset.settingsPreview, '<div class="local-detail-block"><span>配置说明</span><strong>当前为原型配置入口，后续接入后台接口后支持编辑、校验、保存和操作日志。</strong></div>');
+          });
           return true;
         };
 
@@ -3039,6 +4088,9 @@
               enhanceWorkOrderPage();
               enhanceEmergencyPage();
               enhanceCompetitionPage();
+              enhanceReportPage();
+              enhanceQaPage();
+              enhanceSettingsPage();
               setupUserSwitcher();
               syncNavLabels();
               const nativeDrawer = document.querySelector("aside.drawer");
@@ -3059,6 +4111,9 @@
           enhanceWorkOrderPage();
           enhanceEmergencyPage();
           enhanceCompetitionPage();
+          enhanceReportPage();
+          enhanceQaPage();
+          enhanceSettingsPage();
           setupUserSwitcher();
           syncNavLabels();
           document.addEventListener("click", (event) => {
@@ -3076,6 +4131,9 @@
             enhanceWorkOrderPage();
             enhanceEmergencyPage();
             enhanceCompetitionPage();
+            enhanceReportPage();
+            enhanceQaPage();
+            enhanceSettingsPage();
             syncNavLabels();
             return bindActions();
           } catch (error) {
