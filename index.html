@@ -1079,6 +1079,14 @@
             .local-workorder-steps span.done { border-color: #1f73e8; background: #1f73e8; color: #fff; }
             .local-workorder-step-label { display: block; margin-top: 4px; color: #475467; font-size: 12px; font-weight: 700; }
             .local-workorder-flow-panel { display: none !important; }
+            .local-workorder-filter-panel { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+            .local-workorder-filter-panel label { display: grid; gap: 6px; color: #344054; font-size: 13px; font-weight: 800; }
+            .local-workorder-filter-panel select { min-height: 40px; padding: 0 12px; border: 1px solid #c8d2df; border-radius: 8px; background: #fff; color: #101828; font-weight: 700; }
+            .local-workorder-summary { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
+            .local-workorder-summary article { padding: 14px 16px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
+            .local-workorder-summary span { display: block; color: #667085; font-size: 13px; font-weight: 800; }
+            .local-workorder-summary strong { display: block; margin-top: 6px; color: #101828; font-size: 26px; line-height: 1; }
+            .local-workorder-empty { padding: 28px 12px; text-align: center; color: #667085; font-weight: 800; }
             .local-workorder-detail-page { display: grid; gap: 18px; padding: 18px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px #10182814; }
             .local-workorder-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid #d7deea; }
             .local-workorder-detail-head h2 { margin: 0; color: #101828; font-size: 26px; line-height: 1.2; }
@@ -2351,8 +2359,6 @@
             </div>
             <div class="local-detail-grid">
               <article><span>当前处理人</span><strong>${escapeHtml(order.owner)}</strong></article>
-              <article><span>责任部门</span><strong>${escapeHtml(order.dept)}</strong></article>
-              <article><span>SLA剩余时间</span><strong>${escapeHtml(order.sla)}</strong></article>
               <article><span>处理状态</span><strong>${escapeHtml(order.status)}</strong></article>
               <article><span>处理去向</span><strong>${escapeHtml(getWorkOrderRoute(order))}</strong></article>
               <article><span>关闭原因</span><strong>${escapeHtml(order.closeReason)}</strong></article>
@@ -2443,24 +2449,88 @@
           const tbody = table?.querySelector("tbody");
           const theadRow = table?.querySelector("thead tr");
           if (!table || !tbody || !theadRow) return false;
-          const signature = localWorkOrders.map((order) => `${order.id}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|");
+          const tablePanel = table.closest(".panel, section");
+          const getOrderProductLine = (order) => {
+            const feedback = findFeedbackById(order.relatedFeedback);
+            if (feedback?.productLine) return feedback.productLine;
+            if (feedback?.type?.includes("八电极")) return "八电极产品线";
+            if (feedback?.type?.includes("筋膜")) return "筋膜枪产品线";
+            if (feedback?.type?.includes("人体")) return "人体秤产品线";
+            return "体脂秤产品线";
+          };
+          const uniqueValues = (values) => ["全部", ...Array.from(new Set(values.filter(Boolean)))];
+          const selectedFilters = {
+            productLine: document.querySelector("[data-workorder-filter='productLine']")?.value || "全部",
+            status: document.querySelector("[data-workorder-filter='status']")?.value || "全部",
+            owner: document.querySelector("[data-workorder-filter='owner']")?.value || "全部",
+          };
+          const productLineOptions = uniqueValues(localWorkOrders.map(getOrderProductLine));
+          const statusOptions = uniqueValues(localWorkOrders.map((order) => order.status));
+          const ownerOptions = uniqueValues(localWorkOrders.map((order) => order.owner));
+          const renderOptions = (options, current) => options.map((item) => `<option value="${escapeHtml(item)}"${item === current ? " selected" : ""}>${escapeHtml(item)}</option>`).join("");
+          let filterPanel = document.querySelector("[data-local-workorder-filters]");
+          if (!filterPanel && tablePanel) {
+            filterPanel = document.createElement("section");
+            filterPanel.className = "local-workorder-filter-panel";
+            filterPanel.dataset.localWorkorderFilters = "true";
+            tablePanel.parentElement.insertBefore(filterPanel, tablePanel);
+          }
+          if (filterPanel) {
+            filterPanel.innerHTML = `
+              <label>产品线<select data-workorder-filter="productLine">${renderOptions(productLineOptions, selectedFilters.productLine)}</select></label>
+              <label>状态<select data-workorder-filter="status">${renderOptions(statusOptions, selectedFilters.status)}</select></label>
+              <label>当前处理人<select data-workorder-filter="owner">${renderOptions(ownerOptions, selectedFilters.owner)}</select></label>
+            `;
+            filterPanel.querySelectorAll("select").forEach((select) => {
+              select.addEventListener("change", () => {
+                if (table) delete table.dataset.localWorkOrderSignature;
+                enhanceWorkOrderPage();
+              });
+            });
+          }
+          const filteredOrders = localWorkOrders.filter((order) => {
+            const productLine = getOrderProductLine(order);
+            return (selectedFilters.productLine === "全部" || productLine === selectedFilters.productLine)
+              && (selectedFilters.status === "全部" || order.status === selectedFilters.status)
+              && (selectedFilters.owner === "全部" || order.owner === selectedFilters.owner);
+          });
+          const summary = [
+            ["工单总数", filteredOrders.length],
+            ["处理中", filteredOrders.filter((order) => ["转工单", "处理中", "待确认"].includes(order.status)).length],
+            ["已闭环", filteredOrders.filter((order) => order.status === "已闭环" || order.status === "已关闭").length],
+            ["已转需求", filteredOrders.filter((order) => getWorkOrderRoute(order).includes("需求")).length],
+          ];
+          let summaryPanel = document.querySelector("[data-local-workorder-summary]");
+          if (!summaryPanel && tablePanel) {
+            summaryPanel = document.createElement("section");
+            summaryPanel.className = "local-workorder-summary";
+            summaryPanel.dataset.localWorkorderSummary = "true";
+            tablePanel.parentElement.insertBefore(summaryPanel, tablePanel);
+          }
+          if (summaryPanel) {
+            summaryPanel.innerHTML = summary.map(([label, value]) => `<article><span>${label}</span><strong>${value}</strong></article>`).join("");
+          }
+          const signature = [
+            selectedFilters.productLine,
+            selectedFilters.status,
+            selectedFilters.owner,
+            localWorkOrders.map((order) => `${order.id}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|"),
+          ].join("::");
           if (table.dataset.localWorkOrderSignature === signature) return true;
           table.dataset.localWorkOrderSignature = signature;
-          theadRow.innerHTML = ["工单ID", "关联反馈", "处理状态", "当前处理人", "责任部门", "SLA剩余时间", "处理结果", "关闭原因", "处理去向", "操作"].map((label) => `<th>${label}</th>`).join("");
-          tbody.innerHTML = localWorkOrders.map((order) => `
+          theadRow.innerHTML = ["工单ID", "关联反馈", "产品线", "处理状态", "当前处理人", "处理结果", "关闭原因", "操作"].map((label) => `<th>${label}</th>`).join("");
+          tbody.innerHTML = filteredOrders.length ? filteredOrders.map((order) => `
             <tr>
               <td>${order.id}</td>
               <td><button type="button" class="local-text-button" data-local-open-feedback="${escapeHtml(order.relatedFeedback)}">${escapeHtml(order.relatedFeedback)}</button></td>
+              <td>${escapeHtml(getOrderProductLine(order))}</td>
               <td>${order.status}</td>
               <td>${order.owner}</td>
-              <td>${order.dept}</td>
-              <td>${order.sla}</td>
               <td>${order.result}</td>
               <td>${order.closeReason}</td>
-              <td>${getWorkOrderRoute(order)}</td>
               <td><button type="button" class="secondary-button" data-local-workorder-detail="${escapeHtml(order.id)}">详情</button></td>
             </tr>
-          `).join("");
+          `).join("") : `<tr><td colspan="8" class="local-workorder-empty">暂无匹配的工单</td></tr>`;
           tbody.querySelectorAll("[data-local-workorder-detail]").forEach((button) => button.addEventListener("click", () => {
             const order = localWorkOrders.find((item) => item.id === button.dataset.localWorkorderDetail);
             if (order) openWorkOrderDetail(order);
