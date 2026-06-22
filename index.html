@@ -2397,6 +2397,16 @@
             </section>
           `;
         };
+        const createWorkOrderDetailSummary = (order) => {
+          const items = getWorkOrderFeedbackIds(order).map(findFeedbackById).filter(Boolean);
+          if (!items.length) return order.summary || order.result || "待补充工单摘要";
+          const issueNames = Array.from(new Set(items.map((item) => item.level3 || item.level2).filter(Boolean))).slice(0, 3).join("、");
+          const models = Array.from(new Set(items.map((item) => item.model || item.productType).filter(Boolean))).slice(0, 2).join("、");
+          const sources = Array.from(new Set(items.map((item) => item.source).filter(Boolean))).slice(0, 2).join("、");
+          const sample = items[0].ai || items[0].raw || "";
+          const prefix = items.length > 1 ? `AI已归并${items.length}条关联反馈` : "AI已分析关联反馈";
+          return `${prefix}，主要集中在${models || "相关产品"}的${issueNames || "用户反馈问题"}；来源包含${sources || "反馈清单"}。${sample ? `典型问题：${sample}` : ""}`;
+        };
         const getWorkOrderRoute = (order) => {
           if (order.status === "已关闭") return "直接关闭";
           if (order.exception === "是") return "已转异常";
@@ -2439,12 +2449,8 @@
               <article><span>关闭原因</span><strong>${escapeHtml(order.closeReason)}</strong></article>
             </div>
             <div class="local-detail-block">
-              <span>工单流程</span>
-              ${workOrderProgressHtml(order)}
-            </div>
-            <div class="local-detail-block">
-              <span>处理结果</span>
-              <strong>${escapeHtml(order.result)}</strong>
+              <span>AI自动摘要</span>
+              <strong>${escapeHtml(createWorkOrderDetailSummary(order))}</strong>
             </div>
             ${workOrderFeedbackDetailsHtml(order)}
             <div class="local-workorder-detail-actions">
