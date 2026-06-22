@@ -3898,7 +3898,7 @@
               rows: [["2026-06", "产品经理", "刷新中"], ["2026-05", "管理员", "已冻结"], ["2026-04", "管理员", "已归档"]],
             },
             competitor: {
-              title: "竞争分析月报",
+              title: "竞品分析月报",
               desc: "汇总竞品新增、价格变化、渠道动向、产品参数对比和可转需求机会。",
               meta: ["2026-06", "每日 03:00 刷新", "月末冻结"],
               rows: [["2026-06", "产品经理", "刷新中"], ["2026-05", "产品经理", "已冻结"], ["2026-04", "管理员", "已归档"]],
@@ -3933,31 +3933,105 @@
               </div>
             `;
           };
-          const competitorMonthlyReportHtml = () => `
-            <div class="local-detail-grid">
-              <article><span>报告周期</span><strong>2026-06</strong></article>
-              <article><span>报告类型</span><strong>竞争分析月报</strong></article>
-              <article><span>生成规则</span><strong>按产品线、品牌竞品/ODM竞品自动拆分</strong></article>
-              <article><span>状态</span><strong>每日刷新，月末冻结</strong></article>
-            </div>
-            <div class="local-detail-block"><span>核心摘要</span><strong>本月竞品在价格、渠道、功能组合和实物体验上变化明显；八电极秤重点关注高端功能和手柄电极方案，筋膜枪重点关注低价带、低噪音和冷热敷功能。</strong></div>
-            <table class="local-competition-table">
-              <thead><tr><th>产品线</th><th>竞品类型</th><th>新增/监控</th><th>关键变化</th><th>已触发处理</th><th>月报结论</th></tr></thead>
-              <tbody>
-                ${[
-                  ["八电极秤", "品牌竞品", "Withings / 华为", "新增心率、血管年龄、分段测量卖点；高端价位稳定", "启动实物分析 2；转需求 1", "继续监控高端定位，补充手柄电极、测量指标、APP报告字段对比"],
-                  ["八电极秤", "ODM竞品", "京东 ODM A12", "成交价下探，页面新增八电极卖点", "产品经理判断 1", "作为价格带和供应链方案参考，进入月度参数对比"],
-                  ["体脂秤", "品牌竞品", "RENPHO Elis 1", "近7天价格下降 18%，评论集中在连接与稳定性", "转入需求 1", "跟进入门价格带及APP稳定性机会点"],
-                  ["筋膜枪", "品牌竞品", "倍轻松 M5", "达人视频曝光增加，低噪音卖点上升", "启动实物分析 1", "补充体验报告，验证噪音、推力、档位和按摩头配置"],
-                  ["筋膜枪", "ODM竞品", "Mini Pro", "新品上市，热敷功能成为促销重点", "拆机报告 1", "归档结构和包装参考，形成热敷专项对标"],
-                ].map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}
-              </tbody>
-            </table>
-            <div class="local-page-grid two">
-              <article class="local-module-card"><h3>本月输出物</h3><p>竞品收集月报、实物分析报告、拆机分析报告、产品体验报告、专项对标报告。</p><div class="local-module-meta"><span>月初创建</span><span>每日刷新</span><span>月末冻结</span></div></article>
-              <article class="local-module-card"><h3>后续动作</h3><p>需继续监控 L1/L2；L3/L4 由产品经理选择转异常、启动实物分析、转需求或解除监控归档。</p><div class="local-module-meta"><span>产品经理负责</span><span>保留证据</span><span>结论可承接需求</span></div></article>
-            </div>
-          `;
+          const competitorMonthlyReportHtml = () => {
+            const reportLines = [
+              {
+                key: "eight",
+                name: "八电极秤",
+                summary: "八电极秤本月重点关注高端功能、手柄电极、测量指标和APP报告字段，品牌竞品用于定位判断，ODM竞品用于成本和供应链方案参考。",
+                brand: [
+                  ["Withings Body Scan", "品牌官网 / Amazon详情页", "新增心率、血管年龄、分段身体成分等高端卖点", "L4 已启动实物分析 2", "补充手柄电极、测量指标、APP报告字段对比", "拆机报告、体验报告"],
+                  ["华为 智能体脂秤 3 Pro", "天猫 / 京东 / 抖音", "618预售排名上升，八电极分段测量强化健康管理表达", "L3 已转入需求 1", "跟进高频卖点和价格带变化，进入需求机会池", "月报归档、需求评审"],
+                ],
+                odm: [
+                  ["京东 ODM A12", "京东页面 / 供应链报价", "成交价下探，页面新增八电极卖点", "L3 产品经理判断 1", "作为价格带和供应链方案参考，纳入月度参数对比", "参数对比表、报价记录"],
+                  ["ODM X8 Pro", "1688 / 供应商资料", "支持手柄电极和Wi-Fi/Bluetooth，续航规格接近标杆产品", "L2 默认继续监控", "暂不处理，持续观察页面更新和价格波动", "监控记录"],
+                ],
+              },
+              {
+                key: "fat",
+                name: "体脂秤",
+                summary: "体脂秤本月重点关注入门价格带、APP连接稳定性、家庭多人场景和促销节奏，优先沉淀价格与评论变化。",
+                brand: [
+                  ["RENPHO Elis 1 Smart Scale", "Amazon US / Walmart", "近7天价格下降18%，评论集中在连接与稳定性", "L3 已转入需求 1", "跟进入门价格带及APP稳定性机会点", "需求机会记录"],
+                  ["Wyze Scale X", "独立站 / Amazon", "套装包上线，自然流量上升", "L1 系统自动关闭", "未处理，系统自动关闭；保留为渠道监控样本", "自动归档记录"],
+                ],
+                odm: [
+                  ["ODM Basic S400", "京东 / 供应商资料", "低价型号放量，基础测脂功能成为促销入口", "L2 默认继续监控", "观察入门价格带和评论结构，不触发人工处理", "价格带监控表"],
+                ],
+              },
+              {
+                key: "massage",
+                name: "筋膜枪",
+                summary: "筋膜枪本月重点关注低价带、低噪音、冷热敷功能、推力档位和按摩头配置，实物分析用于验证宣传卖点真实性。",
+                brand: [
+                  ["倍轻松 M5", "抖音 / 天猫", "达人视频曝光增加，低噪音卖点上升", "L3 已启动实物分析 1", "补充体验报告，验证噪音、推力、档位和按摩头配置", "体验报告"],
+                  ["Hypervolt Go 2", "Amazon / 独立站", "高端价位稳定，强调轻量和静音体验", "L2 默认继续监控", "持续对标重量、噪音和续航表达", "月度监控记录"],
+                ],
+                odm: [
+                  ["Mini Pro", "天猫 / 抖音", "新品上市，热敷功能成为促销重点", "L4 已触发拆机报告 1", "归档结构和包装参考，形成热敷专项对标", "拆机报告"],
+                  ["ODM Hot Mini", "供应商资料", "冷热敷模块报价下降，包装方案可复用", "L3 已提醒产品经理", "待判断是否进入专项对标", "供应商记录"],
+                ],
+              },
+            ];
+            const tableHtml = (rows) => `
+              <table class="local-competition-table">
+                <thead><tr><th>竞品对象</th><th>信息来源</th><th>关键变化</th><th>触发处理</th><th>月报结论</th><th>输出物</th></tr></thead>
+                <tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
+              </table>
+            `;
+            return `
+              <div class="local-detail-grid">
+                <article><span>报告周期</span><strong>2026-06</strong></article>
+                <article><span>报告类型</span><strong>竞品分析月报</strong></article>
+                <article><span>生成规则</span><strong>先按产品线生成，再拆分品牌竞品月报/ODM竞品月报</strong></article>
+                <article><span>状态</span><strong>每日刷新，月末冻结</strong></article>
+              </div>
+              <div class="local-feedback-tabs" data-competitor-report-line-tabs>
+                ${reportLines.map((line, index) => `<button type="button" class="local-feedback-tab ${index === 0 ? "active" : ""}" data-competitor-report-line="${line.key}">${line.name}月报</button>`).join("")}
+              </div>
+              ${reportLines.map((line, index) => `
+                <section class="local-report-line-panel" data-competitor-report-line-panel="${line.key}" ${index === 0 ? "" : "hidden"}>
+                  <div class="local-detail-block"><span>${line.name}核心摘要</span><strong>${line.summary}</strong></div>
+                  <div class="local-feedback-tabs" data-competitor-report-type-tabs>
+                    <button type="button" class="local-feedback-tab active" data-competitor-report-type="brand">品牌竞品月报</button>
+                    <button type="button" class="local-feedback-tab" data-competitor-report-type="odm">ODM竞品月报</button>
+                  </div>
+                  <div data-competitor-report-type-panel="brand">${tableHtml(line.brand)}</div>
+                  <div data-competitor-report-type-panel="odm" hidden>${tableHtml(line.odm)}</div>
+                </section>
+              `).join("")}
+              <div class="local-page-grid two">
+                <article class="local-module-card"><h3>本月输出物</h3><p>按产品线分别沉淀竞品收集月报、品牌竞品月报、ODM竞品月报、实物分析报告、拆机分析报告和产品体验报告。</p><div class="local-module-meta"><span>月初创建</span><span>每日刷新</span><span>月末冻结</span></div></article>
+                <article class="local-module-card"><h3>归档与承接</h3><p>L1/L2 默认继续监控或系统自动关闭；L3/L4 由产品经理选择转异常、启动实物分析、转需求或解除监控归档。</p><div class="local-module-meta"><span>保留证据</span><span>按产品线归档</span><span>结论承接需求</span></div></article>
+              </div>
+            `;
+          };
+          const bindCompetitorReportTabs = () => {
+            const modal = document.querySelector(".local-modal");
+            if (!modal || modal.dataset.competitorReportTabsReady === "true") return;
+            modal.dataset.competitorReportTabsReady = "true";
+            modal.addEventListener("click", (event) => {
+              const lineTab = event.target.closest("[data-competitor-report-line]");
+              if (lineTab) {
+                const line = lineTab.dataset.competitorReportLine;
+                modal.querySelectorAll("[data-competitor-report-line]").forEach((button) => button.classList.toggle("active", button === lineTab));
+                modal.querySelectorAll("[data-competitor-report-line-panel]").forEach((panel) => {
+                  panel.hidden = panel.dataset.competitorReportLinePanel !== line;
+                });
+                return;
+              }
+              const typeTab = event.target.closest("[data-competitor-report-type]");
+              if (!typeTab) return;
+              const section = typeTab.closest("[data-competitor-report-line-panel]");
+              if (!section) return;
+              const type = typeTab.dataset.competitorReportType;
+              section.querySelectorAll("[data-competitor-report-type]").forEach((button) => button.classList.toggle("active", button === typeTab));
+              section.querySelectorAll("[data-competitor-report-type-panel]").forEach((panel) => {
+                panel.hidden = panel.dataset.competitorReportTypePanel !== type;
+              });
+            });
+          };
           pageBody.innerHTML = `
             <section class="local-workspace-page">
               <div class="local-page-head">
@@ -3968,7 +4042,7 @@
               </div>
               <div class="local-feedback-tabs" data-report-tabs>
                 <button type="button" class="local-feedback-tab active" data-report-tab="feedback">用户反馈月报</button>
-                <button type="button" class="local-feedback-tab" data-report-tab="competitor">竞争分析月报</button>
+                <button type="button" class="local-feedback-tab" data-report-tab="competitor">竞品分析月报</button>
               </div>
               <div data-report-panel>${reportPanelHtml("feedback")}</div>
             </section>
@@ -3984,8 +4058,9 @@
             const button = event.target.closest("[data-report-preview]");
             if (!button) return;
             const report = button.dataset.reportPreview;
-            if (report === "竞争分析月报") {
+            if (report === "竞品分析月报" || report === "竞争分析月报") {
               openSimplePreviewModal(report, competitorMonthlyReportHtml());
+              bindCompetitorReportTabs();
               return;
             }
             openSimplePreviewModal(report, `
