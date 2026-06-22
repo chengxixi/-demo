@@ -3144,7 +3144,7 @@
 
         const enhanceCompetitionPage = (force = false) => {
           const title = document.querySelector("h1")?.textContent.trim();
-          if (title !== "竞争分析") return false;
+          if (title !== "竞品分析" && title !== "竞争分析") return false;
           addStyles();
           const pageBody = document.querySelector(".page-body");
           if (!pageBody) return false;
@@ -3658,7 +3658,7 @@
             <section class="local-competition-workbench">
               <div class="local-page-head">
                 <div>
-                  <h2>竞争分析</h2>
+                  <h2>竞品分析</h2>
                   <p>整合市场动态、舆情监测和竞品产品档案，支撑需求机会识别与产品策略判断。</p>
                 </div>
                 <div class="local-page-actions">
