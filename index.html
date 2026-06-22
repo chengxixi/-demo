@@ -3635,19 +3635,31 @@
               </div>
               <section class="panel table-panel wide-market-table">
                 <div class="panel-title">跨平台竞品动态</div>
+                <div class="local-feedback-tabs" data-market-status-tabs>
+                  <button type="button" class="local-feedback-tab active" data-market-status-tab="all">全部</button>
+                  <button type="button" class="local-feedback-tab" data-market-status-tab="pending">待处理</button>
+                  <button type="button" class="local-feedback-tab" data-market-status-tab="done">已完成</button>
+                </div>
                 <table class="data-table">
                   <thead><tr><th>平台</th><th>品牌</th><th>产品</th><th>类别</th><th>排名</th><th>价格</th><th>评分</th><th>评论数</th><th>变化</th><th>事件</th><th>触发</th><th>最新处理方案</th><th>操作</th></tr></thead>
                   <tbody>
                     ${[
-                      ["Amazon US", "RENPHO", "Elis 1 Smart Scale", "四电极体脂秤", "#8", "$39.99", "4.6", "23,400", "价格 -18%", "促销", "L3", "转入需求"],
-                      ["Amazon US", "Withings", "Body Scan", "八电极体脂秤", "#24", "$99.00", "4.4", "8,920", "新增心率/血管年龄", "上新", "L4", "启动实物分析"],
-                      ["天猫", "华为", "智能体脂秤 3 Pro", "八电极体脂秤", "类目第3", "¥399", "4.8", "18,260", "618预售上升", "排名", "L3", "转入需求"],
-                      ["京东", "小米", "体脂秤 S400 Pro", "四电极体脂秤", "类目第5", "¥179", "4.7", "52,100", "低价型号放量", "价格", "L2", "继续监控"],
-                      ["独立站", "Wyze", "Scale X", "体脂秤", "自然流量上升", "$33.99", "4.2", "4,700", "套餐包上线", "上新", "L1", "继续监控"],
-                      ["抖音", "倍轻松", "M5 筋膜枪", "筋膜枪", "热销榜第7", "¥499", "4.6", "9,840", "达人视频曝光增加", "内容", "L3", "启动实物分析"],
+                      { platform: "Amazon US", brand: "RENPHO", product: "Elis 1 Smart Scale", category: "四电极体脂秤", rank: "#8", price: "$39.99", rating: "4.6", reviews: "23,400", change: "价格 -18%", event: "促销", trigger: "L3", plan: "转入需求", handled: true, date: "2026-06-18" },
+                      { platform: "Amazon US", brand: "Withings", product: "Body Scan", category: "八电极体脂秤", rank: "#24", price: "$99.00", rating: "4.4", reviews: "8,920", change: "新增心率/血管年龄", event: "上新", trigger: "L4", plan: "启动实物分析", handled: true, date: "2026-06-18" },
+                      { platform: "天猫", brand: "华为", product: "智能体脂秤 3 Pro", category: "八电极体脂秤", rank: "类目第3", price: "¥399", rating: "4.8", reviews: "18,260", change: "618预售上升", event: "排名", trigger: "L3", plan: "转入需求", handled: true, date: "2026-06-19" },
+                      { platform: "京东", brand: "小米", product: "体脂秤 S400 Pro", category: "四电极体脂秤", rank: "类目第5", price: "¥179", rating: "4.7", reviews: "52,100", change: "低价型号放量", event: "价格", trigger: "L2", plan: "", handled: false, date: "2026-06-10" },
+                      { platform: "独立站", brand: "Wyze", product: "Scale X", category: "体脂秤", rank: "自然流量上升", price: "$33.99", rating: "4.2", reviews: "4,700", change: "套餐包上线", event: "上新", trigger: "L1", plan: "", handled: false, date: "2026-06-12" },
+                      { platform: "抖音", brand: "倍轻松", product: "M5 筋膜枪", category: "筋膜枪", rank: "热销榜第7", price: "¥499", rating: "4.6", reviews: "9,840", change: "达人视频曝光增加", event: "内容", trigger: "L3", plan: "", handled: false, date: "2026-06-21" },
                     ].map((row) => {
-                      const needsAction = row[10] === "L3" || row[10] === "L4";
-                      return `<tr><td><span class="source-chip">${row[0]}</span></td><td>${row[1]}</td><td class="model-name">${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td><td>${row[5]}</td><td>${row[6]}</td><td>${row[7]}</td><td class="${row[8].includes("-") ? "bad-text" : "good-text"}">${row[8]}</td><td>${row[9]}</td><td><span class="pill ${row[10] === "L4" ? "p1" : row[10] === "L3" ? "p2" : "p3"}">${row[10]}</span></td><td>${row[11]}</td><td>${needsAction ? `<button type="button" class="secondary-button" data-market-handle="${row[1]} ${row[2]}">处理</button>` : `<span class="local-status-pill">展示</span>`}</td></tr>`;
+                      const ageDays = Math.floor((new Date("2026-06-22") - new Date(row.date)) / 86400000);
+                      const needsAction = row.trigger === "L3" || row.trigger === "L4";
+                      const autoDone = !row.handled && ageDays >= 7;
+                      const status = row.handled || autoDone || !needsAction ? "done" : "pending";
+                      const plan = row.handled ? row.plan : autoDone ? "未处理，系统自动关闭" : "未处理";
+                      const action = status === "pending"
+                        ? `<button type="button" class="secondary-button" data-market-handle="${row.brand} ${row.product}">处理</button>`
+                        : `<span class="local-status-pill">${autoDone ? "自动完成" : "已完成"}</span>`;
+                      return `<tr data-market-status="${status}"><td><span class="source-chip">${row.platform}</span></td><td>${row.brand}</td><td class="model-name">${row.product}</td><td>${row.category}</td><td>${row.rank}</td><td>${row.price}</td><td>${row.rating}</td><td>${row.reviews}</td><td class="${row.change.includes("-") ? "bad-text" : "good-text"}">${row.change}</td><td>${row.event}</td><td><span class="pill ${row.trigger === "L4" ? "p1" : row.trigger === "L3" ? "p2" : "p3"}">${row.trigger}</span></td><td>${plan}</td><td>${action}</td></tr>`;
                     }).join("")}
                   </tbody>
                 </table>
@@ -3801,6 +3813,18 @@
                 </section>
               `;
               pageBody.scrollTo({ top: 0, behavior: "smooth" });
+              return;
+            }
+            const statusTab = event.target.closest("[data-market-status-tab]");
+            if (statusTab) {
+              event.preventDefault();
+              event.stopPropagation();
+              const value = statusTab.dataset.marketStatusTab;
+              const tabs = statusTab.closest("[data-market-status-tabs]");
+              tabs?.querySelectorAll("[data-market-status-tab]").forEach((button) => button.classList.toggle("active", button === statusTab));
+              pageBody.querySelectorAll("[data-market-status]").forEach((row) => {
+                row.hidden = value !== "all" && row.dataset.marketStatus !== value;
+              });
               return;
             }
             const handleButton = event.target.closest("[data-market-handle]");
