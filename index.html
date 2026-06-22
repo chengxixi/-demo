@@ -991,9 +991,9 @@
           },
         ];
         const localWorkOrders = [
-          { id: "TK-20260611-0342", relatedFeedback: "FB-20260611-00122", status: "处理中", owner: "王工", dept: "产品部", sla: "18h 22m", result: "分析测量日志", closeReason: "-", exception: "否", requirement: "预留", step: 3 },
-          { id: "TK-20260611-0339", relatedFeedback: "FB-20260611-00121", status: "待确认", owner: "刘工", dept: "研发部", sla: "31h 10m", result: "APP版本兼容排查", closeReason: "-", exception: "否", requirement: "否", step: 4 },
-          { id: "TK-20260610-0318", relatedFeedback: "FB-20260610-00117", status: "已闭环", owner: "孙工", dept: "产品部", sla: "完成", result: "补充使用指导与Listing说明", closeReason: "已回复", exception: "否", requirement: "预留", step: 5 },
+          { id: "TK-20260611-0342", summary: "体脂测量不稳定问题排查", relatedFeedback: "FB-20260611-00122", feedbackIds: ["FB-20260611-00122"], status: "处理中", owner: "王工", dept: "产品部", sla: "18h 22m", result: "分析测量日志", closeReason: "-", exception: "否", requirement: "预留", step: 3 },
+          { id: "TK-20260611-0339", summary: "APP同步闪退兼容性排查", relatedFeedback: "FB-20260611-00121", feedbackIds: ["FB-20260611-00121"], status: "待确认", owner: "刘工", dept: "研发部", sla: "31h 10m", result: "APP版本兼容排查", closeReason: "-", exception: "否", requirement: "否", step: 4 },
+          { id: "TK-20260610-0318", summary: "筋膜枪力度不足说明与体验优化", relatedFeedback: "FB-20260610-00117", feedbackIds: ["FB-20260610-00117"], status: "已闭环", owner: "孙工", dept: "产品部", sla: "完成", result: "补充使用指导与Listing说明", closeReason: "已回复", exception: "否", requirement: "预留", step: 5 },
         ];
         const localEmergencyExceptions = [
           { id: "P1-20260611-008", level: "P1", region: "海外", site: "Amazon", productLine: "八电极秤", internal: "GE31002B1-CS", creator: "陈晨", dimension: "平台合规", source: "投诉/舆情", deadline: "已超时 2h", reminderLimit: "2h", reminderDeadline: "2026-06-05 12:00", overdue: true, owner: "陈总", team: "海外运营+产品经理", status: "临时方案超时", issue: "玻璃碎裂投诉连续上升", impactScope: "GE31002B1-CS 批次 2026Q1，约500台", action: "隔离相关批次，检查包装防护", feedback: "CS-20260618-合并（2条数据）", tempPlan: "", rootCause: "待根因分析", fixPlan: "待整改措施", verifyResult: "待验证", step: 0 },
@@ -1441,11 +1441,29 @@
         const getCurrentGroups = () => buildMergedFeedback([]);
         const findMergeGroupById = (id) => getCurrentGroups().find((group) => group.members.length > 1 && group.members.some((member) => member.data.id === id));
         const getWorkOrderId = (data) => `TK-${(data.id.match(/\d{8}/)?.[0] || "20260618")}-${data.id.replace(/\D/g, "").slice(-4)}`;
+        const getWorkOrderFeedbackIds = (order) => order.feedbackIds || String(order.relatedFeedback || "").split(/[、,/\s]+/).filter(Boolean);
+        const createAiWorkOrderSummary = (items) => {
+          const validItems = items.filter(Boolean);
+          if (!validItems.length) return "待补充工单摘要";
+          const first = validItems[0];
+          const issue = first.level3 || first.level2 || "反馈问题";
+          const product = first.model || first.productType || "产品";
+          if (validItems.length === 1) return `${product}${issue}处理`;
+          const sources = Array.from(new Set(validItems.map((item) => item.source).filter(Boolean))).slice(0, 2).join("、");
+          return `${product}${issue}等${validItems.length}条反馈合并处理${sources ? `（${sources}）` : ""}`;
+        };
+        const getMergedWorkOrderId = (items) => {
+          const first = items[0] || {};
+          const date = first.id?.match(/\d{8}/)?.[0] || "20260618";
+          return `TK-${date}-${String(localWorkOrders.length + 1).padStart(4, "0")}`;
+        };
         const addWorkOrderFromFeedback = (data) => {
-          if (!data || localWorkOrders.some((item) => item.relatedFeedback === data.id)) return;
+          if (!data || localWorkOrders.some((item) => getWorkOrderFeedbackIds(item).includes(data.id))) return;
           localWorkOrders.unshift({
             id: getWorkOrderId(data),
+            summary: createAiWorkOrderSummary([data]),
             relatedFeedback: data.id,
+            feedbackIds: [data.id],
             status: "转工单",
             owner: data.handler || "待分派",
             dept: getProductLineCode(data) === "CM" ? "筋膜枪产品线" : "八电极产品线",
@@ -1457,12 +1475,40 @@
             step: 1,
           });
         };
+        const addMergedWorkOrderFromFeedbacks = (items) => {
+          const validItems = items.filter(Boolean);
+          if (!validItems.length) return;
+          if (validItems.length === 1) {
+            addWorkOrderFromFeedback(validItems[0]);
+            return;
+          }
+          const ids = validItems.map((item) => item.id);
+          const sortedKey = ids.slice().sort().join("|");
+          if (localWorkOrders.some((order) => getWorkOrderFeedbackIds(order).slice().sort().join("|") === sortedKey)) return;
+          const first = validItems[0];
+          localWorkOrders.unshift({
+            id: getMergedWorkOrderId(validItems),
+            summary: createAiWorkOrderSummary(validItems),
+            relatedFeedback: `${getProductLineCode(first)}-${first.id.match(/\d{8}/)?.[0] || "20260618"}-合并（${validItems.length}条数据）`,
+            feedbackIds: ids,
+            status: "转工单",
+            owner: currentUser.name === "管理员" ? "管理员" : currentUser.name,
+            dept: getProductLineCode(first) === "CM" ? "筋膜枪产品线" : "八电极产品线",
+            sla: "48h 00m",
+            result: first.level3 || "待补充处理方案",
+            closeReason: "-",
+            exception: "否",
+            requirement: "否",
+            step: 1,
+          });
+        };
         const updateWorkOrderFromFeedback = (data) => {
           if (data?.processRoute !== "已转工单") return;
           addWorkOrderFromFeedback(data);
-          const order = localWorkOrders.find((item) => item.relatedFeedback === data.id);
+          const order = localWorkOrders.find((item) => getWorkOrderFeedbackIds(item).includes(data.id));
           if (order) {
             order.owner = data.handler || order.owner;
+            order.summary = order.summary || createAiWorkOrderSummary([data]);
             order.result = data.level3 || order.result;
           }
         };
@@ -2266,6 +2312,8 @@
         const applyBatchRoute = (route) => {
           const ids = getSelectedFeedbackIds();
           if (!ids.length) return;
+          const workOrderTargets = [];
+          const seenTargetIds = new Set();
           ids.forEach((id) => {
             const group = findMergeGroupById(id);
             const targets = group ? group.members.map((member) => member.data) : [findFeedbackById(id)];
@@ -2274,10 +2322,14 @@
               data.processRoute = route;
               data.processState = "已处理";
               data.handler = currentUser.name === "管理员" ? "管理员" : currentUser.name;
-              if (route === "已转工单") addWorkOrderFromFeedback(data);
+              if (route === "已转工单" && !seenTargetIds.has(data.id)) {
+                seenTargetIds.add(data.id);
+                workOrderTargets.push(data);
+              }
               if (route === "已转异常") data.mergeGroup = "";
             });
           });
+          if (route === "已转工单") addMergedWorkOrderFromFeedbacks(workOrderTargets);
           closeDetailDrawer();
           refreshFeedbackTable();
           enhanceWorkOrderPage();
@@ -2322,6 +2374,29 @@
             ` : `<p class="local-feedback-sub">未在当前反馈清单中匹配到关联反馈，可返回反馈清单按编号查询。</p>`}
           </section>
         `;
+        const workOrderFeedbackLinksHtml = (order) => {
+          const ids = getWorkOrderFeedbackIds(order);
+          if (ids.length <= 1) return `<button type="button" class="local-text-button" data-local-open-feedback="${escapeHtml(ids[0] || order.relatedFeedback)}">${escapeHtml(order.relatedFeedback)}</button>`;
+          return `<div class="local-merge-detail-list">${ids.map((id) => `<button type="button" class="local-text-button" data-local-open-feedback="${escapeHtml(id)}">${escapeHtml(id)}</button>`).join("")}</div>`;
+        };
+        const workOrderFeedbackDetailsHtml = (order) => {
+          const items = getWorkOrderFeedbackIds(order).map(findFeedbackById).filter(Boolean);
+          if (items.length <= 1) return feedbackDetailHtml(items[0] || findFeedbackById(order.relatedFeedback));
+          return `
+            <section class="panel">
+              <div class="panel-title">关联反馈单详细信息（${items.length}条）</div>
+              <div class="local-merge-detail-list">
+                ${items.map((feedback) => `
+                  <article class="local-merge-detail-card">
+                    <h3>${escapeHtml(feedback.id)} / ${escapeHtml(feedback.level3 || feedback.level2 || "-")}</h3>
+                    <p>${escapeHtml(feedback.ai || feedback.raw || "-")}</p>
+                    <p>来源：${escapeHtml(feedback.source)} / 型号：${escapeHtml(feedback.model)} / 处理人：${escapeHtml(feedback.handler)}</p>
+                  </article>
+                `).join("")}
+              </div>
+            </section>
+          `;
+        };
         const getWorkOrderRoute = (order) => {
           if (order.status === "已关闭") return "直接关闭";
           if (order.exception === "是") return "已转异常";
@@ -2340,7 +2415,6 @@
         const openWorkOrderDetail = (order) => {
           const pageBody = document.querySelector(".page-body");
           if (!pageBody) return;
-          const relatedFeedback = findFeedbackById(order.relatedFeedback);
           closeWorkOrderDetail();
           Array.from(pageBody.children).forEach((node) => {
             node.hidden = true;
@@ -2358,6 +2432,7 @@
               <button type="button" class="secondary-button" data-local-workorder-back>返回列表</button>
             </div>
             <div class="local-detail-grid">
+              <article><span>AI工单摘要</span><strong>${escapeHtml(order.summary || "待补充工单摘要")}</strong></article>
               <article><span>当前处理人</span><strong>${escapeHtml(order.owner)}</strong></article>
               <article><span>处理状态</span><strong>${escapeHtml(order.status)}</strong></article>
               <article><span>处理去向</span><strong>${escapeHtml(getWorkOrderRoute(order))}</strong></article>
@@ -2371,7 +2446,7 @@
               <span>处理结果</span>
               <strong>${escapeHtml(order.result)}</strong>
             </div>
-            ${feedbackDetailHtml(relatedFeedback)}
+            ${workOrderFeedbackDetailsHtml(order)}
             <div class="local-workorder-detail-actions">
               <button type="button" class="warning-button" data-local-workorder-route="exception">转异常</button>
               <button type="button" class="secondary-button" data-local-workorder-route="qa">转Q&A</button>
@@ -2451,7 +2526,7 @@
           if (!table || !tbody || !theadRow) return false;
           const tablePanel = table.closest(".panel, section");
           const getOrderProductLine = (order) => {
-            const feedback = findFeedbackById(order.relatedFeedback);
+            const feedback = findFeedbackById(getWorkOrderFeedbackIds(order)[0] || order.relatedFeedback);
             if (feedback?.productLine) return feedback.productLine;
             if (feedback?.type?.includes("八电极")) return "八电极产品线";
             if (feedback?.type?.includes("筋膜")) return "筋膜枪产品线";
@@ -2514,15 +2589,16 @@
             selectedFilters.productLine,
             selectedFilters.status,
             selectedFilters.owner,
-            localWorkOrders.map((order) => `${order.id}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|"),
+            localWorkOrders.map((order) => `${order.id}:${order.summary}:${order.relatedFeedback}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|"),
           ].join("::");
           if (table.dataset.localWorkOrderSignature === signature) return true;
           table.dataset.localWorkOrderSignature = signature;
-          theadRow.innerHTML = ["工单ID", "关联反馈", "产品线", "处理状态", "当前处理人", "处理结果", "关闭原因", "操作"].map((label) => `<th>${label}</th>`).join("");
+          theadRow.innerHTML = ["工单ID", "工单摘要", "关联反馈", "产品线", "处理状态", "当前处理人", "处理结果", "关闭原因", "操作"].map((label) => `<th>${label}</th>`).join("");
           tbody.innerHTML = filteredOrders.length ? filteredOrders.map((order) => `
             <tr>
               <td>${order.id}</td>
-              <td><button type="button" class="local-text-button" data-local-open-feedback="${escapeHtml(order.relatedFeedback)}">${escapeHtml(order.relatedFeedback)}</button></td>
+              <td>${escapeHtml(order.summary || "待补充工单摘要")}</td>
+              <td>${workOrderFeedbackLinksHtml(order)}</td>
               <td>${escapeHtml(getOrderProductLine(order))}</td>
               <td>${order.status}</td>
               <td>${order.owner}</td>
@@ -2530,7 +2606,7 @@
               <td>${order.closeReason}</td>
               <td><button type="button" class="secondary-button" data-local-workorder-detail="${escapeHtml(order.id)}">详情</button></td>
             </tr>
-          `).join("") : `<tr><td colspan="8" class="local-workorder-empty">暂无匹配的工单</td></tr>`;
+          `).join("") : `<tr><td colspan="9" class="local-workorder-empty">暂无匹配的工单</td></tr>`;
           tbody.querySelectorAll("[data-local-workorder-detail]").forEach((button) => button.addEventListener("click", () => {
             const order = localWorkOrders.find((item) => item.id === button.dataset.localWorkorderDetail);
             if (order) openWorkOrderDetail(order);
