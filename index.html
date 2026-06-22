@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Prototype</title>
-    <script type="module" crossorigin src="./assets/index-SXHQTfNW.js"></script>
+    <script type="module" crossorigin src="./assets/index-B81B07EF.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-OuHj09xx.css">
     <style>
       .local-model-search-field {
@@ -1050,6 +1050,28 @@
             .local-row-actions { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
             .local-row-actions button { min-height: 26px; padding: 0 8px; border: 1px solid #c8d2df; border-radius: 6px; background: #fff; color: #1f73e8; font-size: 12px; font-weight: 800; }
             .local-row-actions button.review { color: #b42318; border-color: #fecdca; background: #fff5f5; }
+            .local-ai-modal { width: min(1080px, 100%); }
+            .local-ai-summary { display: grid; grid-template-columns: repeat(3, 120px) minmax(0, 1fr); gap: 18px; align-items: center; min-height: 76px; margin: 14px 0; padding: 14px 18px; border-radius: 8px; background: #f4f7fb; }
+            .local-ai-summary strong { display: block; color: #101828; font-size: 28px; line-height: 1; }
+            .local-ai-summary span { display: block; margin-top: 5px; color: #667085; font-size: 12px; }
+            .local-ai-summary em { justify-self: end; color: #475467; font-style: normal; font-size: 13px; font-weight: 700; }
+            .local-ai-table-wrap { max-height: 430px; overflow: auto; border: 1px solid #e4eaf3; border-radius: 8px; }
+            .local-ai-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .local-ai-table th { position: sticky; top: 0; z-index: 1; height: 40px; padding: 8px 10px; border-bottom: 1px solid #d7deea; background: #fff; color: #475467; text-align: left; white-space: nowrap; }
+            .local-ai-table td { padding: 12px 10px; border-bottom: 1px solid #eef2f7; color: #344054; vertical-align: top; }
+            .local-ai-table td:first-child { width: 150px; color: #101828; font-weight: 700; }
+            .local-ai-title { display: block; color: #101828; font-weight: 800; line-height: 1.3; }
+            .local-ai-sub { display: block; margin-top: 4px; color: #667085; font-size: 12px; line-height: 1.35; }
+            .local-ai-route { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; background: #eaf2ff; color: #175cd3; font-weight: 800; }
+            .local-ai-route.requirement { background: #dcfae6; color: #067647; }
+            .local-ai-route.exception { background: #fff3e0; color: #b54708; }
+            .local-ai-route.qa { background: #f2f4f7; color: #475467; }
+            .local-ai-confidence { font-weight: 900; }
+            .local-ai-confidence.high { color: #0b8f53; }
+            .local-ai-confidence.medium { color: #ff8a00; }
+            .local-ai-confidence.low { color: #d92d20; }
+            .local-ai-table select { min-width: 110px; height: 34px; padding: 0 8px; border: 1px solid #d7deea; border-radius: 6px; background: #fff; color: #1d2939; font: inherit; font-weight: 700; }
+            .local-ai-empty { padding: 28px; color: #667085; text-align: center; }
             .local-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
             .local-detail-grid article,
             .local-detail-block { padding: 10px; border: 1px solid #e4eaf3; border-radius: 8px; background: #f8fafc; }
@@ -1791,6 +1813,15 @@
             });
             addButton.insertAdjacentElement("afterend", templateButton);
           }
+          const batchButtons = document.querySelector(".batch-action-buttons");
+          if (batchButtons && !batchButtons.querySelector("[data-local-ai-assist-entry]")) {
+            const aiButton = document.createElement("button");
+            aiButton.type = "button";
+            aiButton.className = "secondary-button";
+            aiButton.dataset.localAiAssistEntry = "true";
+            aiButton.textContent = "AI辅助处理";
+            batchButtons.appendChild(aiButton);
+          }
         };
 
         const setupUserSwitcher = () => {
@@ -2302,6 +2333,126 @@
         const getSelectedFeedbackIds = () => Array.from(document.querySelectorAll(".feedback-table tbody tr:not(.local-feedback-hidden) .select-column input:checked"))
           .map((box) => box.closest("tr")?.dataset.localId)
           .filter(Boolean);
+
+        const toFinalRoute = (value) => value.startsWith("已") ? value : `已${value}`;
+        const toAdjustRoute = (route) => String(route || "转工单").replace(/^已/, "");
+        const aiRouteOptions = ["转工单", "转需求", "转异常", "转Q&A", "直接回复关闭"];
+        const getCurrentHandlerName = () => currentUser.name === "管理员" ? "管理员" : currentUser.name;
+        const isCurrentHandlerPending = (data) => {
+          if (!data || !["待处理", "待人工复核"].includes(data.processState || "待处理")) return false;
+          if (!matchesUserScope(data)) return false;
+          return currentUser.name === "管理员" || !data.handler || data.handler === currentUser.name || data.handler === "产品经理";
+        };
+        const suggestAiRoute = (data) => {
+          const text = `${data.level1 || ""} ${data.level2 || ""} ${data.level3 || ""} ${data.raw || ""} ${data.ai || ""}`;
+          if (/P0|P1|投诉|警告|破裂|伤害|合规|召回/.test(`${data.exception || ""} ${text}`)) return "转异常";
+          if (/需求|建议|功能|优化|改进|尺寸|低噪|新增/.test(text)) return "转需求";
+          if (/怎么|如何|咨询|使用|物流|签收|订单|说明/.test(text)) return "转Q&A";
+          return "转工单";
+        };
+        const getAiConfidence = (data, route) => {
+          if (route === "转异常" && /P0|P1/.test(data.exception || "")) return "高";
+          if (route === "转需求" && /需求|建议|功能|优化|改进/.test(`${data.raw || ""} ${data.ai || ""} ${data.level3 || ""}`)) return "中";
+          if (route === "转Q&A") return "中";
+          return data.processState === "待人工复核" ? "低" : "高";
+        };
+        const getAiReason = (data, route) => {
+          if (route === "转异常") return "涉及异常等级、投诉或批量风险，需进入异常处理闭环。";
+          if (route === "转需求") return "用户提出改进建议或功能诉求，可转候选需求线索。";
+          if (route === "转Q&A") return "偏咨询、使用指引或标准回复场景，可沉淀到Q&A。";
+          if (route === "直接回复关闭") return "可由当前处理人直接回复并关闭。";
+          return "涉及产品质量/功能问题，需派发工单跟进排查。";
+        };
+        const getAiAssistItems = () => {
+          const visibleIds = new Set(Array.from(document.querySelectorAll(".feedback-table tbody tr:not(.local-feedback-hidden)[data-local-id]"))
+            .map((row) => row.dataset.localId)
+            .filter(Boolean));
+          const selectedIds = getSelectedFeedbackIds();
+          const sourceIds = selectedIds.length ? selectedIds : Array.from(visibleIds);
+          const seen = new Set();
+          return sourceIds.map((id) => findFeedbackById(id))
+            .filter((data) => data && !seen.has(data.id) && seen.add(data.id) && isCurrentHandlerPending(data))
+            .map((data) => {
+              const route = suggestAiRoute(data);
+              return { data, route, confidence: getAiConfidence(data, route), reason: getAiReason(data, route) };
+            });
+        };
+        const routeClass = (route) => route === "转需求" ? "requirement" : route === "转异常" ? "exception" : route === "转Q&A" ? "qa" : "";
+        const confidenceClass = (confidence) => confidence === "高" ? "high" : confidence === "中" ? "medium" : "low";
+        const routeSummary = (items) => aiRouteOptions.reduce((summary, route) => {
+          summary[route] = items.filter((item) => item.route === route).length;
+          return summary;
+        }, {});
+        const applyAiAssistItems = () => {
+          const rows = Array.from(document.querySelectorAll("[data-ai-route][data-id]"));
+          const workOrderTargets = [];
+          rows.forEach((select) => {
+            const data = findFeedbackById(select.dataset.id);
+            if (!data) return;
+            const route = select.value;
+            data.processRoute = toFinalRoute(route);
+            data.processState = "已处理";
+            data.handler = getCurrentHandlerName();
+            if (route === "转工单") workOrderTargets.push(data);
+            if (route === "转异常") data.mergeGroup = "";
+          });
+          addMergedWorkOrderFromFeedbacks(workOrderTargets);
+          closeModal();
+          closeDetailDrawer();
+          refreshFeedbackTable();
+          enhanceWorkOrderPage();
+          enhanceEmergencyPage();
+          enhanceQaPage();
+        };
+        const openAiAssistModal = () => {
+          addStyles();
+          const items = getAiAssistItems();
+          const summary = routeSummary(items);
+          openModal(`
+            <div class="local-modal local-ai-modal">
+              <div class="local-modal-head">
+                <div>
+                  <span>AI 辅助处理</span>
+                  <h2>AI 处理建议清单</h2>
+                  <p>AI 已基于当前处理人“${escapeHtml(getCurrentHandlerName())}”的待处理反馈生成处理清单。请人工复核后确认导入执行。</p>
+                </div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-ai-summary">
+                <div><strong>${summary["转工单"] || 0}</strong><span>转工单</span></div>
+                <div><strong>${summary["转需求"] || 0}</strong><span>转需求</span></div>
+                <div><strong>${summary["转异常"] || 0}</strong><span>转异常</span></div>
+                <em>共 ${items.length} 条</em>
+              </div>
+              ${items.length ? `
+                <div class="local-ai-table-wrap">
+                  <table class="local-ai-table">
+                    <thead><tr><th>反馈ID</th><th>问题摘要</th><th>AI建议</th><th>建议理由</th><th>信心</th><th>人工调整</th></tr></thead>
+                    <tbody>
+                      ${items.map(({ data, route, confidence, reason }) => `
+                        <tr>
+                          <td>${escapeHtml(data.id)}</td>
+                          <td><span class="local-ai-title">${escapeHtml(data.level3 || data.level2 || "待确认问题")}</span><span class="local-ai-sub">${escapeHtml(`${data.model || data.productType || "-"} · ${data.raw || data.ai || ""}`)}</span></td>
+                          <td><span class="local-ai-route ${routeClass(route)}">${escapeHtml(route)}</span></td>
+                          <td>${escapeHtml(reason)}</td>
+                          <td><span class="local-ai-confidence ${confidenceClass(confidence)}">${escapeHtml(confidence)}</span></td>
+                          <td><select data-ai-route data-id="${escapeHtml(data.id)}">${aiRouteOptions.map((option) => `<option ${option === route ? "selected" : ""}>${option}</option>`).join("")}</select></td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>
+                <p class="local-feedback-sub">提示：可在“人工调整”列修改每条反馈的处理方式，确认后会一次性导入到对应模块。</p>
+              ` : `<div class="local-ai-empty">当前处理人暂无待处理或待人工复核反馈。</div>`}
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-ai-apply ${items.length ? "" : "disabled"}>确认导入全部建议</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-ai-apply]")?.addEventListener("click", applyAiAssistItems);
+        };
 
         const updateBatchSelectedCount = () => {
           const count = getSelectedFeedbackIds().length;
@@ -4325,6 +4476,18 @@
                 : text.includes("Q&A") ? "已转Q&A"
                 : "";
               if (route) applyBatchRoute(route);
+            });
+          });
+          Array.from(document.querySelectorAll("button")).filter((button) => button.textContent.includes("AI辅助")).forEach((button) => {
+            if (button.dataset.localAiAssistReady === "true") return;
+            button.dataset.localAiAssistReady = "true";
+            button.disabled = false;
+            button.removeAttribute("disabled");
+            button.setAttribute("aria-disabled", "false");
+            button.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              openAiAssistModal();
             });
           });
           let feedbackObserverScheduled = false;
