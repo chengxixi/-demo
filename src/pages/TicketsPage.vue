@@ -1,123 +1,168 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Search, ChevronDown, ChevronRight, Clock, CheckCircle2 } from 'lucide-vue-next';
-import { workOrderData } from '@/api/mock-data';
+import { ref } from 'vue'
+import { ArrowLeft } from 'lucide-vue-next'
+import { workOrderData, workOrderSteps } from '@/api/mock-data'
+import type { WorkOrder } from '@/types'
 
-const searchQuery = ref('');
-const statusFilter = ref('全部');
-const expandedRows = ref<Set<string>>(new Set());
+const orders = ref([...workOrderData])
+const detailOrder = ref<WorkOrder | null>(null)
 
-const statusOptions = ['全部', '处理中', '待处理', '已完成'];
-
-const filteredData = computed(() => {
-  let items = workOrderData;
-  if (statusFilter.value !== '全部') items = items.filter((i) => i.status === statusFilter.value);
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
-    items = items.filter((i) => i.id.toLowerCase().includes(q) || i.summary.toLowerCase().includes(q));
-  }
-  return items;
-});
-
-function statusClass(status: string) {
-  if (status === '处理中') return 'bg-blue-50 text-blue-600';
-  if (status === '待处理') return 'bg-yellow-50 text-yellow-600';
-  return 'bg-green-50 text-green-600';
+function openDetail(order: WorkOrder) {
+  detailOrder.value = { ...order }
 }
 
-function slaClass(sla: string) {
-  if (sla === '已完成') return 'text-green-500';
-  const h = parseInt(sla);
-  return h < 5 ? 'text-red-500 font-bold' : 'text-orange-500';
+function closeDetail() {
+  detailOrder.value = null
 }
 
-function toggle(id: string) {
-  const s = new Set(expandedRows.value);
-  if (s.has(id)) s.delete(id);
-  else s.add(id);
-  expandedRows.value = s;
+function getStatusClass(status: string) {
+  if (status === '处理中' || status === '转工单') return 'status-processing'
+  if (status === '待确认') return 'status-pending'
+  if (status === '已闭环') return 'status-done'
+  return ''
+}
+
+function getRoute(order: WorkOrder): string {
+  if (order.exception === '是') return '已转异常'
+  if (order.requirement === '是' || order.requirement === '预留') return '已转需求'
+  return '-'
+}
+
+function updateOrderRoute(order: WorkOrder, route: string) {
+  const idx = orders.value.findIndex(o => o.id === order.id)
+  if (idx < 0) return
+  if (route === 'exception') orders.value[idx].exception = '是'
+  else if (route === 'requirement') orders.value[idx].requirement = '是'
+  else if (route === 'close') { orders.value[idx].status = '已闭环'; orders.value[idx].step = 5 }
+  closeDetail()
 }
 </script>
 
 <template>
-  <div class="p-6 max-w-[1400px] mx-auto">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-2">
-        <h2 class="text-lg font-semibold text-gray-800">工单池</h2>
-        <span class="text-xs text-gray-400 px-2 py-0.5 bg-gray-100 rounded">{{ workOrderData.length }}条</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="relative">
-          <Search :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input v-model="searchQuery" placeholder="搜索工单..." class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm w-48 focus:outline-none focus:border-brand-400" />
-        </div>
-        <select v-model="statusFilter" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
-          <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
-        </select>
-        <button class="px-3 py-1.5 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">新建工单</button>
-      </div>
+  <div class="h-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 bg-white border-b border-gray-200 flex-shrink-0">
+      <h2 class="text-lg font-extrabold text-gray-900">工单池</h2>
+      <p class="text-xs text-gray-400 mt-0.5">从反馈清单生成的处理协同事项，按SLA进行分派、跟进和闭环。</p>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div v-if="!detailOrder" class="flex-1 overflow-auto p-6">
+      <!-- Table -->
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table class="w-full text-xs">
           <thead>
-            <tr class="bg-gray-50 text-gray-500 text-xs">
-              <th class="text-left px-4 py-2.5 font-medium w-8"></th>
-              <th class="text-left px-4 py-2.5 font-medium">工单编号</th>
-              <th class="text-left px-4 py-2.5 font-medium">摘要</th>
-              <th class="text-left px-4 py-2.5 font-medium">状态</th>
-              <th class="text-left px-4 py-2.5 font-medium">负责人</th>
-              <th class="text-left px-4 py-2.5 font-medium">部门</th>
-              <th class="text-left px-4 py-2.5 font-medium">SLA</th>
-              <th class="text-left px-4 py-2.5 font-medium">转异常</th>
-              <th class="text-left px-4 py-2.5 font-medium">转需求</th>
-              <th class="text-left px-4 py-2.5 font-medium">步骤</th>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">工单ID</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">关联反馈</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">状态</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">负责人</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">部门</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">SLA</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">处理结果</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">关闭原因</th>
+              <th class="text-center px-3 py-2 font-extrabold text-gray-600">是否转异常</th>
+              <th class="text-center px-3 py-2 font-extrabold text-gray-600">是否转需求</th>
+              <th class="text-center px-3 py-2 font-extrabold text-gray-600">步骤</th>
             </tr>
           </thead>
           <tbody>
-            <template v-for="item in filteredData" :key="item.id">
-              <tr class="border-t border-gray-50 hover:bg-gray-50/50 cursor-pointer" @click="toggle(item.id)">
-                <td class="px-4 py-3">
-                  <component :is="expandedRows.has(item.id) ? ChevronDown : ChevronRight" :size="14" class="text-gray-400" />
-                </td>
-                <td class="px-4 py-3 font-mono text-xs text-brand-600">{{ item.id }}</td>
-                <td class="px-4 py-3 font-medium text-gray-800 max-w-[240px] truncate">{{ item.summary }}</td>
-                <td class="px-4 py-3"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusClass(item.status)]">{{ item.status }}</span></td>
-                <td class="px-4 py-3">{{ item.owner }}</td>
-                <td class="px-4 py-3 text-gray-500">{{ item.dept }}</td>
-                <td class="px-4 py-3" :class="slaClass(item.sla)">{{ item.sla }}</td>
-                <td class="px-4 py-3">{{ item.exception }}</td>
-                <td class="px-4 py-3">{{ item.requirement }}</td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center gap-1">
-                    <div v-for="s in 5" :key="s" :class="['w-2 h-2 rounded-full', s <= item.step ? 'bg-brand-500' : 'bg-gray-200']" />
+            <tr
+              v-for="order in orders"
+              :key="order.id"
+              class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+              @click="openDetail(order)"
+            >
+              <td class="px-3 py-2 font-extrabold text-blue-600">{{ order.id }}</td>
+              <td class="px-3 py-2 text-gray-600">{{ order.relatedFeedback }}</td>
+              <td class="px-3 py-2">
+                <span :class="getStatusClass(order.status)">{{ order.status }}</span>
+              </td>
+              <td class="px-3 py-2 font-bold">{{ order.owner }}</td>
+              <td class="px-3 py-2 text-gray-500">{{ order.dept }}</td>
+              <td class="px-3 py-2 font-bold">{{ order.sla }}</td>
+              <td class="px-3 py-2 text-gray-600">{{ order.result }}</td>
+              <td class="px-3 py-2 text-gray-400">{{ order.closeReason }}</td>
+              <td class="px-3 py-2 text-center">{{ order.exception }}</td>
+              <td class="px-3 py-2 text-center">{{ order.requirement }}</td>
+              <td class="px-3 py-2">
+                <div class="flex flex-col items-center gap-1">
+                  <div class="flex gap-0.5">
+                    <span
+                      v-for="i in 5"
+                      :key="i"
+                      class="w-4 h-4 rounded-full border text-[10px] flex items-center justify-center font-extrabold"
+                      :class="i <= order.step ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-400 bg-white'"
+                    >{{ i }}</span>
                   </div>
-                </td>
-              </tr>
-              <tr v-if="expandedRows.has(item.id)">
-                <td colspan="10" class="px-4 py-4 bg-gray-50/50">
-                  <div class="flex items-center gap-2 mb-3">
-                    <div v-for="(label, i) in ['接收', '分析', '处理', '闭环', '完成']" :key="i" class="flex items-center gap-2">
-                      <div :class="['flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold', i < item.step ? 'bg-brand-600 text-white' : i === item.step ? 'bg-brand-100 text-brand-600 ring-2 ring-brand-300' : 'bg-gray-100 text-gray-400']">
-                        <CheckCircle2 v-if="i < item.step" :size="14" />
-                        <Clock v-else-if="i === item.step" :size="14" />
-                        <span v-else>{{ i + 1 }}</span>
-                      </div>
-                      <span :class="['text-xs', i < item.step ? 'text-brand-600 font-medium' : 'text-gray-400']">{{ label }}</span>
-                      <div v-if="i < 4" :class="['w-8 h-px', i < item.step ? 'bg-brand-300' : 'bg-gray-200']" />
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-3 text-sm">
-                    <div><span class="text-gray-400 text-xs">处理结果</span><p class="text-gray-700 mt-0.5">{{ item.result || '—' }}</p></div>
-                    <div><span class="text-gray-400 text-xs">关闭原因</span><p class="text-gray-700 mt-0.5">{{ item.closeReason }}</p></div>
-                    <div><span class="text-gray-400 text-xs">关联反馈</span><p class="text-gray-700 mt-0.5">{{ item.relatedFeedback }}</p></div>
-                  </div>
-                </td>
-              </tr>
-            </template>
+                  <span class="text-[10px] font-bold text-gray-500">{{ workOrderSteps[Math.max(0, Math.min(order.step - 1, 4))] }}</span>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Detail View -->
+    <div v-else class="flex-1 overflow-auto p-6 bg-gray-50">
+      <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg">
+        <div class="flex items-start justify-between px-5 py-4 border-b border-gray-200 bg-white rounded-t-lg">
+          <div>
+            <h2 class="text-xl font-extrabold text-gray-900">工单详情</h2>
+            <p class="text-xs text-gray-500 mt-1">关联反馈 {{ detailOrder.relatedFeedback }} / {{ detailOrder.status }} / {{ detailOrder.owner }}</p>
+          </div>
+          <button class="btn-secondary text-xs flex items-center gap-1" @click="closeDetail">
+            <ArrowLeft class="w-3 h-3" /> 返回列表
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Detail Grid -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">工单ID</span>
+              <strong class="block mt-1 text-sm">{{ detailOrder.id }}</strong>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">状态</span>
+              <strong class="block mt-1 text-sm">{{ detailOrder.status }}</strong>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">负责人</span>
+              <strong class="block mt-1 text-sm">{{ detailOrder.owner }}</strong>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">部门</span>
+              <strong class="block mt-1 text-sm">{{ detailOrder.dept }}</strong>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">SLA</span>
+              <strong class="block mt-1 text-sm">{{ detailOrder.sla }}</strong>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">处理去向</span>
+              <strong class="block mt-1 text-sm">{{ getRoute(detailOrder) }}</strong>
+            </div>
+          </div>
+
+          <!-- Step Progress (Large) -->
+          <div class="flex gap-2 items-center py-3">
+            <span
+              v-for="i in 5"
+              :key="i"
+              class="flex-1 flex items-center justify-center h-8 rounded-full border text-xs font-extrabold"
+              :class="i <= detailOrder.step ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-400'"
+            >{{ i }}. {{ workOrderSteps[i - 1] }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+          <button class="btn-danger text-xs" @click="updateOrderRoute(detailOrder, 'exception')">转异常</button>
+          <button class="btn-secondary text-xs" @click="updateOrderRoute(detailOrder, 'qa')">转Q&A</button>
+          <button class="btn-success text-xs" @click="updateOrderRoute(detailOrder, 'requirement')">转需求</button>
+          <button class="btn-primary text-xs" @click="updateOrderRoute(detailOrder, 'close')">直接关闭</button>
+        </div>
       </div>
     </div>
   </div>

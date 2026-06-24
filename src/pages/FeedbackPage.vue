@@ -1,199 +1,459 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Search, Filter, Plus, ChevronDown, X } from 'lucide-vue-next';
-import { feedbackData } from '@/api/mock-data';
-import type { FeedbackItem } from '@/types';
+import { ref, computed } from 'vue'
+import { Search, Filter, Plus, ChevronDown } from 'lucide-vue-next'
+import { useFeedbackStore } from '@/stores'
+import { siteOptions, sourceOptions, processRouteOptions, processStateOptions, exceptionLevels, returnOptions, feedbackTabOptions } from '@/api/mock-data'
+import type { FeedbackItem } from '@/types'
 
-const tabs = [
-  { key: 'all', label: '全部', count: 7 },
-  { key: 'pending', label: '待处理', count: 5 },
-  { key: 'review', label: '待人工复核', count: 1 },
-  { key: 'done', label: '已处理', count: 1 },
-];
+const store = useFeedbackStore()
+const detailItem = ref<FeedbackItem | null>(null)
 
-const activeTab = ref('all');
-const searchQuery = ref('');
-const selectedItem = ref<FeedbackItem | null>(null);
-const expandedGroups = ref<Set<string>>(new Set());
+// Detail editing
+const editMode = ref(false)
+const editData = ref<Partial<FeedbackItem>>({})
 
-const filteredList = computed(() => {
-  let items = feedbackData;
-  if (activeTab.value === 'pending') items = feedbackData.filter((i) => i.processState === '待处理');
-  if (activeTab.value === 'review') items = feedbackData.filter((i) => i.createMode === '人工录入');
-  if (activeTab.value === 'done') items = feedbackData.filter((i) => i.processState === '已关闭' || i.processState === '已转需求' || i.processState === '异常处理中');
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
-    items = items.filter((i) => i.id.toLowerCase().includes(q) || i.raw.toLowerCase().includes(q) || i.model.toLowerCase().includes(q));
+const tabCounts = computed(() => ({
+  all: store.items.length,
+  pending: store.items.filter(i => i.processState === '待处理').length,
+  review: store.items.filter(i => i.processState === '待人工复核').length,
+  done: store.items.filter(i => i.processState === '已处理').length,
+  mine: store.items.filter(i => i.feedbackUser === '张伟').length,
+}))
+
+function getDataSource(item: FeedbackItem): string {
+  if (item.source === '退货原因') return item.site === 'Amazon.com (US)' ? '海外电商-退货反馈' : '国内电商-退货反馈'
+  if (item.source === '商品评论') return item.site === 'Amazon.com (US)' ? '海外电商-商品评论' : '国内电商-商品评论'
+  return item.source
+}
+
+function getDeviceType(item: FeedbackItem): string {
+  return item.productType === '体脂秤' ? '八电极' : item.productType
+}
+
+function getSolution(item: FeedbackItem): string {
+  if (item.processRoute === '待处理') return '待产品经理确认处理方案'
+  if (item.processRoute === '已转工单') return '已转工单跟进质量排查'
+  if (item.processRoute === '已转需求') return '已转需求池评审'
+  if (item.processRoute === '已转异常') return '已转异常处理流程'
+  if (item.processRoute === '已转Q&A') return '已沉淀至Q&A案例库'
+  return '已直接回复并关闭'
+}
+
+function getExpressNo(item: FeedbackItem): string {
+  if (['退货', '换货', '退货+换货'].includes(item.returned)) return `RT-${item.id.replace(/[^0-9]/g, '').slice(-8)}`
+  return ''
+}
+
+function getRegion(item: FeedbackItem): string {
+  return item.site === 'Amazon.com (US)' ? '海外' : '国内'
+}
+
+function openDetail(item: FeedbackItem) {
+  detailItem.value = item
+  editData.value = { ...item }
+  editMode.value = false
+}
+
+function closeDetail() {
+  detailItem.value = null
+}
+
+function saveDetail() {
+  if (detailItem.value) {
+    store.updateItem(detailItem.value.id, editData.value)
+    closeDetail()
   }
-  return items;
-});
-
-const grouped = computed(() => {
-  const map = new Map<string, FeedbackItem[]>();
-  for (const item of filteredList.value) {
-    const key = item.mergeGroup;
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(item);
-  }
-  return Array.from(map.entries());
-});
-
-function toggleGroup(key: string) {
-  const s = new Set(expandedGroups.value);
-  if (s.has(key)) s.delete(key);
-  else s.add(key);
-  expandedGroups.value = s;
 }
 
-function createModeClass(mode: string) {
-  return mode === 'AI自动创建' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500';
+function applyRoute(item: FeedbackItem, route: string) {
+  store.updateItem(item.id, {
+    processRoute: route,
+    processState: route === '待处理' ? '待处理' : '已处理',
+    handler: route === '已转工单' ? '系统' : item.handler,
+  })
+  if (detailItem.value?.id === item.id) closeDetail()
 }
 
-function levelClass(level: string) {
-  if (level === 'P1') return 'bg-red-50 text-red-600';
-  if (level === 'P2') return 'bg-orange-50 text-orange-600';
-  return 'bg-yellow-50 text-yellow-600';
+function unmergeItem(item: FeedbackItem) {
+  store.updateItem(item.id, { mergeGroup: '' })
 }
-
-function sentimentColor(s: string) {
-  return s === '负向' ? 'text-red-500' : 'text-green-500';
-}
-
-const columns = ['编号', '来源', '创建方式', '品牌', '站点', '产品类型', '型号', '情感', '退货', '异常', '处理状态', '反馈人', '处理人', '日期'];
 </script>
 
 <template>
-  <div class="p-6 max-w-[1600px] mx-auto">
-    <!-- 筛选区 -->
-    <div class="flex items-center gap-2 mb-4 text-sm flex-wrap">
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>近30天</option><option>近7天</option><option>近90天</option></select>
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>Amazon.com (US)</option><option>全部站点</option><option>天猫</option><option>京东</option><option>抖音</option></select>
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>全部品牌</option><option>云康宝</option><option>AF</option><option>GE</option></select>
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>全部产品类型</option><option>体脂秤</option><option>人体秤</option><option>八电极秤</option><option>筋膜枪</option></select>
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>全部型号</option><option>CS20A</option><option>CS30B</option><option>BF511</option><option>MG20</option></select>
-      <select class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white"><option>全部来源</option><option>商品评论</option><option>退货原因</option><option>站内信</option><option>APP反馈</option><option>社媒</option></select>
-    </div>
-
-    <!-- 操作栏 -->
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-1">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          :class="[
-            'px-4 py-2 text-sm rounded-lg transition-colors',
-            activeTab === tab.key ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-500 hover:bg-gray-50',
-          ]"
-        >
-          {{ tab.label }} ({{ tab.count }})
-        </button>
+  <div class="h-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+      <div>
+        <h2 class="text-lg font-extrabold text-gray-900">反馈清单</h2>
+        <p class="text-xs text-gray-400 mt-0.5">原始反馈数据池与AI分类结果总览，独立于工单处理流程</p>
       </div>
       <div class="flex items-center gap-2">
-        <div class="relative">
-          <Search :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input
-            v-model="searchQuery"
-            placeholder="搜索反馈..."
-            class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm w-56 focus:outline-none focus:border-brand-400"
-          />
+        <button class="btn-primary"><Plus class="w-3.5 h-3.5 mr-1" /> 新增反馈</button>
+        <button class="btn-secondary text-xs">我的模板设置</button>
+        <button class="btn-secondary text-xs">批量导入</button>
+        <div class="relative group">
+          <button class="btn-secondary text-xs flex items-center gap-1">批量操作 <ChevronDown class="w-3 h-3" /></button>
+          <div class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 hidden group-hover:block min-w-[120px]">
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转工单</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转异常</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转需求</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转Q&A</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50">直接关闭</button>
+          </div>
         </div>
-        <button class="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-          <Filter :size="14" />
-          <span>筛选</span>
-        </button>
-        <button class="flex items-center gap-1 px-3 py-1.5 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">
-          <Plus :size="14" />
-          <span>新增反馈</span>
-        </button>
       </div>
     </div>
 
-    <!-- 表格 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="flex-1 overflow-auto" :class="{ 'hidden': detailItem }">
+      <!-- Filter & Tabs -->
+      <div class="px-6 pt-3 bg-white border-b border-gray-200">
+        <!-- Search -->
+        <div class="relative mb-2">
+          <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <input
+            v-model="store.searchQuery"
+            type="search"
+            placeholder="搜索反馈ID、ASIN、型号、原文关键词"
+            class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
+          />
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex items-center gap-1 -mb-px">
+          <button
+            v-for="tab in feedbackTabOptions"
+            :key="tab.key"
+            class="px-4 py-2 text-xs font-extrabold border-b-2 transition-colors"
+            :class="store.activeTab === tab.key ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-700'"
+            @click="store.activeTab = tab.key"
+          >
+            {{ tab.label }}
+            <span v-if="tab.key === 'all'" class="ml-1 text-gray-400">({{ tabCounts.all }})</span>
+            <span v-else-if="tab.key === 'pending'" class="ml-1 text-gray-400">({{ tabCounts.pending }})</span>
+            <span v-else-if="tab.key === 'review'" class="ml-1 text-gray-400">({{ tabCounts.review }})</span>
+            <span v-else-if="tab.key === 'done'" class="ml-1 text-gray-400">({{ tabCounts.done }})</span>
+          </button>
+          <button
+            class="ml-auto px-3 py-1.5 text-xs font-bold text-gray-500 border border-gray-300 rounded-md hover:bg-gray-50"
+            :class="{ 'text-blue-600 border-blue-300 bg-blue-50': store.filterVisible }"
+            @click="store.filterVisible = !store.filterVisible"
+          >
+            <Filter class="w-3 h-3 inline mr-1" />
+            {{ store.filterVisible ? '收起筛选' : '筛选' }}
+          </button>
+        </div>
+
+        <!-- Filter Panel -->
+        <div v-if="store.filterVisible" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 py-3 border-t border-gray-100">
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            数据来源
+            <select v-model="store.filters.source" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in sourceOptions" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            创建方式
+            <select v-model="store.filters.mode" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option value="AI自动创建">AI自动创建</option>
+              <option value="人工录入">人工录入</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            品牌
+            <input v-model="store.filters.brand" placeholder="输入品牌" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            站点
+            <select v-model="store.filters.site" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in siteOptions" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            设备类型
+            <input v-model="store.filters.productType" placeholder="输入设备类型" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            销售型号
+            <input v-model="store.filters.model" placeholder="输入销售型号" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            内部型号/料号
+            <input v-model="store.filters.internal" placeholder="输入内部型号" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            反馈人
+            <input v-model="store.filters.feedbackUser" placeholder="输入反馈人" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            反馈开始时间
+            <input type="date" v-model="store.filters.dateFrom" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            反馈结束时间
+            <input type="date" v-model="store.filters.dateTo" class="h-7 text-xs border border-gray-200 rounded px-1.5" />
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            状态
+            <select v-model="store.filters.processState" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in processStateOptions" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            异常等级
+            <select v-model="store.filters.exception" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in exceptionLevels" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            处理去向
+            <select v-model="store.filters.processRoute" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in processRouteOptions" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <label class="text-[11px] font-bold text-gray-500 flex flex-col gap-1">
+            退换货
+            <select v-model="store.filters.returned" class="h-7 text-xs border border-gray-200 rounded px-1.5">
+              <option value="">全部</option>
+              <option v-for="s in returnOptions" :key="s" :value="s">{{ s }}</option>
+            </select>
+          </label>
+          <div class="flex items-end">
+            <button class="btn-secondary text-xs h-7" @click="store.resetFilters()">重置筛选</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-auto">
+        <table class="feedback-table">
           <thead>
-            <tr class="bg-gray-50 text-gray-500 text-xs">
-              <th class="text-left px-3 py-2.5 font-medium w-8"></th>
-              <th v-for="col in columns" :key="col" class="text-left px-3 py-2.5 font-medium whitespace-nowrap">{{ col }}</th>
+            <tr>
+              <th class="w-12"><input type="checkbox" /></th>
+              <th>编号</th>
+              <th>地区</th>
+              <th>数据来源</th>
+              <th>设备类型</th>
+              <th>品牌</th>
+              <th>内部型号/料号</th>
+              <th>销售型号</th>
+              <th>订单号</th>
+              <th>快递单号</th>
+              <th>用户反馈</th>
+              <th>AI翻译</th>
+              <th>图片补充</th>
+              <th>视频补充</th>
+              <th>反馈时间</th>
+              <th>处理方案</th>
+              <th>一级职能</th>
+              <th>二级问题</th>
+              <th>三级问题</th>
+              <th>异常级别</th>
+              <th>创建方式</th>
+              <th>处理去向</th>
+              <th>状态</th>
+              <th>反馈人</th>
+              <th>处理人</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
-            <template v-for="[key, items] in grouped" :key="key">
-              <!-- 合并父行 -->
-              <tr class="border-t border-gray-100 bg-gray-50/50 cursor-pointer hover:bg-gray-100/50" @click="toggleGroup(key)">
-                <td class="px-3 py-3">
-                  <ChevronDown :size="14" :class="['transition-transform text-gray-400', expandedGroups.has(key) ? '' : '-rotate-90']" />
+            <template v-for="group in store.filteredGroups" :key="group.lead.data.id">
+              <!-- Merge parent row -->
+              <tr v-if="group.members.length > 1" class="merge-parent cursor-pointer" @click="group.expanded = !group.expanded">
+                <td><input type="checkbox" /></td>
+                <td colspan="25">
+                  <div class="flex items-center gap-2">
+                    <button class="w-5 h-5 flex items-center justify-center border border-blue-200 rounded bg-white text-blue-600 text-xs font-extrabold">
+                      {{ group.expanded ? '−' : '+' }}
+                    </button>
+                    <div>
+                      <span class="font-extrabold text-sm text-gray-900">{{ group.lead.data.model }} {{ group.lead.data.level3 }}合并反馈</span>
+                      <span class="ml-2 text-xs text-gray-500">
+                        {{ group.lead.data.internal }} / {{ group.members.length }}条明细
+                      </span>
+                    </div>
+                    <span class="ml-auto text-xs text-gray-400">{{ getDataSource(group.lead.data) }}</span>
+                  </div>
                 </td>
-                <td class="px-3 py-3 font-medium text-brand-600" :colspan="columns.length">
-                  <span class="inline-flex items-center gap-2">
-                    {{ key }}
-                    <span class="text-xs text-gray-400">（{{ items.length }}条合并）</span>
-                  </span>
+                <td>
+                  <div class="flex items-center gap-1">
+                    <button class="px-2 py-0.5 text-[11px] font-bold text-blue-600 border border-gray-200 rounded hover:bg-blue-50" @click.stop="openDetail(group.lead.data)">详情</button>
+                  </div>
                 </td>
               </tr>
-              <!-- 子项 -->
-              <template v-if="expandedGroups.has(key)">
-                <tr v-for="item in items" :key="item.id" class="border-t border-gray-50 hover:bg-brand-50/30 transition-colors cursor-pointer" @click="selectedItem = item">
-                  <td class="px-3 py-2.5"></td>
-                  <td class="px-3 py-2.5 font-mono text-xs text-gray-600">{{ item.id }}</td>
-                  <td class="px-3 py-2.5 text-gray-600">{{ item.source }}</td>
-                  <td class="px-3 py-2.5"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', createModeClass(item.createMode)]">{{ item.createMode }}</span></td>
-                  <td class="px-3 py-2.5">{{ item.brand }}</td>
-                  <td class="px-3 py-2.5 text-gray-600">{{ item.site }}</td>
-                  <td class="px-3 py-2.5">{{ item.productType }}</td>
-                  <td class="px-3 py-2.5 font-medium">{{ item.model }}</td>
-                  <td class="px-3 py-2.5" :class="sentimentColor(item.sentiment)">{{ item.sentiment }}</td>
-                  <td class="px-3 py-2.5" :class="item.returned === '退货' ? 'text-red-500' : 'text-gray-400'">{{ item.returned }}</td>
-                  <td class="px-3 py-2.5"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', levelClass(item.exception)]">{{ item.exception }}</span></td>
-                  <td class="px-3 py-2.5" :class="item.processState.includes('处理中') ? 'text-orange-500' : item.processState.includes('已') ? 'text-green-500' : 'text-gray-400'">{{ item.processState }}</td>
-                  <td class="px-3 py-2.5 text-gray-600">{{ item.feedbackUser }}</td>
-                  <td class="px-3 py-2.5 text-gray-600">{{ item.handler }}</td>
-                  <td class="px-3 py-2.5 text-gray-400 text-xs">{{ item.date }}</td>
+              <!-- Children -->
+              <template v-if="group.expanded || group.members.length === 1">
+                <tr
+                  v-for="(member, idx) in group.members"
+                  :key="member.data.id"
+                  :class="group.members.length > 1 ? 'merge-child' : ''"
+                >
+                  <td><input type="checkbox" /></td>
+                  <td>
+                    <template v-if="group.members.length > 1">
+                      <div class="flex items-center gap-1 pl-5">
+                        <span class="text-gray-400 font-extrabold">└</span>
+                        <span>
+                          <span class="font-extrabold text-gray-900 text-xs">{{ member.data.id }}</span>
+                          <span class="block text-[11px] text-gray-400">第 {{ idx + 1 }} 条明细</span>
+                        </span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <span class="font-extrabold text-gray-900 text-xs">{{ member.data.id }}</span>
+                    </template>
+                  </td>
+                  <td>{{ getRegion(member.data) }}</td>
+                  <td><span class="text-xs font-bold text-gray-600">{{ getDataSource(member.data) }}</span></td>
+                  <td>{{ getDeviceType(member.data) }}</td>
+                  <td>{{ member.data.brand }}</td>
+                  <td>{{ member.data.internal }}</td>
+                  <td>{{ member.data.model }}</td>
+                  <td>{{ member.data.asin !== '-' ? member.data.asin : 'ORD-' + member.data.id.replace('FB-', '') }}</td>
+                  <td>{{ getExpressNo(member.data) }}</td>
+                  <td class="max-w-[200px] truncate text-xs">{{ member.data.raw }}</td>
+                  <td class="max-w-[200px] truncate text-xs">{{ member.data.ai }}</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>{{ member.data.date }}</td>
+                  <td class="max-w-[180px] truncate text-xs">{{ getSolution(member.data) }}</td>
+                  <td>{{ member.data.level1 }}</td>
+                  <td>{{ member.data.level2 }}</td>
+                  <td>{{ member.data.level3 }}</td>
+                  <td>{{ member.data.exception }}</td>
+                  <td>
+                    <span :class="member.data.createMode === 'AI自动创建' ? 'badge-ai' : 'badge-manual'">
+                      {{ member.data.createMode }}
+                    </span>
+                  </td>
+                  <td>{{ member.data.processRoute }}</td>
+                  <td>{{ member.data.processState }}</td>
+                  <td>{{ member.data.feedbackUser }}</td>
+                  <td>{{ member.data.handler }}</td>
+                  <td>
+                    <div class="flex items-center gap-1">
+                      <button class="px-2 py-0.5 text-[11px] font-bold text-blue-600 border border-gray-200 rounded hover:bg-blue-50" @click="openDetail(member.data)">详情</button>
+                      <button v-if="group.members.length > 1 && !['P0', 'P1'].includes(member.data.exception)" class="px-2 py-0.5 text-[11px] font-bold text-gray-500 border border-gray-200 rounded hover:bg-gray-50" @click="unmergeItem(member.data)">移出合并</button>
+                      <button v-if="member.data.processState === '待人工复核'" class="px-2 py-0.5 text-[11px] font-bold text-red-600 border border-red-200 rounded bg-red-50 hover:bg-red-100">人工复核</button>
+                    </div>
+                  </td>
                 </tr>
               </template>
             </template>
+            <tr v-if="store.filteredGroups.length === 0">
+              <td colspan="26" class="text-center py-10 text-gray-400 text-sm font-bold">当前筛选条件下没有反馈记录</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- 详情抽屉 -->
-    <div v-if="selectedItem" class="fixed inset-0 z-50 flex justify-end" @click.self="selectedItem = null">
-      <div class="bg-white w-[560px] h-full shadow-xl border-l border-gray-200 overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-gray-100 z-10 flex items-center justify-between p-4">
-          <h3 class="font-semibold text-gray-800">反馈详情 - {{ selectedItem.id }}</h3>
-          <button @click="selectedItem = null" class="p-1.5 hover:bg-gray-100 rounded-lg"><X :size="18" class="text-gray-400" /></button>
-        </div>
-        <div class="p-4 space-y-4">
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div><span class="text-gray-400 text-xs">数据来源</span><p class="text-gray-700 mt-0.5">{{ selectedItem.source }}</p></div>
-            <div><span class="text-gray-400 text-xs">创建方式</span><p class="text-gray-700 mt-0.5">{{ selectedItem.createMode }}</p></div>
-            <div><span class="text-gray-400 text-xs">品牌</span><p class="text-gray-700 mt-0.5">{{ selectedItem.brand }}</p></div>
-            <div><span class="text-gray-400 text-xs">站点</span><p class="text-gray-700 mt-0.5">{{ selectedItem.site }}</p></div>
-            <div><span class="text-gray-400 text-xs">产品类型</span><p class="text-gray-700 mt-0.5">{{ selectedItem.productType }}</p></div>
-            <div><span class="text-gray-400 text-xs">销售型号</span><p class="text-gray-700 mt-0.5 font-medium">{{ selectedItem.model }}</p></div>
-            <div><span class="text-gray-400 text-xs">内部型号</span><p class="text-gray-700 mt-0.5">{{ selectedItem.internal }}</p></div>
-            <div><span class="text-gray-400 text-xs">ASIN</span><p class="text-gray-700 mt-0.5 font-mono text-xs">{{ selectedItem.asin }}</p></div>
-            <div><span class="text-gray-400 text-xs">分类</span><p class="text-gray-700 mt-0.5">{{ selectedItem.level1 }} › {{ selectedItem.level2 }} › {{ selectedItem.level3 }}</p></div>
-            <div><span class="text-gray-400 text-xs">情感</span><p class="mt-0.5" :class="sentimentColor(selectedItem.sentiment)">{{ selectedItem.sentiment }}</p></div>
-            <div><span class="text-gray-400 text-xs">退货</span><p class="text-gray-700 mt-0.5">{{ selectedItem.returned }}</p></div>
-            <div><span class="text-gray-400 text-xs">异常级别</span><p class="text-gray-700 mt-0.5">{{ selectedItem.exception }}</p></div>
-          </div>
-          <div class="border-t border-gray-100 pt-3">
-            <span class="text-gray-400 text-xs">用户原始反馈</span>
-            <p class="text-gray-700 text-sm mt-1 p-3 bg-gray-50 rounded-lg">{{ selectedItem.raw }}</p>
-          </div>
+    <!-- Detail Drawer -->
+    <div v-if="detailItem" class="flex-1 overflow-auto bg-gray-50 p-6">
+      <div class="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg">
+        <div class="flex items-start justify-between px-5 py-4 border-b border-gray-200">
           <div>
-            <span class="text-gray-400 text-xs">AI 分析</span>
-            <p class="text-gray-700 text-sm mt-1 p-3 bg-brand-50 rounded-lg">{{ selectedItem.ai }}</p>
+            <span class="text-xs text-gray-400 font-bold">反馈详情</span>
+            <h2 class="text-xl font-extrabold text-gray-900 mt-0.5">{{ detailItem.id }}</h2>
+            <p class="text-xs text-gray-500 mt-1">{{ getDataSource(detailItem) }} / {{ detailItem.brand }} / {{ detailItem.model }}</p>
           </div>
-          <div class="border-t border-gray-100 pt-3 flex gap-2">
-            <button class="flex-1 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">转工单</button>
-            <button class="flex-1 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100">转异常</button>
-            <button class="flex-1 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">转需求</button>
+          <button class="btn-secondary text-xs" @click="closeDetail">返回列表</button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Editable fields -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">地区</span>
+              <select v-model="editData.site" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold">
+                <option v-for="s in siteOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">设备类型</span>
+              <select v-model="editData.productType" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold">
+                <option value="体脂秤">体脂秤</option>
+                <option value="筋膜枪">筋膜枪</option>
+                <option value="血压计">血压计</option>
+              </select>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">异常级别</span>
+              <select v-model="editData.exception" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold">
+                <option v-for="lvl in exceptionLevels" :key="lvl" :value="lvl">{{ lvl }}</option>
+              </select>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">处理去向</span>
+              <select v-model="editData.processRoute" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold">
+                <option v-for="r in processRouteOptions" :key="r" :value="r">{{ r }}</option>
+              </select>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">状态</span>
+              <select v-model="editData.processState" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold">
+                <option v-for="s in processStateOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+              <span class="block text-[11px] font-bold text-gray-500">处理人</span>
+              <input v-model="editData.handler" class="w-full mt-1 h-8 text-xs border border-gray-200 rounded px-1.5 font-bold" />
+            </div>
           </div>
+
+          <!-- Text areas -->
+          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+            <span class="block text-[11px] font-bold text-gray-500 mb-1">用户反馈（客户对话/退货反馈）</span>
+            <textarea v-model="editData.raw" rows="3" class="w-full text-xs border border-gray-200 rounded p-2 resize-y font-bold"></textarea>
+          </div>
+          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+            <span class="block text-[11px] font-bold text-gray-500 mb-1">用户评价翻译（AI自动翻译）</span>
+            <textarea v-model="editData.ai" rows="3" class="w-full text-xs border border-gray-200 rounded p-2 resize-y font-bold"></textarea>
+          </div>
+
+          <!-- Solution -->
+          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+            <span class="block text-[11px] font-bold text-gray-500">问题回答/处理方案</span>
+            <strong class="block mt-1 text-sm text-gray-900">{{ getSolution(detailItem) }}</strong>
+          </div>
+
+          <!-- Return progress -->
+          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+            <span class="block text-[11px] font-bold text-gray-500 mb-1">退换货进度（PMS售后模块）</span>
+            <div class="grid grid-cols-4 gap-2">
+              <div class="p-2 bg-white border border-gray-100 rounded">
+                <b class="block text-xs">售后状态</b>
+                <em class="block text-[11px] text-gray-500 not-italic mt-0.5">{{ detailItem.returned !== '否' ? `${detailItem.returned}处理中` : '未触发退换货' }}</em>
+              </div>
+              <div class="p-2 bg-white border border-gray-100 rounded">
+                <b class="block text-xs">PMS单号</b>
+                <em class="block text-[11px] text-gray-500 not-italic mt-0.5">{{ getExpressNo(detailItem) || '无' }}</em>
+              </div>
+              <div class="p-2 bg-white border border-gray-100 rounded">
+                <b class="block text-xs">当前节点</b>
+                <em class="block text-[11px] text-gray-500 not-italic mt-0.5">{{ detailItem.processState === '已处理' ? '已完成售后闭环' : 'PMS售后模块处理中' }}</em>
+              </div>
+              <div class="p-2 bg-white border border-gray-100 rounded">
+                <b class="block text-xs">更新时间</b>
+                <em class="block text-[11px] text-gray-500 not-italic mt-0.5">{{ detailItem.date }}</em>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+          <button class="btn-secondary text-xs" @click="closeDetail">关闭</button>
+          <button class="btn-primary text-xs" @click="saveDetail">保存修改</button>
+          <button class="btn-warning text-xs" @click="applyRoute(detailItem, '已转工单')">转工单</button>
+          <button class="btn-danger text-xs" @click="applyRoute(detailItem, '已转异常')">转异常</button>
+          <button class="btn-success text-xs" @click="applyRoute(detailItem, '已转需求')">转需求</button>
         </div>
       </div>
     </div>

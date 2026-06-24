@@ -1,108 +1,156 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { userRoleData, timeOptions, siteOptions, brandOptions, productTypeOptions, modelOptions, sourceOptions } from '@/api/mock-data';
+import { ref } from 'vue'
+import { roleOptions, siteOptions, brandOptions, productTypeOptions, modelOptions, sourceOptions, templateLibrary } from '@/api/mock-data'
 
-const config = ref({
-  period: '近30天',
+const globalDefaults = ref({
+  period: '最近30天',
   site: 'Amazon.com (US)',
-  brand: '全部品牌',
+  brand: '云康宝',
   productType: '体脂秤',
-  model: '全部',
-  source: '全部',
-});
+  model: 'CS20A',
+  source: '商品评论',
+})
 
-function scopeLabel(scope: string) {
-  if (scope === 'all') return '全部数据';
-  if (scope.startsWith('line:')) return `${scope.split(':')[1]}产品线`;
-  if (scope.startsWith('region:')) return `${scope.split(':')[1]}区域`;
-  return scope;
+const saved = ref(false)
+
+function saveDefaults() {
+  saved.value = true
+  setTimeout(() => { saved.value = false }, 2000)
+}
+
+function getScopeLabel(scope: string) {
+  if (scope === 'all') return '全部数据'
+  if (scope === 'line:CM') return '筋膜枪产品线'
+  if (scope === 'line:CS') return '八电极产品线'
+  if (scope === 'region:海外') return '海外区域'
+  if (scope === 'region:国内') return '国内区域'
+  return scope
 }
 </script>
 
 <template>
-  <div class="p-6 max-w-[1000px] mx-auto">
-    <h2 class="text-lg font-semibold text-gray-800 mb-6">系统配置</h2>
-
-    <!-- 全局筛选默认值 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
-      <h3 class="text-sm font-semibold text-gray-700 mb-4">全局筛选默认值</h3>
-      <div class="grid grid-cols-3 gap-4">
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">时间周期</label>
-          <select v-model="config.period" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in timeOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">站点</label>
-          <select v-model="config.site" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in siteOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">品牌</label>
-          <select v-model="config.brand" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in brandOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">产品类型</label>
-          <select v-model="config.productType" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in productTypeOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">型号</label>
-          <select v-model="config.model" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in modelOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">来源</label>
-          <select v-model="config.source" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-            <option v-for="o in sourceOptions" :key="o" :value="o">{{ o }}</option>
-          </select>
-        </div>
-      </div>
-      <div class="mt-4 pt-4 border-t border-gray-50">
-        <button class="px-4 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700">保存配置</button>
-      </div>
+  <div class="h-full flex flex-col">
+    <div class="px-6 py-4 bg-white border-b border-gray-200 flex-shrink-0">
+      <h2 class="text-lg font-extrabold text-gray-900">系统配置</h2>
+      <p class="text-xs text-gray-400 mt-0.5">产品线/型号 模板与角色配置</p>
     </div>
-
-    <!-- 用户角色管理 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="p-5 border-b border-gray-50">
-        <h3 class="text-sm font-semibold text-gray-700">用户角色管理</h3>
+    <div class="flex-1 overflow-auto p-6 space-y-6">
+      <!-- Section 1: Global Defaults -->
+      <div class="bg-white border border-gray-200 rounded-lg">
+        <div class="px-4 py-3 border-b border-gray-200">
+          <h3 class="text-sm font-extrabold text-gray-900">全局筛选默认值</h3>
+        </div>
+        <div class="p-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认时间段
+              <select v-model="globalDefaults.period" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option value="最近7天">最近7天</option>
+                <option value="最近30天">最近30天</option>
+                <option value="本月">本月</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认站点
+              <select v-model="globalDefaults.site" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option v-for="s in siteOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认品牌
+              <select v-model="globalDefaults.brand" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option v-for="b in brandOptions" :key="b" :value="b">{{ b }}</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认产品类型
+              <select v-model="globalDefaults.productType" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option v-for="p in productTypeOptions" :key="p" :value="p">{{ p }}</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认型号
+              <select v-model="globalDefaults.model" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option v-for="m in modelOptions" :key="m" :value="m">{{ m }}</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-bold text-gray-600">
+              默认数据来源
+              <select v-model="globalDefaults.source" class="h-8 text-xs border border-gray-200 rounded px-2">
+                <option v-for="s in sourceOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </label>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn-primary text-xs" @click="saveDefaults">保存配置</button>
+            <span v-if="saved" class="text-xs text-green-600 font-bold">已保存</span>
+          </div>
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+
+      <!-- Section 2: User Roles -->
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200">
+          <h3 class="text-sm font-extrabold text-gray-900">用户角色管理</h3>
+        </div>
+        <table class="w-full text-xs">
           <thead>
-            <tr class="bg-gray-50 text-gray-500 text-xs">
-              <th class="text-left px-4 py-2.5 font-medium">Key</th>
-              <th class="text-left px-4 py-2.5 font-medium">姓名</th>
-              <th class="text-left px-4 py-2.5 font-medium">角色标签</th>
-              <th class="text-left px-4 py-2.5 font-medium">数据权限</th>
-              <th class="text-left px-4 py-2.5 font-medium w-12">头像</th>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">角色Key</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">姓名</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">角色标签</th>
+              <th class="text-left px-3 py-2 font-extrabold text-gray-600">数据权限范围</th>
+              <th class="text-center px-3 py-2 font-extrabold text-gray-600 w-16">头像</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in userRoleData" :key="user.key" class="border-t border-gray-50 hover:bg-gray-50/50">
-              <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ user.key }}</td>
-              <td class="px-4 py-3 font-medium text-gray-800">{{ user.name }}</td>
-              <td class="px-4 py-3 text-gray-600">{{ user.label }}</td>
-              <td class="px-4 py-3">
-                <span :class="['inline-flex px-2 py-0.5 rounded text-xs', user.scope === 'all' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600']">
-                  {{ scopeLabel(user.scope) }}
-                </span>
+            <tr v-for="user in roleOptions" :key="user.key" class="border-b border-gray-100">
+              <td class="px-3 py-2 font-bold text-blue-600">{{ user.key }}</td>
+              <td class="px-3 py-2 font-bold text-gray-900">{{ user.name }}</td>
+              <td class="px-3 py-2 text-gray-500">{{ user.label }}</td>
+              <td class="px-3 py-2">
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+                  :class="user.scope === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'"
+                >{{ getScopeLabel(user.scope) }}</span>
               </td>
-              <td class="px-4 py-3">
-                <div class="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
-                  <span class="text-brand-700 text-xs font-bold">{{ user.avatar }}</span>
-                </div>
+              <td class="px-3 py-2 text-center">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-xs font-extrabold text-gray-700">
+                  {{ user.avatar }}
+                </span>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Section 3: Templates -->
+      <div class="bg-white border border-gray-200 rounded-lg">
+        <div class="px-4 py-3 border-b border-gray-200">
+          <h3 class="text-sm font-extrabold text-gray-900">模板管理</h3>
+        </div>
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div
+              v-for="tmpl in templateLibrary"
+              :key="tmpl.name"
+              class="border border-gray-200 rounded-lg p-4"
+            >
+              <h4 class="text-sm font-extrabold text-gray-900 mb-2">{{ tmpl.name }}</h4>
+              <div class="space-y-1 text-[11px] text-gray-500">
+                <p><b>站点:</b> {{ (tmpl.values.site as string[]).join(' / ') }}</p>
+                <p><b>品牌:</b> {{ tmpl.values.brand }}</p>
+                <p><b>产品类型:</b> {{ tmpl.values.productType }}</p>
+                <p><b>来源:</b> {{ tmpl.values.source }}</p>
+                <p><b>负责人:</b> {{ tmpl.values.owner }}</p>
+              </div>
+              <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                <button class="btn-primary text-[11px]">应用</button>
+                <button class="btn-secondary text-[11px]">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
