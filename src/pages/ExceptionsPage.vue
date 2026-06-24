@@ -69,6 +69,27 @@ function levelClass(level: string): string {
   return 'bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-xs font-black'
 }
 
+// Detail expansion
+const detailId = ref<string | null>(null)
+function toggleDetail(id: string) {
+  detailId.value = detailId.value === id ? null : id
+}
+
+// Update progress
+function updateProgress(id: string) {
+  const ex = store.exceptions.find(e => e.id === id)
+  if (ex && ex.step < 5) {
+    store.updateException(id, { step: ex.step + 1 })
+  }
+}
+
+// Toast
+const toast = ref<string | null>(null)
+function showToast(msg: string) {
+  toast.value = msg
+  setTimeout(() => { toast.value = null }, 2500)
+}
+
 </script>
 
 <template>
@@ -316,13 +337,25 @@ function levelClass(level: string): string {
 
           <!-- Action Buttons -->
           <div class="flex gap-2 border-t border-gray-100 pt-3">
-            <button class="btn-secondary text-xs">
+            <button class="btn-secondary text-xs" @click="toggleDetail(ex.id)">
               查看详情
               <ChevronRight class="w-3.5 h-3.5 ml-1" />
             </button>
-            <button class="btn-primary text-xs">
+            <button class="btn-primary text-xs" @click="updateProgress(ex.id); showToast(`${ex.id} 进度已更新`)">
               更新进度
             </button>
+          </div>
+
+          <!-- Expanded Detail -->
+          <div v-if="detailId === ex.id" class="mt-4 pt-4 border-t border-gray-200 bg-gray-50 rounded-lg p-4">
+            <h4 class="text-sm font-extrabold text-gray-900 mb-3">处理详情</h4>
+            <div class="space-y-2 text-xs">
+              <p><span class="font-bold text-gray-400">反馈原文：</span>{{ ex.feedback }}</p>
+              <p><span class="font-bold text-gray-400">影响范围：</span>{{ ex.impactScope }}</p>
+              <p><span class="font-bold text-gray-400">处理动作：</span>{{ ex.action }}</p>
+              <p><span class="font-bold text-gray-400">当前步骤：</span>第 {{ ex.step }} 步 / 共 5 步（{{ emergencyStepLabels[Math.max(0, Math.min(ex.step - 1, 4))] }}）</p>
+              <p><span class="font-bold text-gray-400">创建时间：</span>{{ ex.deadline }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -332,6 +365,11 @@ function levelClass(level: string): string {
         <AlertTriangle class="w-10 h-10 text-gray-300 mx-auto mb-3" />
         <p class="text-sm font-bold text-gray-400">未找到匹配的异常记录</p>
       </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white bg-green-600">
+      {{ toast }}
     </div>
   </div>
 </template>

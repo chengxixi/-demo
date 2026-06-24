@@ -77,6 +77,34 @@ function applyRoute(item: FeedbackItem, route: string) {
 function unmergeItem(item: FeedbackItem) {
   store.updateItem(item.id, { mergeGroup: '' })
 }
+
+// Toast notification
+const toast = ref<{ msg: string; type: 'info' | 'success' | 'warning' } | null>(null)
+function showToast(msg: string, type: 'info' | 'success' | 'warning' = 'info') {
+  toast.value = { msg, type }
+  setTimeout(() => { toast.value = null }, 2500)
+}
+
+function addFeedback() {
+  showToast('新增反馈功能：跳转至反馈录入页面', 'info')
+}
+
+function openTemplateSettings() {
+  showToast('模板设置：跳转至系统配置页面', 'info')
+}
+
+function batchImport() {
+  showToast('批量导入：请选择 CSV/Excel 文件', 'info')
+}
+
+function batchAction(action: string) {
+  showToast(`批量操作：已选中项执行「${action}」`, 'success')
+}
+
+function manualReview(item: FeedbackItem) {
+  store.updateItem(item.id, { processState: '已处理', processRoute: '已转Q&A' })
+  showToast(`反馈 ${item.id} 已完成人工复核`, 'success')
+}
 </script>
 
 <template>
@@ -88,17 +116,17 @@ function unmergeItem(item: FeedbackItem) {
         <p class="text-xs text-gray-400 mt-0.5">原始反馈数据池与AI分类结果总览，独立于工单处理流程</p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn-primary"><Plus class="w-3.5 h-3.5 mr-1" /> 新增反馈</button>
-        <button class="btn-secondary text-xs">我的模板设置</button>
-        <button class="btn-secondary text-xs">批量导入</button>
+        <button class="btn-primary" @click="addFeedback"><Plus class="w-3.5 h-3.5 mr-1" /> 新增反馈</button>
+        <button class="btn-secondary text-xs" @click="openTemplateSettings">我的模板设置</button>
+        <button class="btn-secondary text-xs" @click="batchImport">批量导入</button>
         <div class="relative group">
           <button class="btn-secondary text-xs flex items-center gap-1">批量操作 <ChevronDown class="w-3 h-3" /></button>
           <div class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 hidden group-hover:block min-w-[120px]">
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转工单</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转异常</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转需求</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">转Q&A</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50">直接关闭</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转工单')">转工单</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转异常')">转异常</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转需求')">转需求</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转Q&A')">转Q&A</button>
+            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50" @click="batchAction('直接关闭')">直接关闭</button>
           </div>
         </div>
       </div>
@@ -340,7 +368,7 @@ function unmergeItem(item: FeedbackItem) {
                     <div class="flex items-center gap-1">
                       <button class="px-2 py-0.5 text-[11px] font-bold text-blue-600 border border-gray-200 rounded hover:bg-blue-50" @click="openDetail(member.data)">详情</button>
                       <button v-if="group.members.length > 1 && !['P0', 'P1'].includes(member.data.exception)" class="px-2 py-0.5 text-[11px] font-bold text-gray-500 border border-gray-200 rounded hover:bg-gray-50" @click="unmergeItem(member.data)">移出合并</button>
-                      <button v-if="member.data.processState === '待人工复核'" class="px-2 py-0.5 text-[11px] font-bold text-red-600 border border-red-200 rounded bg-red-50 hover:bg-red-100">人工复核</button>
+                      <button v-if="member.data.processState === '待人工复核'" class="px-2 py-0.5 text-[11px] font-bold text-red-600 border border-red-200 rounded bg-red-50 hover:bg-red-100" @click.stop="manualReview(member.data)">人工复核</button>
                     </div>
                   </td>
                 </tr>
@@ -456,6 +484,11 @@ function unmergeItem(item: FeedbackItem) {
           <button class="btn-success text-xs" @click="applyRoute(detailItem, '已转需求')">转需求</button>
         </div>
       </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white" :class="toast.type === 'success' ? 'bg-green-600' : toast.type === 'warning' ? 'bg-orange-500' : 'bg-blue-600'">
+      {{ toast.msg }}
     </div>
   </div>
 </template>

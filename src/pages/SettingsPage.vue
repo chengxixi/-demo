@@ -12,10 +12,29 @@ const globalDefaults = ref({
 })
 
 const saved = ref(false)
+const toast = ref<string | null>(null)
+
+function showToast(msg: string) {
+  toast.value = msg
+  setTimeout(() => { toast.value = null }, 2500)
+}
 
 function saveDefaults() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
+  showToast('全局默认配置已保存')
+}
+
+function applyTemplate(tmpl: typeof templateLibrary[0]) {
+  if (tmpl.values.site) globalDefaults.value.site = (tmpl.values.site as string[])[0]
+  if (tmpl.values.brand) globalDefaults.value.brand = tmpl.values.brand as string
+  if (tmpl.values.productType) globalDefaults.value.productType = tmpl.values.productType as string
+  if (tmpl.values.source) globalDefaults.value.source = tmpl.values.source as string
+  showToast(`模板「${tmpl.name}」已应用到全局默认值`)
+}
+
+function editTemplate(name: string) {
+  showToast(`编辑模板：${name}`)
 }
 
 function getScopeLabel(scope: string) {
@@ -145,13 +164,18 @@ function getScopeLabel(scope: string) {
                 <p><b>负责人:</b> {{ tmpl.values.owner }}</p>
               </div>
               <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                <button class="btn-primary text-[11px]">应用</button>
-                <button class="btn-secondary text-[11px]">编辑</button>
+                <button class="btn-primary text-[11px]" @click="applyTemplate(tmpl)">应用</button>
+                <button class="btn-secondary text-[11px]" @click="editTemplate(tmpl.name)">编辑</button>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white bg-blue-600">
+      {{ toast }}
     </div>
   </div>
 </template>

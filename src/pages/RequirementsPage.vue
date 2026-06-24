@@ -56,6 +56,20 @@ const filteredRequirements = computed(() => {
 })
 
 const statusOptions = computed(() => [...new Set(mockRequirements.map(r => r.status))])
+
+// Toast & detail
+const toast = ref<string | null>(null)
+const detailId = ref<string | null>(null)
+function showToast(msg: string) {
+  toast.value = msg
+  setTimeout(() => { toast.value = null }, 2500)
+}
+function createRequirement() {
+  showToast('新建候选需求：跳转至需求录入页面')
+}
+function viewDetail(req: MockRequirement) {
+  detailId.value = detailId.value === req.id ? null : req.id
+}
 </script>
 
 <template>
@@ -66,7 +80,7 @@ const statusOptions = computed(() => [...new Set(mockRequirements.map(r => r.sta
         <h2 class="text-2xl font-extrabold text-gray-900">需求管理</h2>
         <p class="text-sm text-gray-500 mt-1">承接候选需求导入清单，完成五维评分、L1-L4分级、审批路径和下游开发衔接。</p>
       </div>
-      <button class="btn-primary">
+      <button class="btn-primary" @click="createRequirement">
         <Plus class="w-4 h-4 mr-1" />
         新建候选需求
       </button>
@@ -139,10 +153,20 @@ const statusOptions = computed(() => [...new Set(mockRequirements.map(r => r.sta
             <span class="text-gray-400 font-bold">部门:</span>
             <span class="font-bold text-gray-700">{{ req.dept }}</span>
           </div>
-          <button class="ml-auto text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center">
+          <button class="ml-auto text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center" @click.stop="viewDetail(req)">
             查看详情
             <ChevronRight class="w-3.5 h-3.5 ml-0.5" />
           </button>
+        </div>
+
+        <!-- Expanded Detail -->
+        <div v-if="detailId === req.id" class="mt-3 pt-3 border-t border-gray-100 space-y-2 text-xs text-gray-600">
+          <p><span class="font-bold text-gray-400">需求ID：</span>{{ req.id }}</p>
+          <p><span class="font-bold text-gray-400">优先级：</span>{{ req.priority }}</p>
+          <p><span class="font-bold text-gray-400">当前状态：</span>{{ req.status }}</p>
+          <p><span class="font-bold text-gray-400">来源：</span>{{ req.source }}</p>
+          <p><span class="font-bold text-gray-400">创建日期：</span>{{ req.date }}</p>
+          <p><span class="font-bold text-gray-400">详细描述：</span>{{ req.desc }}</p>
         </div>
       </div>
 
@@ -151,6 +175,11 @@ const statusOptions = computed(() => [...new Set(mockRequirements.map(r => r.sta
         <Search class="w-10 h-10 text-gray-300 mx-auto mb-3" />
         <p class="text-sm font-bold text-gray-400">未找到匹配的需求</p>
       </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white bg-blue-600">
+      {{ toast }}
     </div>
   </div>
 </template>

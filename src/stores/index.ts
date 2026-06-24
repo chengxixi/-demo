@@ -123,7 +123,13 @@ export const useWorkOrderStore = defineStore('workorder', () => {
 
 export const useEmergencyStore = defineStore('emergency', () => {
   const exceptions = ref<EmergencyException[]>([...emergencyData])
-  return { exceptions }
+
+  function updateException(id: string, updates: Partial<EmergencyException>) {
+    const idx = exceptions.value.findIndex(e => e.id === id)
+    if (idx >= 0) exceptions.value[idx] = { ...exceptions.value[idx], ...updates }
+  }
+
+  return { exceptions, updateException }
 })
 
 export const useUserStore = defineStore('user', () => {

@@ -19,6 +19,16 @@ const filteredItems = computed(() => {
 function toggle(id: string) {
   expandedId.value = expandedId.value === id ? null : id
 }
+
+const toast = ref<string | null>(null)
+function showToast(msg: string) {
+  toast.value = msg
+  setTimeout(() => { toast.value = null }, 2500)
+}
+
+function learnMore() {
+  showToast('视频指引教程列表即将上线，敬请期待')
+}
 </script>
 
 <template>
@@ -31,7 +41,7 @@ function toggle(id: string) {
       <!-- Banner -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
         <span class="text-xs font-bold text-blue-700">Q&A新增视频指引 - 部分高频问题的处理步骤已增加短视频教程，可直接转发给用户。</span>
-        <button class="text-[11px] font-bold text-blue-600 hover:underline">了解更多</button>
+        <button class="text-[11px] font-bold text-blue-600 hover:underline" @click="learnMore">了解更多</button>
       </div>
 
       <!-- Search -->
@@ -83,6 +93,11 @@ function toggle(id: string) {
           未找到匹配的Q&A内容
         </div>
       </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white bg-blue-600">
+      {{ toast }}
     </div>
   </div>
 </template>
