@@ -113,7 +113,19 @@ export const useFeedbackStore = defineStore('feedback', () => {
     if (idx >= 0) items.value[idx] = { ...items.value[idx], ...updates }
   }
 
-  return { items, activeTab, searchQuery, selectedIds, filterVisible, filters, tabCounts, mergeGroups, filteredGroups, getDataSource, getDeviceType, resetFilters, updateItem }
+  function addItem(item: FeedbackItem) {
+    items.value.unshift(item)
+  }
+
+  const filteredItems = computed(() => {
+    const result: FeedbackItem[] = []
+    filteredGroups.value.forEach(g => {
+      g.members.forEach(m => result.push(m.data))
+    })
+    return result
+  })
+
+  return { items, activeTab, searchQuery, selectedIds, filterVisible, filters, tabCounts, mergeGroups, filteredGroups, filteredItems, getDataSource, getDeviceType, resetFilters, updateItem, addItem }
 })
 
 export const useWorkOrderStore = defineStore('workorder', () => {

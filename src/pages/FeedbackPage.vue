@@ -1,12 +1,38 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Search, Filter, Plus, ChevronDown } from 'lucide-vue-next'
+import { Search, Filter, Plus, ChevronDown, X } from 'lucide-vue-next'
 import { useFeedbackStore } from '@/stores'
 import { siteOptions, sourceOptions, processRouteOptions, processStateOptions, exceptionLevels, returnOptions, feedbackTabOptions } from '@/api/mock-data'
 import type { FeedbackItem } from '@/types'
 
 const store = useFeedbackStore()
 const detailItem = ref<FeedbackItem | null>(null)
+
+// Select all / individual checkboxes
+const selectedIds = ref<Set<string>>(new Set())
+const allSelected = computed(() => {
+  const items = store.filteredItems
+  return items.length > 0 && items.every(i => selectedIds.value.has(i.id))
+})
+const someSelected = computed(() => {
+  const items = store.filteredItems
+  return items.length > 0 && items.some(i => selectedIds.value.has(i.id)) && !allSelected.value
+})
+function toggleSelectAll() {
+  const items = store.filteredItems
+  if (allSelected.value) {
+    items.forEach(i => selectedIds.value.delete(i.id))
+  } else {
+    items.forEach(i => selectedIds.value.add(i.id))
+  }
+}
+function toggleSelect(id: string) {
+  if (selectedIds.value.has(id)) {
+    selectedIds.value.delete(id)
+  } else {
+    selectedIds.value.add(id)
+  }
+}
 
 // Detail editing
 const editMode = ref(false)
@@ -85,8 +111,85 @@ function showToast(msg: string, type: 'info' | 'success' | 'warning' = 'info') {
   setTimeout(() => { toast.value = null }, 2500)
 }
 
+// Add Feedback Modal
+const showAddModal = ref(false)
+const newFeedback = ref({
+  site: 'Amazon.com (US)',
+  source: '商品评论',
+  brand: '云康宝',
+  productType: '体脂秤' as string,
+  model: 'CS20A',
+  internal: '',
+  asin: '',
+  raw: '',
+  createMode: '人工录入' as const,
+  feedbackUser: '张伟',
+  exception: '无' as string,
+  sentiment: '中性' as string,
+})
+
+function openAddModal() {
+  showAddModal.value = true
+  newFeedback.value = {
+    site: 'Amazon.com (US)',
+    source: '商品评论',
+    brand: '云康宝',
+    productType: '体脂秤',
+    model: 'CS20A',
+    internal: '',
+    asin: '',
+    raw: '',
+    createMode: '人工录入',
+    feedbackUser: '张伟',
+    exception: '无' as string,
+    sentiment: '中性' as string,
+  }
+}
+
+function closeAddModal() {
+  showAddModal.value = false
+}
+
+function submitNewFeedback() {
+  if (!newFeedback.value.raw.trim()) {
+    showToast('请填写用户反馈内容', 'warning')
+    return
+  }
+  const now = new Date()
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  const id = `FB-${dateStr}-${String(store.items.length + 1).padStart(4, '0')}`
+  const item: FeedbackItem = {
+    id,
+    site: newFeedback.value.site,
+    source: newFeedback.value.source,
+    brand: newFeedback.value.brand,
+    productType: newFeedback.value.productType,
+    model: newFeedback.value.model,
+    internal: newFeedback.value.internal || `${newFeedback.value.model}-V${String(Math.floor(Math.random() * 99) + 1).padStart(2, '0')}`,
+    asin: newFeedback.value.asin || '-',
+    raw: newFeedback.value.raw,
+    ai: newFeedback.value.source === '商品评论' || newFeedback.value.source === '退货原因' ? '' : newFeedback.value.raw,
+    date: now.toLocaleDateString('zh-CN'),
+    processRoute: '待处理',
+    processState: '待处理',
+    level1: '待分类',
+    level2: '待分类',
+    level3: '待分类',
+    exception: newFeedback.value.exception,
+    createMode: newFeedback.value.createMode,
+    returned: '否',
+    feedbackUser: newFeedback.value.feedbackUser,
+    handler: '',
+    mergeGroup: '',
+    sentiment: newFeedback.value.source === '退货原因' ? '差评' : '中性',
+  }
+  store.addItem(item)
+  closeAddModal()
+  showToast(`反馈 ${id} 已创建成功`, 'success')
+}
+
 function addFeedback() {
-  showToast('新增反馈功能：跳转至反馈录入页面', 'info')
+  openAddModal()
 }
 
 function openTemplateSettings() {
@@ -262,7 +365,9 @@ function manualReview(item: FeedbackItem) {
         <table class="feedback-table">
           <thead>
             <tr>
-              <th class="w-12"><input type="checkbox" /></th>
+              <th class="w-12">
+                <input type="checkbox" :checked="allSelected" :indeterminate.prop="someSelected" @change="toggleSelectAll()" />
+              </th>
               <th>编号</th>
               <th>地区</th>
               <th>数据来源</th>
@@ -294,7 +399,7 @@ function manualReview(item: FeedbackItem) {
             <template v-for="group in store.filteredGroups" :key="group.lead.data.id">
               <!-- Merge parent row -->
               <tr v-if="group.members.length > 1" class="merge-parent cursor-pointer" @click="group.expanded = !group.expanded">
-                <td><input type="checkbox" /></td>
+                <td><input type="checkbox" :checked="selectedIds.has(group.lead.data.id)" @change="toggleSelect(group.lead.data.id)" @click.stop /></td>
                 <td colspan="25">
                   <div class="flex items-center gap-2">
                     <button class="w-5 h-5 flex items-center justify-center border border-blue-200 rounded bg-white text-blue-600 text-xs font-extrabold">
@@ -322,7 +427,7 @@ function manualReview(item: FeedbackItem) {
                   :key="member.data.id"
                   :class="group.members.length > 1 ? 'merge-child' : ''"
                 >
-                  <td><input type="checkbox" /></td>
+                  <td><input type="checkbox" :checked="selectedIds.has(member.data.id)" @change="toggleSelect(member.data.id)" /></td>
                   <td>
                     <template v-if="group.members.length > 1">
                       <div class="flex items-center gap-1 pl-5">
@@ -482,6 +587,116 @@ function manualReview(item: FeedbackItem) {
           <button class="btn-warning text-xs" @click="applyRoute(detailItem, '已转工单')">转工单</button>
           <button class="btn-danger text-xs" @click="applyRoute(detailItem, '已转异常')">转异常</button>
           <button class="btn-success text-xs" @click="applyRoute(detailItem, '已转需求')">转需求</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Feedback Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mt-10">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
+          <h3 class="text-base font-extrabold text-gray-900">新增反馈</h3>
+          <button class="text-gray-400 hover:text-gray-600" @click="closeAddModal"><X class="w-5 h-5" /></button>
+        </div>
+
+        <div class="p-5 space-y-3">
+          <p class="text-xs text-gray-400">请填写反馈信息，带 <span class="text-red-500">*</span> 为必填项</p>
+
+          <!-- Row 1: Source & Site -->
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">数据来源 <span class="text-red-500">*</span></span>
+              <select v-model="newFeedback.source" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none">
+                <option value="商品评论">商品评论</option>
+                <option value="退货原因">退货原因</option>
+                <option value="站内信">站内信</option>
+                <option value="客服沟通">客服沟通</option>
+                <option value="APP反馈">APP反馈</option>
+                <option value="社媒">社媒</option>
+                <option value="Vine">Vine</option>
+                <option value="天使用户">天使用户</option>
+                <option value="投诉/警告">投诉/警告</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">站点 <span class="text-red-500">*</span></span>
+              <select v-model="newFeedback.site" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none">
+                <option v-for="s in siteOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Row 2: Brand & Product Type -->
+          <div class="grid grid-cols-3 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">品牌</span>
+              <input v-model="newFeedback.brand" placeholder="如：云康宝" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">设备类型</span>
+              <select v-model="newFeedback.productType" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none">
+                <option value="体脂秤">体脂秤</option>
+                <option value="人体秤">人体秤</option>
+                <option value="八电极秤">八电极秤</option>
+                <option value="筋膜枪">筋膜枪</option>
+                <option value="血压计">血压计</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">销售型号</span>
+              <input v-model="newFeedback.model" placeholder="如：CS20A" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none" />
+            </label>
+          </div>
+
+          <!-- Row 3: Internal Model, ASIN, Exception Level -->
+          <div class="grid grid-cols-3 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">内部型号/料号</span>
+              <input v-model="newFeedback.internal" placeholder="自动生成或手动填写" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">ASIN / 订单号</span>
+              <input v-model="newFeedback.asin" placeholder="选填" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">异常级别</span>
+              <select v-model="newFeedback.exception" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none">
+                <option v-for="lvl in exceptionLevels" :key="lvl" :value="lvl">{{ lvl }}</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Row 4: Raw Feedback (required) -->
+          <label class="flex flex-col gap-1">
+            <span class="text-[11px] font-bold text-gray-600">用户反馈内容 <span class="text-red-500">*</span></span>
+            <textarea
+              v-model="newFeedback.raw"
+              rows="4"
+              placeholder="请输入用户原始反馈内容（支持中英文）"
+              class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold focus:border-blue-500 outline-none"
+            ></textarea>
+          </label>
+
+          <!-- Row 5: Create Mode & Feedback User -->
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">创建方式</span>
+              <select v-model="newFeedback.createMode" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none">
+                <option value="人工录入">人工录入</option>
+                <option value="AI自动创建">AI自动创建</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] font-bold text-gray-600">反馈人</span>
+              <input v-model="newFeedback.feedbackUser" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold focus:border-blue-500 outline-none" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="flex justify-end gap-2 px-5 py-3.5 bg-gray-50 rounded-b-xl border-t border-gray-200">
+          <button class="btn-secondary text-xs h-8 px-4" @click="closeAddModal">取消</button>
+          <button class="btn-primary text-xs h-8 px-5" @click="submitNewFeedback">提交反馈</button>
         </div>
       </div>
     </div>
