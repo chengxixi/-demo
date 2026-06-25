@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Search, Filter, Plus, ChevronDown, X } from 'lucide-vue-next'
+import { Search, Filter, Plus, ChevronDown, X, FileDown } from 'lucide-vue-next'
 import { useFeedbackStore } from '@/stores'
 import { siteOptions, sourceOptions, processRouteOptions, processStateOptions, exceptionLevels, returnOptions, feedbackTabOptions } from '@/api/mock-data'
 import type { FeedbackItem } from '@/types'
@@ -182,6 +182,32 @@ function addFeedback() {
 
 function closeAddModal() {
   showAddModal.value = false
+  showTemplatePicker.value = false
+}
+
+// ==================== Import Template into New Feedback ====================
+const showTemplatePicker = ref(false)
+
+function importTemplateFrom(tpl: Template) {
+  const f = tpl.fields
+  newFeedback.value.region = f.region
+  newFeedback.value.dataSource = f.dataSource
+  newFeedback.value.deviceType = f.deviceType
+  newFeedback.value.brand = f.brand
+  newFeedback.value.internal = f.internal
+  newFeedback.value.model = f.model
+  newFeedback.value.orderNo = f.orderNo
+  newFeedback.value.expressNo = f.expressNo
+  newFeedback.value.feedbackDate = f.feedbackDate
+  newFeedback.value.raw = f.raw
+  newFeedback.value.ai = f.ai
+  newFeedback.value.solution = f.solution
+  newFeedback.value.level1 = f.level1
+  newFeedback.value.level2 = f.level2
+  newFeedback.value.level3 = f.level3
+  newFeedback.value.exception = f.exception
+  showToast(`已导入模板「${tpl.name}」`, 'success')
+  showTemplatePicker.value = false
 }
 
 function submitNewFeedback() {
@@ -841,7 +867,40 @@ function batchAction(action: string) {
             <h3 class="text-base font-extrabold text-gray-900">新增反馈</h3>
             <p class="text-[11px] text-gray-400">编号规则：产品线简码-创建时间年月日-流水号。CS：八电极/体脂秤，CM：筋膜枪。</p>
           </div>
-          <button class="text-gray-400 hover:text-gray-600" @click="closeAddModal"><X class="w-5 h-5" /></button>
+          <div class="flex items-center gap-2">
+            <!-- 导入我的模板 -->
+            <div class="relative">
+              <button
+                class="text-xs font-extrabold text-red-500 hover:text-red-600 border border-red-300 hover:border-red-400 rounded-md px-3 h-7 flex items-center gap-1 transition-colors"
+                @click="showTemplatePicker = !showTemplatePicker"
+              >
+                <FileDown class="w-3.5 h-3.5" />
+                导入我的模板
+              </button>
+              <!-- Template Picker Dropdown -->
+              <div v-if="showTemplatePicker" class="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-xl w-60 max-h-64 overflow-y-auto">
+                <div class="p-2 border-b border-gray-100">
+                  <span class="text-[10px] font-extrabold text-gray-400">选择模板导入</span>
+                </div>
+                <div
+                  v-for="tpl in templates"
+                  :key="tpl.id"
+                  class="px-3 py-2.5 cursor-pointer hover:bg-blue-50 border-b border-gray-50 flex items-center justify-between transition-colors"
+                  @click="importTemplateFrom(tpl)"
+                >
+                  <div>
+                    <div class="text-xs font-extrabold text-gray-800">{{ tpl.name }}</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">{{ tpl.fields.brand }} / {{ tpl.fields.model }} / {{ tpl.fields.region }}</div>
+                  </div>
+                  <span v-if="tpl.isDefault" class="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-extrabold flex-shrink-0">默认</span>
+                </div>
+                <div v-if="templates.length === 0" class="px-3 py-4 text-center text-[11px] text-gray-400">
+                  暂无模板，请先在「我的模板设置」中创建
+                </div>
+              </div>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600" @click="closeAddModal"><X class="w-5 h-5" /></button>
+          </div>
         </div>
 
         <div class="p-5 max-h-[70vh] overflow-y-auto">
