@@ -597,13 +597,11 @@ function batchAction(action: string) {
               <th>内部型号/料号</th>
               <th>销售型号</th>
               <th>订单号</th>
-              <th>快递单号</th>
+              <th>是否退换货</th>
               <th>用户反馈</th>
               <th>AI翻译</th>
-              <th>图片补充</th>
-              <th>视频补充</th>
               <th>反馈时间</th>
-              <th>处理方案</th>
+              <th>问题回答/处理方案</th>
               <th>一级职能</th>
               <th>二级问题</th>
               <th>三级问题</th>
@@ -621,7 +619,7 @@ function batchAction(action: string) {
               <!-- Merge parent row -->
               <tr v-if="group.members.length > 1" class="merge-parent cursor-pointer" @click="group.expanded = !group.expanded">
                 <td><input type="checkbox" :checked="selectedIds.has(group.lead.data.id)" @change="toggleSelect(group.lead.data.id)" @click.stop /></td>
-                <td colspan="25">
+                <td colspan="23">
                   <div class="flex items-center gap-2">
                     <button class="w-5 h-5 flex items-center justify-center border border-blue-200 rounded bg-white text-blue-600 text-xs font-extrabold">
                       {{ group.expanded ? '−' : '+' }}
@@ -670,11 +668,9 @@ function batchAction(action: string) {
                   <td>{{ member.data.internal }}</td>
                   <td>{{ member.data.model }}</td>
                   <td>{{ member.data.asin !== '-' ? member.data.asin : 'ORD-' + member.data.id.replace('FB-', '') }}</td>
-                  <td>{{ getExpressNo(member.data) }}</td>
+                  <td>{{ member.data.returned || '-' }}</td>
                   <td class="max-w-[200px] truncate text-xs">{{ member.data.raw }}</td>
                   <td class="max-w-[200px] truncate text-xs">{{ member.data.ai }}</td>
-                  <td>-</td>
-                  <td>-</td>
                   <td>{{ member.data.date }}</td>
                   <td class="max-w-[180px] truncate text-xs">{{ getSolution(member.data) }}</td>
                   <td>{{ member.data.level1 }}</td>
@@ -701,7 +697,7 @@ function batchAction(action: string) {
               </template>
             </template>
             <tr v-if="store.filteredGroups.length === 0">
-              <td colspan="26" class="text-center py-10 text-gray-400 text-sm font-bold">当前筛选条件下没有反馈记录</td>
+              <td colspan="24" class="text-center py-10 text-gray-400 text-sm font-bold">当前筛选条件下没有反馈记录</td>
             </tr>
           </tbody>
         </table>
