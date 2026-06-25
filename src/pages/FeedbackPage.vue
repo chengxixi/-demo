@@ -645,7 +645,7 @@ function batchAction(action: string) {
               <!-- Merge parent row -->
               <tr v-if="group.members.length > 1" class="merge-parent cursor-pointer" @click="group.expanded = !group.expanded">
                 <td><input type="checkbox" :checked="selectedIds.has(group.lead.data.id)" @change="toggleSelect(group.lead.data.id)" @click.stop /></td>
-                <td colspan="23">
+                <td colspan="22">
                   <div class="flex items-center gap-2">
                     <button class="w-5 h-5 flex items-center justify-center border border-blue-200 rounded bg-white text-blue-600 text-xs font-extrabold">
                       {{ group.expanded ? '−' : '+' }}
