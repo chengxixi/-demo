@@ -36,7 +36,9 @@ export interface MergeGroup {
 // 工单
 export interface WorkOrder {
   id: string
+  summary: string
   relatedFeedback: string
+  productLine: string
   status: string
   owner: string
   dept: string
@@ -45,7 +47,10 @@ export interface WorkOrder {
   closeReason: string
   exception: string
   requirement: string
+  qa: string
   step: number
+  aiAbstract: string
+  closeNote: string
 }
 
 // 异常
