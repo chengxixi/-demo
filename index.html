@@ -820,8 +820,8 @@
       })();
 
       (() => {
-        if (window.__localFeedbackEnhancerBootstrapped) return;
-        window.__localFeedbackEnhancerBootstrapped = true;
+        if (document.documentElement.dataset.localFeedbackEnhancerBootstrapped === "true") return;
+        document.documentElement.dataset.localFeedbackEnhancerBootstrapped = "true";
 
         const siteOptions = ["Amazon.com (US)", "天猫", "京东", "抖音"];
         const feedbackTabOptions = [
@@ -841,9 +841,7 @@
           { key: "overseasFeedback", name: "张伟", label: "海外反馈人员", scope: "region:海外", avatar: "OS" },
           { key: "domesticFeedback", name: "王雪", label: "国内反馈人员", scope: "region:国内", avatar: "CN" },
         ];
-        const userTemplate = {
-          enabled: false,
-          values: {
+        const feedbackTemplateDefaults = {
             region: "海外",
             dataSource: "海外电商-退货反馈",
             deviceType: "八电极",
@@ -868,8 +866,42 @@
             processState: "待处理",
             feedbackUser: "张伟",
             note: "",
-          },
         };
+        const userTemplates = [
+          {
+            id: "TPL-001",
+            name: "八电极海外退货模板",
+            isDefault: true,
+            enabled: true,
+            values: { ...feedbackTemplateDefaults },
+          },
+          {
+            id: "TPL-002",
+            name: "筋膜枪国内反馈模板",
+            isDefault: false,
+            enabled: true,
+            values: {
+              ...feedbackTemplateDefaults,
+              region: "国内",
+              dataSource: "客服沟通",
+              deviceType: "筋膜枪",
+              brand: "LF",
+              internal: "LF-MG20-CN",
+              model: "MG20",
+              orderNo: "",
+              returned: "无需",
+              raw: "用户反馈筋膜枪高档位噪音偏大。",
+              ai: "筋膜枪高档位噪音明显，建议检查电机与结构件。",
+              solution: "待筋膜枪产品经理确认处理方案。",
+              level1: "产品体验",
+              level2: "功能效果",
+              level3: "噪音偏大",
+              exception: "P3",
+              feedbackUser: "王雪",
+            },
+          },
+        ];
+        const getDefaultUserTemplate = () => userTemplates.find((item) => item.isDefault && item.enabled) || null;
         const tableHeaders = [
           "全选",
           "编号",
@@ -1083,6 +1115,42 @@
           { id: "TK-20260611-0339", summary: "APP同步闪退兼容性排查", relatedFeedback: "FB-20260611-00121", feedbackIds: ["FB-20260611-00121"], status: "待确认", owner: "刘工", dept: "研发部", sla: "31h 10m", result: "APP版本兼容排查", closeReason: "-", exception: "否", requirement: "否", step: 4 },
           { id: "TK-20260610-0318", summary: "筋膜枪力度不足说明与体验优化", relatedFeedback: "FB-20260610-00117", feedbackIds: ["FB-20260610-00117"], status: "已闭环", owner: "孙工", dept: "产品部", sla: "完成", result: "补充使用指导与Listing说明", closeReason: "已回复", exception: "否", requirement: "预留", step: 5 },
         ];
+        const qaRecords = [
+          { id: "QA-202606-0086", title: "体脂秤无法开机标准回复", type: "标准回复", line: "八电极秤", category: "产品质量 / 硬件问题", scenario: "无法开机/更换电池无效", tags: ["无法开机", "售后回复"], version: "V2.1", status: "已发布", sourceType: "反馈单", sourceId: "CS-20260618-0002", owner: "李工", updatedAt: "2026-06-24", content: "先确认电池安装方向和电量，重新安装后仍无法开机则按售后流程处理。" },
+          { id: "QA-202606-0085", title: "测量偏差排查案例", type: "异常案例", line: "八电极秤", category: "产品体验 / 数据准确性", scenario: "称重偏高5-8磅", tags: ["测量偏差", "校准"], version: "V1.3", status: "待审核", sourceType: "紧急异常", sourceId: "P0-20260611-007", owner: "刘工", updatedAt: "2026-06-23", content: "记录问题现象、影响范围、根因、整改措施及验证结论。" },
+          { id: "QA-202606-0084", title: "筋膜枪噪音使用说明", type: "使用指引", line: "筋膜枪", category: "产品体验 / 功能效果", scenario: "高档位噪音咨询", tags: ["噪音", "使用指引"], version: "V1.0", status: "已发布", sourceType: "工单", sourceId: "TK-20260610-0318", owner: "孙工", updatedAt: "2026-06-20", content: "说明不同档位的正常声音范围，并提供异常噪音判断方法。" },
+          { id: "QA-202606-0083", title: "客服新人常见问题培训", type: "培训材料", line: "全产品线", category: "咨询服务", scenario: "客服入职培训", tags: ["培训", "标准话术"], version: "V0.9", status: "草稿", sourceType: "手工新建", sourceId: "-", owner: "管理员", updatedAt: "2026-06-18", content: "汇总常见咨询、标准回复和升级处理边界。" },
+        ];
+        const settingsData = {
+          channels: [
+            { id: "CH-01", name: "Amazon", fields: "站点、ASIN、订单号、评论星级", enabled: true },
+            { id: "CH-02", name: "天猫", fields: "店铺、订单号、SKU、旺旺昵称", enabled: true },
+            { id: "CH-03", name: "京东", fields: "店铺、订单号、SKU、评价等级", enabled: true },
+            { id: "CH-04", name: "抖音", fields: "店铺、订单号、商品ID、达人来源", enabled: true },
+            { id: "CH-05", name: "APP反馈", fields: "APP版本、系统版本、设备ID", enabled: true },
+            { id: "CH-06", name: "客服沟通", fields: "客服、会话ID、联系方式", enabled: true },
+          ],
+          categories: [
+            { id: "CAT-01", level1: "产品质量", level2: "硬件问题", level3: "无法开机", enabled: true },
+            { id: "CAT-02", level1: "产品质量", level2: "硬件问题", level3: "玻璃碎裂", enabled: true },
+            { id: "CAT-03", level1: "产品体验", level2: "数据准确性", level3: "测脂不准", enabled: true },
+            { id: "CAT-04", level1: "产品体验", level2: "功能效果", level3: "噪音偏大", enabled: true },
+            { id: "CAT-05", level1: "咨询服务", level2: "配件适配", level3: "尺寸咨询", enabled: true },
+          ],
+          permissions: [
+            { id: "ROLE-01", name: "管理员", dataScope: "全部数据", actions: "查看、新增、编辑、删除、配置、导出", enabled: true },
+            { id: "ROLE-02", name: "产品经理", dataScope: "所属产品线", actions: "查看、编辑、转工单、转需求、审核", enabled: true },
+            { id: "ROLE-03", name: "反馈人员", dataScope: "所属地区/渠道", actions: "查看、新增、编辑、导入", enabled: true },
+            { id: "ROLE-04", name: "只读人员", dataScope: "授权范围", actions: "查看、导出", enabled: true },
+          ],
+          competitorFields: [
+            { id: "CF-01", name: "ASIN/商品ID", group: "基础信息", type: "文本", required: true, enabled: true },
+            { id: "CF-02", name: "售价", group: "价格信息", type: "金额", required: true, enabled: true },
+            { id: "CF-03", name: "测量指标数量", group: "功能参数", type: "数字", required: false, enabled: true },
+            { id: "CF-04", name: "电池/续航", group: "硬件参数", type: "文本", required: false, enabled: true },
+            { id: "CF-05", name: "渠道覆盖", group: "市场参数", type: "多选", required: false, enabled: true },
+          ],
+        };
         const localEmergencyExceptions = [
           { id: "P1-20260611-008", level: "P1", region: "海外", site: "Amazon", productLine: "八电极秤", internal: "GE31002B1-CS", creator: "陈晨", dimension: "平台合规", source: "投诉/舆情", deadline: "已超时 2h", reminderLimit: "2h", reminderDeadline: "2026-06-05 12:00", overdue: true, owner: "陈总", team: "海外运营+产品经理", status: "临时方案超时", issue: "玻璃碎裂投诉连续上升", impactScope: "GE31002B1-CS 批次 2026Q1，约500台", action: "隔离相关批次，检查包装防护", feedback: "CS-20260618-合并（2条数据）", tempPlan: "", rootCause: "待根因分析", fixPlan: "待整改措施", verifyResult: "待验证", step: 0 },
           { id: "P0-20260611-007", level: "P0", region: "国内", site: "京东", productLine: "体脂秤", internal: "FT31002A2", creator: "张伟", dimension: "客户伤害", source: "退货原因", deadline: "剩余 1h 30m", reminderLimit: "2h", reminderDeadline: "2026-06-05 08:45", overdue: false, owner: "刘海州", team: "售后负责人+质量负责人", status: "临时方案输出", issue: "测脂不准导致退货率升高", impactScope: "FT31002A2 全批次，约2000台", action: "暂停相关投放，输出说明书修订", feedback: "CS-20260617-0003", tempPlan: "售后先行解释并补发测量指引", rootCause: "传感器数据与说明书口径不一致", fixPlan: "优化测量引导和算法提示", verifyResult: "待验证", step: 2 },
@@ -1119,6 +1187,29 @@
             .local-template-save-row { display: flex; gap: 10px; align-items: center; }
             .local-template-save-row input { flex: 1; }
             .local-template-set { margin-top: 8px; }
+            .local-template-manager { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 14px; min-height: 420px; }
+            .local-template-sidebar { display: grid; align-content: start; gap: 8px; padding-right: 12px; border-right: 1px solid #d7deea; }
+            .local-template-list { display: grid; gap: 7px; }
+            .local-template-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 10px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; cursor: pointer; }
+            .local-template-item.active { border-color: #1f73e8; background: #f5f9ff; box-shadow: 0 0 0 2px #1f73e81a; }
+            .local-template-item strong { display: block; color: #101828; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .local-template-item span { color: #667085; font-size: 11px; font-weight: 700; }
+            .local-template-editor { min-width: 0; }
+            .local-template-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; margin-bottom: 12px; }
+            .local-template-name-row label { display: grid; gap: 5px; color: #344054; font-size: 12px; font-weight: 800; }
+            .local-template-name-row input { min-height: 38px; padding: 0 10px; border: 1px solid #c8d2df; border-radius: 7px; }
+            .local-template-default { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; color: #344054; font-size: 13px; font-weight: 800; white-space: nowrap; }
+            .local-template-import-picker { display: grid; gap: 8px; margin-top: 12px; }
+            .local-template-import-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
+            .local-template-import-card strong { display: block; color: #101828; }
+            .local-template-import-card p { margin: 4px 0 0; color: #667085; font-size: 12px; }
+            .local-ai-review-block { grid-column: 1 / -1; display: grid; gap: 10px; margin-top: 4px; padding: 13px; border: 1px solid #b2ccff; border-radius: 8px; background: #f5f9ff; }
+            .local-ai-review-block h3 { margin: 0; color: #1849a9; font-size: 14px; }
+            .local-ai-review-block p { margin: 0; color: #475467; font-size: 12px; }
+            .local-ai-review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .local-ai-review-grid label { display: grid; gap: 5px; color: #344054; font-size: 12px; font-weight: 800; }
+            .local-ai-review-grid select, .local-ai-review-grid textarea { width: 100%; padding: 8px 10px; border: 1px solid #c8d2df; border-radius: 7px; background: #fff; }
+            .local-ai-review-grid textarea { min-height: 72px; resize: vertical; }
             .feedback-table { min-width: 3000px; }
             .local-feedback-tabs { display: flex; align-items: center; gap: 6px; margin: 12px 0 10px; border-bottom: 1px solid #d7deea; }
             .local-feedback-tab { min-height: 38px; padding: 0 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #475467; font-size: 14px; font-weight: 800; }
@@ -1376,6 +1467,29 @@
             .local-config-table th, .local-config-table td { padding: 12px; border-bottom: 1px solid #edf1f7; color: #344054; font-size: 13px; text-align: left; }
             .local-config-table th { background: #f8fafc; color: #475467; font-weight: 800; }
             .local-config-table tr:last-child td { border-bottom: 0; }
+            .local-qa-toolbar, .local-settings-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(140px, 190px)); gap: 10px; margin: 14px 0; }
+            .local-qa-toolbar input, .local-qa-toolbar select, .local-settings-toolbar input, .local-settings-toolbar select { min-height: 38px; padding: 0 10px; border: 1px solid #c8d2df; border-radius: 7px; background: #fff; color: #101828; }
+            .local-qa-source { color: #175cd3; font-weight: 800; }
+            .local-tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+            .local-tag-row span { display: inline-flex; align-items: center; min-height: 22px; padding: 0 7px; border-radius: 999px; background: #eef4ff; color: #175cd3; font-size: 11px; font-weight: 800; }
+            .local-table-actions { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+            .local-table-actions button { min-height: 28px; padding: 0 8px; }
+            .local-settings-tabs { display: flex; gap: 4px; margin: 14px 0 0; border-bottom: 1px solid #d7deea; }
+            .local-settings-tab { min-height: 40px; padding: 0 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #475467; font-weight: 800; }
+            .local-settings-tab.active { border-bottom-color: #1f73e8; color: #175cd3; }
+            .local-settings-panel { display: grid; gap: 12px; padding-top: 14px; }
+            .local-settings-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+            .local-settings-panel-head h3 { margin: 0; color: #101828; }
+            .local-settings-panel-head p { margin: 5px 0 0; color: #667085; font-size: 13px; }
+            .local-switch { display: inline-flex; align-items: center; gap: 7px; color: #344054; font-size: 12px; font-weight: 800; }
+            .local-sort-actions { display: inline-flex; gap: 4px; }
+            .local-sort-actions button { width: 28px; min-height: 28px; padding: 0; }
+            @media (max-width: 900px) {
+              .local-template-manager { grid-template-columns: 1fr; }
+              .local-template-sidebar { padding-right: 0; padding-bottom: 12px; border-right: 0; border-bottom: 1px solid #d7deea; }
+              .local-qa-toolbar, .local-settings-toolbar { grid-template-columns: 1fr 1fr; }
+              .local-ai-review-grid { grid-template-columns: 1fr; }
+            }
             @media (max-width: 980px) {
               .local-page-grid,
               .local-page-grid.three { grid-template-columns: 1fr; }
@@ -2030,41 +2144,85 @@
 
         const openTemplateSettings = () => {
           openModal(`
-            <div class="local-modal">
+            <div class="local-modal local-modal-large">
               <div class="local-modal-head">
-                <div><span>我的模板设置</span><h2>我的模板设置</h2><p>每个用户仅维护自己的一个录入模板。</p></div>
+                <div><span>我的模板设置</span><h2>我的模板设置</h2><p>创建多个个人录入模板，并选择一个默认模板用于新增反馈。</p></div>
                 <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
               </div>
-              <div class="local-template-panel">
-                <label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#344054;">
-                  <input type="checkbox" data-local-template-enabled ${userTemplate.enabled ? "checked" : ""} />
-                  启用我的模板，新增反馈时自动导入默认字段
-                </label>
+              <div class="local-template-manager">
+                <aside class="local-template-sidebar">
+                  <button type="button" class="primary-button" data-local-template-add>新增模板</button>
+                  <div class="local-template-list" data-local-template-list></div>
+                </aside>
+                <section class="local-template-editor">
+                  <div class="local-template-name-row">
+                    <label>模板名称<input data-local-template-name placeholder="请输入模板名称" /></label>
+                    <label class="local-template-default"><input type="checkbox" data-local-template-default /> 设为默认启用模板</label>
+                  </div>
+                  <div class="local-modal-grid" data-local-template-form></div>
+                </section>
               </div>
-              <div class="local-modal-grid" data-local-template-form></div>
               <div class="local-modal-actions">
+                <button type="button" class="danger-button" data-local-template-delete>删除当前模板</button>
                 <button type="button" class="primary-button" data-local-template-save>保存模板</button>
                 <button type="button" class="secondary-button" data-local-close>关闭</button>
               </div>
             </div>
           `);
           const form = document.querySelector("[data-local-template-form]");
+          const list = document.querySelector("[data-local-template-list]");
+          const nameInput = document.querySelector("[data-local-template-name]");
+          const defaultInput = document.querySelector("[data-local-template-default]");
+          let activeId = userTemplates.find((item) => item.isDefault)?.id || userTemplates[0]?.id;
+          const getActive = () => userTemplates.find((item) => item.id === activeId);
+          const collectActiveForm = () => {
+            const active = getActive();
+            if (!active) return;
+            active.name = nameInput.value.trim() || "未命名模板";
+            active.values = Object.fromEntries(Array.from(form.querySelectorAll("[name]")).map((field) => [field.name, field.value]));
+            active.enabled = true;
+            if (defaultInput.checked) userTemplates.forEach((item) => { item.isDefault = item.id === active.id; });
+          };
+          const renderList = () => {
+            list.innerHTML = userTemplates.map((item) => `
+              <button type="button" class="local-template-item ${item.id === activeId ? "active" : ""}" data-template-id="${item.id}">
+                <span><strong>${escapeHtml(item.name)}</strong><span>${item.isDefault ? "默认启用" : item.enabled ? "可用模板" : "已停用"}</span></span>
+                <span>${item.isDefault ? "默认" : "选择"}</span>
+              </button>
+            `).join("");
+            list.querySelectorAll("[data-template-id]").forEach((button) => button.addEventListener("click", () => {
+              collectActiveForm();
+              activeId = button.dataset.templateId;
+              render();
+            }));
+          };
           const render = () => {
-            const v = (key, fallback = "") => escapeHtml(userTemplate.values[key] ?? fallback);
-            const selected = (key, value) => userTemplate.values[key] === value ? "selected" : "";
+            const active = getActive();
+            if (!active) {
+              nameInput.value = "";
+              defaultInput.checked = false;
+              form.innerHTML = '<div class="local-detail-block wide"><strong>暂无模板，请点击“新增模板”。</strong></div>';
+              renderList();
+              return;
+            }
+            nameInput.value = active.name;
+            defaultInput.checked = active.isDefault;
+            const values = active.values || {};
+            const v = (key, fallback = "") => escapeHtml(values[key] ?? fallback);
+            const selected = (key, value) => values[key] === value ? "selected" : "";
             const aiSuggest = analyzeFeedbackByAI({
-              level3: userTemplate.values.level3 || "",
-              ai: userTemplate.values.ai || "",
-              raw: userTemplate.values.raw || "",
-              exception: userTemplate.values.exception || "",
-              returned: userTemplate.values.returned || "",
+              level3: values.level3 || "",
+              ai: values.ai || "",
+              raw: values.raw || "",
+              exception: values.exception || "",
+              returned: values.returned || "",
             });
             const aiOption = aiRouteOptions.find((o) => o.value === aiSuggest.route);
             const aiLabel = aiOption?.label || "--";
             const aiReason = aiSuggest.reasoning;
             form.innerHTML = `
               <label>地区<select name="region"><option ${selected("region", "海外")}>海外</option><option ${selected("region", "国内")}>国内</option></select></label>
-              <label>数据来源<select name="dataSource">${["海外电商-退货反馈", "海外电商-商品评论", "国内电商-退货反馈", "国内电商-商品评论", "站内信", "客服沟通", "APP反馈"].map((item) => `<option ${item === userTemplate.values.dataSource ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>数据来源<select name="dataSource">${["海外电商-退货反馈", "海外电商-商品评论", "国内电商-退货反馈", "国内电商-商品评论", "站内信", "客服沟通", "APP反馈"].map((item) => `<option ${item === values.dataSource ? "selected" : ""}>${item}</option>`).join("")}</select></label>
               <label>设备类型<input name="deviceType" value="${v("deviceType")}" /></label>
               <label>品牌<input name="brand" value="${v("brand")}" /></label>
               <label>内部型号/料号<input name="internal" value="${v("internal")}" /></label>
@@ -2073,12 +2231,12 @@
               <label>是否退换货<select name="returned" onchange="const el=this.closest('form').querySelector('.local-express-row');if(el)el.style.display=(this.value==='退货'||this.value==='换货'||this.value==='退货+换货')?'':'none'"><option ${selected("returned", "退货")}>退货</option><option ${selected("returned", "换货")}>换货</option><option ${selected("returned", "退货+换货")}>退货+换货</option><option ${selected("returned", "无需")}>无需</option></select></label>
               <label class="local-express-row" style="display:${v("returned")==="退货"||v("returned")==="换货"||v("returned")==="退货+换货"?"":"none"}">快递单号（退换货）<input name="expressNo" value="${v("expressNo")}" placeholder="退换货时填写" /></label>
               <label>问题反馈时间<input type="date" name="feedbackDate" value="${v("feedbackDate")}" /></label>
-              <label>异常级别<select name="exception">${["否", "待确认", "P0", "P1", "P2", "P3"].map((item) => `<option ${item === userTemplate.values.exception ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>异常级别<select name="exception">${["否", "待确认", "P0", "P1", "P2", "P3"].map((item) => `<option ${item === values.exception ? "selected" : ""}>${item}</option>`).join("")}</select></label>
               <label>图片补充<input name="image" value="${v("image")}" placeholder="图片链接或附件说明" /></label>
               <label>视频补充<input name="video" value="${v("video")}" placeholder="视频链接或附件说明" /></label>
               <label>创建方式<select name="createMode"><option ${selected("createMode", "人工录入")}>人工录入</option><option ${selected("createMode", "AI自动创建")}>AI自动创建</option></select></label>
-              <label>处理去向<select name="processRoute">${processRouteOptions.map((item) => `<option ${item === userTemplate.values.processRoute ? "selected" : ""}>${item}</option>`).join("")}</select></label>
-              <label>状态<select name="processState">${processStateOptions.map((item) => `<option ${item === userTemplate.values.processState ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>处理去向<select name="processRoute">${processRouteOptions.map((item) => `<option ${item === values.processRoute ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+              <label>状态<select name="processState">${processStateOptions.map((item) => `<option ${item === values.processState ? "selected" : ""}>${item}</option>`).join("")}</select></label>
               <label>反馈人<input name="feedbackUser" value="${v("feedbackUser")}" /></label>
               <label>一级职能划分<input name="level1" value="${v("level1")}" /></label>
               <label>二级问题场景分类<input name="level2" value="${v("level2")}" /></label>
@@ -2089,12 +2247,29 @@
               <label class="wide">AI建议处理方案<div class="local-ai-suggestion"><strong>${aiLabel}</strong> — ${aiReason}</div></label>
               <label class="wide">备注<textarea name="note" placeholder="可保存固定话术、默认标签、备注字段">${v("note")}</textarea></label>
             `;
+            renderList();
           };
           render();
-          document.querySelector("[data-local-close]")?.addEventListener("click", closeModal);
+          bindModalClose();
+          document.querySelector("[data-local-template-add]")?.addEventListener("click", () => {
+            collectActiveForm();
+            const id = `TPL-${String(userTemplates.length + 1).padStart(3, "0")}`;
+            userTemplates.push({ id, name: `我的模板${userTemplates.length + 1}`, isDefault: false, enabled: true, values: { ...feedbackTemplateDefaults } });
+            activeId = id;
+            render();
+          });
+          document.querySelector("[data-local-template-delete]")?.addEventListener("click", () => {
+            const index = userTemplates.findIndex((item) => item.id === activeId);
+            if (index < 0) return;
+            const wasDefault = userTemplates[index].isDefault;
+            userTemplates.splice(index, 1);
+            if (wasDefault && userTemplates[0]) userTemplates[0].isDefault = true;
+            activeId = userTemplates[0]?.id;
+            render();
+          });
           document.querySelector("[data-local-template-save]")?.addEventListener("click", () => {
-            userTemplate.enabled = Boolean(document.querySelector("[data-local-template-enabled]")?.checked);
-            userTemplate.values = Object.fromEntries(Array.from(form.querySelectorAll("[name]")).map((field) => [field.name, field.value]));
+            collectActiveForm();
+            if (!userTemplates.some((item) => item.isDefault) && userTemplates[0]) userTemplates[0].isDefault = true;
             closeModal();
           });
         };
@@ -2384,8 +2559,38 @@
           });
         };
 
-        const openFeedbackModal = () => {
-          const template = userTemplate.enabled ? userTemplate.values : {};
+        const openTemplateImportPicker = () => {
+          openModal(`
+            <div class="local-modal">
+              <div class="local-modal-head">
+                <div><span>新增反馈</span><h2>选择我的模板</h2><p>选择一个个人模板，将模板字段导入新增反馈表单。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-template-import-picker">
+                ${userTemplates.filter((item) => item.enabled).map((item) => `
+                  <article class="local-template-import-card">
+                    <div><strong>${escapeHtml(item.name)}</strong><p>${item.isDefault ? "默认模板 · " : ""}${escapeHtml(item.values.region)} / ${escapeHtml(item.values.dataSource)} / ${escapeHtml(item.values.deviceType)}</p></div>
+                    <button type="button" class="primary-button" data-import-template="${item.id}">导入</button>
+                  </article>
+                `).join("") || '<div class="local-detail-block"><strong>暂无可用模板，请先在“我的模板设置”中创建。</strong></div>'}
+              </div>
+              <div class="local-modal-actions">
+                <button type="button" class="secondary-button" data-local-back-feedback>返回新增反馈</button>
+                <button type="button" class="secondary-button" data-local-close>关闭</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          document.querySelector("[data-local-back-feedback]")?.addEventListener("click", () => openFeedbackModal({}));
+          document.querySelectorAll("[data-import-template]").forEach((button) => button.addEventListener("click", () => {
+            const selectedTemplate = userTemplates.find((item) => item.id === button.dataset.importTemplate);
+            openFeedbackModal(selectedTemplate?.values || {});
+          }));
+        };
+
+        const openFeedbackModal = (importedTemplate) => {
+          const defaultTemplate = getDefaultUserTemplate();
+          const template = importedTemplate || defaultTemplate?.values || {};
           const tv = (key, fallback = "") => escapeHtml(template[key] || fallback);
           const lineCode = template.deviceType === "筋膜枪" ? "CM" : "CS";
           const aiSuggest = analyzeFeedbackByAI({
@@ -2402,7 +2607,10 @@
             <div class="local-modal">
               <div class="local-modal-head">
                 <div><span>新增反馈</span><h2>新增反馈</h2><p>编号规则：产品线简码-创建时间年月日-流水号。CS：八电极/体脂秤，CM：筋膜枪。</p></div>
-                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                <div class="local-page-actions">
+                  <button type="button" class="secondary-button" data-local-import-template>导入模板</button>
+                  <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                </div>
               </div>
               <div class="local-modal-grid">
                 <label>编号<input value="${lineCode}-20260618-0007" /></label>
@@ -2422,11 +2630,23 @@
                 <label>图片补充<input type="file" accept="image/*" multiple data-local-attachment /></label>
                 <label>视频补充<input type="file" accept="video/*" multiple data-local-attachment /></label>
                 <label class="wide">粘贴图片/视频<div class="local-attachment-drop" contenteditable="true" data-local-paste>可直接 Ctrl+V 粘贴截图、图片、视频文件或附件链接。</div></label>
-                <label class="wide">问题回答/处理方案<textarea>${tv("solution", "待产品经理确认处理方案。")}</textarea></label>
-                <label class="wide">AI建议处理方案<div class="local-ai-suggestion"><strong>${aiLabel}</strong> — ${aiReason}</div></label>
                 <label>一级职能划分<select>${["产品质量", "产品体验", "咨询服务"].map((item) => `<option ${item === template.level1 ? "selected" : ""}>${item}</option>`).join("")}</select></label>
                 <label>二级问题场景分类<input value="${tv("level2", "硬件损坏/无法使用")}" /></label>
                 <label>三级具体问题<input value="${tv("level3", "无法开机/上电")}" /></label>
+                <section class="local-ai-review-block">
+                  <div><h3>AI建议处理方案</h3><p>AI建议仅作为参考，最终处理方案由人工确认。</p></div>
+                  <div class="local-ai-suggestion"><strong>${aiLabel}</strong> — ${aiReason}</div>
+                  <div class="local-ai-review-grid">
+                    <label>人工选择处理方案
+                      <select data-local-human-route>
+                        ${processRouteOptions.map((item) => `<option ${item === (template.processRoute || "待处理") ? "selected" : ""}>${item}</option>`).join("")}
+                      </select>
+                    </label>
+                    <label>人工处理说明
+                      <textarea data-local-human-solution placeholder="填写最终回复、处理动作或转办说明">${tv("solution", "待产品经理确认处理方案。")}</textarea>
+                    </label>
+                  </div>
+                </section>
               </div>
               <div class="local-modal-actions">
                 <button type="button" class="secondary-button" data-local-close>取消</button>
@@ -2435,6 +2655,7 @@
             </div>
           `);
           bindModalClose();
+          document.querySelector("[data-local-import-template]")?.addEventListener("click", openTemplateImportPicker);
           document.querySelector("[data-local-paste]")?.addEventListener("paste", (event) => {
             const files = Array.from(event.clipboardData?.files || []);
             if (files.length) {
@@ -2807,6 +3028,62 @@
             delete node.dataset.localWorkorderListHidden;
           });
         };
+        const openWorkOrderFeedbackManager = (order) => {
+          const selectedIds = new Set(getWorkOrderFeedbackIds(order));
+          openModal(`
+            <div class="local-modal local-modal-large">
+              <div class="local-modal-head">
+                <div><span>${escapeHtml(order.id)}</span><h2>管理关联反馈</h2><p>一个工单可关联多个反馈单，勾选后保存即可同步更新。</p></div>
+                <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+              </div>
+              <div class="local-settings-toolbar">
+                <input type="search" data-workorder-feedback-search placeholder="搜索反馈编号、型号或问题" />
+                <select data-workorder-feedback-line><option value="">全部产品</option>${Array.from(new Set(localFeedbackData.map((item) => item.productType))).map((item) => `<option>${escapeHtml(item)}</option>`).join("")}</select>
+              </div>
+              <div class="local-template-import-picker" data-workorder-feedback-list>
+                ${localFeedbackData.map((item) => `
+                  <label class="local-template-import-card" data-workorder-feedback-item data-search="${escapeHtml(`${item.id} ${item.model} ${item.level3} ${item.raw}`.toLowerCase())}" data-line="${escapeHtml(item.productType)}">
+                    <div><strong>${escapeHtml(item.id)} · ${escapeHtml(item.level3 || item.level2)}</strong><p>${escapeHtml(item.productType)} / ${escapeHtml(item.model)} / ${escapeHtml(item.ai || item.raw)}</p></div>
+                    <input type="checkbox" value="${escapeHtml(item.id)}" ${selectedIds.has(item.id) ? "checked" : ""} />
+                  </label>
+                `).join("")}
+              </div>
+              <div class="local-modal-actions">
+                <span class="local-feedback-sub" data-workorder-feedback-count>已选择 ${selectedIds.size} 条反馈</span>
+                <button type="button" class="secondary-button" data-local-close>取消</button>
+                <button type="button" class="primary-button" data-workorder-feedback-save>保存关联</button>
+              </div>
+            </div>
+          `);
+          bindModalClose();
+          const updateCount = () => {
+            const count = document.querySelectorAll("[data-workorder-feedback-item] input:checked").length;
+            const node = document.querySelector("[data-workorder-feedback-count]");
+            if (node) node.textContent = `已选择 ${count} 条反馈`;
+          };
+          const applyFilters = () => {
+            const query = document.querySelector("[data-workorder-feedback-search]")?.value.trim().toLowerCase() || "";
+            const line = document.querySelector("[data-workorder-feedback-line]")?.value || "";
+            document.querySelectorAll("[data-workorder-feedback-item]").forEach((item) => {
+              item.hidden = Boolean((query && !item.dataset.search.includes(query)) || (line && item.dataset.line !== line));
+            });
+          };
+          document.querySelector("[data-workorder-feedback-search]")?.addEventListener("input", applyFilters);
+          document.querySelector("[data-workorder-feedback-line]")?.addEventListener("change", applyFilters);
+          document.querySelectorAll("[data-workorder-feedback-item] input").forEach((input) => input.addEventListener("change", updateCount));
+          document.querySelector("[data-workorder-feedback-save]")?.addEventListener("click", () => {
+            const ids = Array.from(document.querySelectorAll("[data-workorder-feedback-item] input:checked")).map((input) => input.value);
+            if (!ids.length) return;
+            order.feedbackIds = ids;
+            order.relatedFeedback = ids.length === 1 ? ids[0] : `${ids[0]} 等${ids.length}条`;
+            order.summary = createAiWorkOrderSummary(ids.map(findFeedbackById));
+            closeModal();
+            const table = document.querySelector(".page-body table, table.data-table");
+            if (table) delete table.dataset.localWorkOrderSignature;
+            enhanceWorkOrderPage();
+            openWorkOrderDetail(order);
+          });
+        };
         const openWorkOrderDetail = (order) => {
           const pageBody = document.querySelector(".page-body");
           if (!pageBody) return;
@@ -2838,6 +3115,21 @@
               <strong>${escapeHtml(createWorkOrderDetailSummary(order))}</strong>
             </div>
             ${workOrderFeedbackDetailsHtml(order)}
+            <details class="local-detail-block" data-inline-workorder-feedback>
+              <summary><strong>管理关联反馈（当前 ${getWorkOrderFeedbackIds(order).length} 条）</strong></summary>
+              <div class="local-template-import-picker">
+                ${localFeedbackData.map((item) => `
+                  <label class="local-template-import-card">
+                    <div><strong>${escapeHtml(item.id)} · ${escapeHtml(item.level3 || item.level2)}</strong><p>${escapeHtml(item.productType)} / ${escapeHtml(item.model)} / ${escapeHtml(item.ai || item.raw)}</p></div>
+                    <input type="checkbox" value="${escapeHtml(item.id)}" data-inline-workorder-feedback-item ${getWorkOrderFeedbackIds(order).includes(item.id) ? "checked" : ""} />
+                  </label>
+                `).join("")}
+              </div>
+              <div class="local-modal-actions">
+                <span class="local-feedback-sub" data-inline-workorder-feedback-count>已选择 ${getWorkOrderFeedbackIds(order).length} 条反馈</span>
+                <button type="button" class="primary-button" data-inline-workorder-feedback-save>保存关联反馈</button>
+              </div>
+            </details>
             <div class="local-workorder-detail-actions">
               <button type="button" class="warning-button" data-local-workorder-route="exception">转异常</button>
               <button type="button" class="secondary-button" data-local-workorder-route="qa">转Q&A</button>
@@ -2848,6 +3140,22 @@
           pageBody.appendChild(detail);
           detail.scrollIntoView({ block: "start" });
           detail.querySelector("[data-local-workorder-back]")?.addEventListener("click", closeWorkOrderDetail);
+          detail.querySelectorAll("[data-inline-workorder-feedback-item]").forEach((input) => input.addEventListener("change", () => {
+            const count = detail.querySelectorAll("[data-inline-workorder-feedback-item]:checked").length;
+            const node = detail.querySelector("[data-inline-workorder-feedback-count]");
+            if (node) node.textContent = `已选择 ${count} 条反馈`;
+          }));
+          detail.querySelector("[data-inline-workorder-feedback-save]")?.addEventListener("click", () => {
+            const ids = Array.from(detail.querySelectorAll("[data-inline-workorder-feedback-item]:checked")).map((input) => input.value);
+            if (!ids.length) return;
+            order.feedbackIds = ids;
+            order.relatedFeedback = ids.length === 1 ? ids[0] : `${ids[0]} 等${ids.length}条`;
+            order.summary = createAiWorkOrderSummary(ids.map(findFeedbackById));
+            const table = document.querySelector(".page-body table, table.data-table");
+            if (table) delete table.dataset.localWorkOrderSignature;
+            enhanceWorkOrderPage();
+            openWorkOrderDetail(order);
+          });
           detail.querySelectorAll("[data-local-workorder-route]").forEach((button) => button.addEventListener("click", () => {
             const route = button.dataset.localWorkorderRoute;
             if (route === "close") {
@@ -2980,7 +3288,7 @@
             selectedFilters.productLine,
             selectedFilters.status,
             selectedFilters.owner,
-            localWorkOrders.map((order) => `${order.id}:${order.summary}:${order.relatedFeedback}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|"),
+            localWorkOrders.map((order) => `${order.id}:${order.summary}:${getWorkOrderFeedbackIds(order).join(",")}:${order.relatedFeedback}:${order.status}:${order.owner}:${order.step}:${order.exception}:${order.requirement}:${order.qa}:${order.closeReason}`).join("|"),
           ].join("::");
           if (table.dataset.localWorkOrderSignature === signature) return true;
           table.dataset.localWorkOrderSignature = signature;
@@ -5345,63 +5653,155 @@
           const pageBody = document.querySelector(".page-body");
           if (!pageBody || pageBody.dataset.localQaReady === "true") return true;
           pageBody.dataset.localQaReady = "true";
-          pageBody.innerHTML = `
-            <section class="local-workspace-page">
-              <div class="local-page-head">
-                <div><h2>Q&A/案例库</h2><p>沉淀标准回复、异常案例、使用指引和客服培训材料。</p></div>
-                <div class="local-page-actions">
-                  <button type="button" class="primary-button" data-qa-preview="新增Q&A">新增Q&A</button>
-                  <button type="button" class="secondary-button" data-qa-preview="导入材料">导入材料</button>
+          const qaSourceOptions = (sourceType) => {
+            if (sourceType === "反馈单") return localFeedbackData.map((item) => [item.id, `${item.id} / ${item.level3}`]);
+            if (sourceType === "紧急异常") return localEmergencyExceptions.map((item) => [item.id, `${item.id} / ${item.issue}`]);
+            if (sourceType === "工单") return localWorkOrders.map((item) => [item.id, `${item.id} / ${item.summary}`]);
+            return [];
+          };
+          const openQaEditor = (sourceType = "手工新建", sourceId = "", record = null) => {
+            const options = qaSourceOptions(sourceType);
+            const sourceRecord = sourceType === "反馈单" ? findFeedbackById(sourceId)
+              : sourceType === "紧急异常" ? localEmergencyExceptions.find((item) => item.id === sourceId)
+              : sourceType === "工单" ? localWorkOrders.find((item) => item.id === sourceId) : null;
+            const initial = record || {
+              title: sourceRecord?.level3 ? `${sourceRecord.level3}处理知识` : sourceRecord?.issue || sourceRecord?.summary || "",
+              type: sourceType === "紧急异常" ? "异常案例" : sourceType === "反馈单" ? "标准回复" : "使用指引",
+              line: sourceRecord?.productType || sourceRecord?.productLine || "八电极秤",
+              category: sourceRecord?.level1 ? `${sourceRecord.level1} / ${sourceRecord.level2}` : "",
+              scenario: sourceRecord?.level3 || sourceRecord?.issue || sourceRecord?.summary || "",
+              tags: [],
+              version: "V1.0",
+              status: "草稿",
+              content: sourceRecord?.ai || sourceRecord?.raw || sourceRecord?.action || sourceRecord?.result || "",
+              sourceType,
+              sourceId,
+            };
+            openModal(`
+              <div class="local-modal local-modal-large">
+                <div class="local-modal-head">
+                  <div><span>Q&A/案例库</span><h2>${record ? "编辑知识条目" : "新建知识条目"}</h2><p>支持手工新建，或从反馈、异常、工单转入并保留来源追溯。</p></div>
+                  <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                </div>
+                <div class="local-modal-grid">
+                  <label>创建来源<select data-qa-source-type>${["手工新建", "反馈单", "紧急异常", "工单"].map((item) => `<option ${item === initial.sourceType ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                  <label>来源记录<select data-qa-source-id ${initial.sourceType === "手工新建" ? "disabled" : ""}><option value="">请选择来源记录</option>${options.map(([id, label]) => `<option value="${id}" ${id === initial.sourceId ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
+                  <label class="wide">标题<input data-qa-field="title" value="${escapeHtml(initial.title)}" placeholder="输入便于检索的知识标题" /></label>
+                  <label>类型<select data-qa-field="type">${["标准回复", "异常案例", "使用指引", "视频指引", "培训材料"].map((item) => `<option ${item === initial.type ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                  <label>产品线<select data-qa-field="line">${["八电极秤", "体脂秤", "筋膜枪", "全产品线"].map((item) => `<option ${item === initial.line ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                  <label>分类路径<input data-qa-field="category" value="${escapeHtml(initial.category)}" placeholder="一级 / 二级分类" /></label>
+                  <label>审核状态<select data-qa-field="status">${["草稿", "待审核", "已发布", "已停用"].map((item) => `<option ${item === initial.status ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+                  <label>版本<input data-qa-field="version" value="${escapeHtml(initial.version)}" /></label>
+                  <label>标签<input data-qa-field="tags" value="${escapeHtml((initial.tags || []).join("、"))}" placeholder="多个标签用顿号分隔" /></label>
+                  <label class="wide">适用场景<input data-qa-field="scenario" value="${escapeHtml(initial.scenario)}" /></label>
+                  <label class="wide">知识内容<textarea data-qa-field="content" rows="7" placeholder="填写标准回复、案例过程、根因、措施、使用说明或培训内容">${escapeHtml(initial.content)}</textarea></label>
+                </div>
+                <div class="local-modal-actions">
+                  <button type="button" class="secondary-button" data-local-close>取消</button>
+                  <button type="button" class="primary-button" data-local-save-qa>保存知识条目</button>
                 </div>
               </div>
-              <div class="local-page-grid three">
-                <article class="local-module-card"><h3>常见问题标准回复</h3><p>按产品线、问题分类和渠道维护标准话术。</p><div class="local-module-meta"><span>86 条</span><span>本月新增 12</span></div></article>
-                <article class="local-module-card"><h3>异常案例归档</h3><p>沉淀 P0/P1 异常处理过程、根因、整改和验证结果。</p><div class="local-module-meta"><span>18 个案例</span><span>已归档</span></div></article>
-                <article class="local-module-card"><h3>产品使用视频指引</h3><p>管理视频链接、适用型号和客服可发送版本。</p><div class="local-module-meta"><span>24 个视频</span><span>8 个型号</span></div></article>
-              </div>
-              <table class="local-config-table">
-                <thead><tr><th>标题</th><th>类型</th><th>产品线</th><th>适用场景</th><th>状态</th><th>操作</th></tr></thead>
-                <tbody>
-                  ${[
-                    ["体脂秤无法开机标准回复", "标准回复", "八电极秤", "无法开机/更换电池无效", "已发布"],
-                    ["测量偏差排查案例", "异常案例", "八电极秤", "称重偏高5-8磅", "待复核"],
-                    ["筋膜枪噪音使用说明", "视频指引", "筋膜枪", "高档位噪音咨询", "已发布"],
-                    ["客服新人培训材料", "培训材料", "全产品线", "入职培训", "草稿"],
-                  ].map((row) => `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td><td><button type="button" class="secondary-button" data-qa-preview="${row[0]}">查看</button></td></tr>`).join("")}
-                </tbody>
-              </table>
-            </section>
-          `;
-          pageBody.addEventListener("click", (event) => {
-            const button = event.target.closest("[data-qa-preview]");
-            if (!button) return;
-            if (button.dataset.qaPreview === "新增Q&A") {
-              openModal(`
-                <div class="local-modal">
-                  <div class="local-modal-head">
-                    <div><span>Q&A/案例库</span><h2>新增Q&A</h2><p>录入标准回复、异常案例、视频指引或培训材料。</p></div>
-                    <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
-                  </div>
-                  <div class="local-modal-grid">
-                    <label>标题<input data-qa-field="title" placeholder="例如 体脂秤无法开机标准回复" /></label>
-                    <label>类型<select data-qa-field="type"><option>标准回复</option><option>异常案例</option><option>视频指引</option><option>培训材料</option></select></label>
-                    <label>产品线<select data-qa-field="line"><option>八电极秤</option><option>体脂秤</option><option>筋膜枪</option><option>全产品线</option></select></label>
-                    <label>状态<select data-qa-field="status"><option>草稿</option><option>待复核</option><option>已发布</option></select></label>
-                    <label class="wide">适用场景<input data-qa-field="scenario" placeholder="例如 无法开机/更换电池无效" /></label>
-                    <label class="wide">说明<textarea data-qa-field="desc" placeholder="填写标准回复内容、案例过程、视频链接或培训说明"></textarea></label>
-                  </div>
-                  <div class="local-modal-actions">
-                    <button type="button" class="secondary-button" data-local-close>取消</button>
-                    <button type="button" class="primary-button" data-local-save-qa>保存</button>
+            `);
+            bindModalClose();
+            document.querySelector("[data-qa-source-type]")?.addEventListener("change", (event) => {
+              openQaEditor(event.target.value);
+            });
+            document.querySelector("[data-qa-source-id]")?.addEventListener("change", (event) => {
+              openQaEditor(document.querySelector("[data-qa-source-type]")?.value || "手工新建", event.target.value);
+            });
+            document.querySelector("[data-local-save-qa]")?.addEventListener("click", () => {
+              const read = (key) => document.querySelector(`[data-qa-field="${key}"]`)?.value.trim() || "";
+              const target = record || { id: `QA-202606-${String(qaRecords.length + 83).padStart(4, "0")}` };
+              Object.assign(target, {
+                title: read("title") || "未命名知识条目",
+                type: read("type"),
+                line: read("line"),
+                category: read("category"),
+                scenario: read("scenario"),
+                tags: read("tags").split(/[、,]/).map((item) => item.trim()).filter(Boolean),
+                version: read("version") || "V1.0",
+                status: read("status"),
+                content: read("content"),
+                sourceType: document.querySelector("[data-qa-source-type]")?.value || "手工新建",
+                sourceId: document.querySelector("[data-qa-source-id]")?.value || "-",
+                owner: currentUser.name,
+                updatedAt: "2026-06-25",
+              });
+              if (!record) qaRecords.unshift(target);
+              closeModal();
+              renderQaPage();
+            });
+          };
+          const renderQaPage = () => {
+            const previous = {
+              query: pageBody.querySelector("[data-qa-filter='query']")?.value || "",
+              type: pageBody.querySelector("[data-qa-filter='type']")?.value || "",
+              line: pageBody.querySelector("[data-qa-filter='line']")?.value || "",
+              status: pageBody.querySelector("[data-qa-filter='status']")?.value || "",
+            };
+            const filtered = qaRecords.filter((item) => {
+              const haystack = `${item.title} ${item.category} ${item.scenario} ${(item.tags || []).join(" ")} ${item.sourceId}`.toLowerCase();
+              return (!previous.query || haystack.includes(previous.query.toLowerCase()))
+                && (!previous.type || item.type === previous.type)
+                && (!previous.line || item.line === previous.line)
+                && (!previous.status || item.status === previous.status);
+            });
+            pageBody.innerHTML = `
+              <section class="local-workspace-page">
+                <div class="local-page-head">
+                  <div><h2>Q&A/案例库</h2><p>统一沉淀标准回复、异常案例、使用指引和培训材料，支持来源追溯、版本及审核发布。</p></div>
+                  <div class="local-page-actions">
+                    <button type="button" class="primary-button" data-qa-create="手工新建">手工新建</button>
+                    <button type="button" class="secondary-button" data-qa-create="反馈单">从反馈单转入</button>
+                    <button type="button" class="secondary-button" data-qa-create="紧急异常">从异常转入</button>
+                    <button type="button" class="secondary-button" data-qa-create="工单">从工单转入</button>
                   </div>
                 </div>
-              `);
-              bindModalClose();
-              document.querySelector("[data-local-save-qa]")?.addEventListener("click", closeModal);
-              return;
-            }
-            openSimplePreviewModal(button.dataset.qaPreview, '<div class="local-detail-block"><span>内容预览</span><strong>这里展示标准回复、案例归档或培训材料的详情，后续可接入富文本编辑和附件管理。</strong></div>');
-          });
+                <div class="local-page-grid three">
+                  <article class="local-module-card"><h3>已发布知识</h3><p>可供客服和业务人员直接检索引用。</p><div class="local-module-meta"><span>${qaRecords.filter((item) => item.status === "已发布").length} 条</span></div></article>
+                  <article class="local-module-card"><h3>待审核内容</h3><p>由产品经理或管理员审核版本与适用范围。</p><div class="local-module-meta"><span>${qaRecords.filter((item) => item.status === "待审核").length} 条</span></div></article>
+                  <article class="local-module-card"><h3>业务转入</h3><p>保留反馈、异常、工单来源，支持反向追溯。</p><div class="local-module-meta"><span>${qaRecords.filter((item) => item.sourceType !== "手工新建").length} 条</span></div></article>
+                </div>
+                <div class="local-qa-toolbar">
+                  <input type="search" data-qa-filter="query" value="${escapeHtml(previous.query)}" placeholder="搜索标题、场景、标签或来源编号" />
+                  <select data-qa-filter="type"><option value="">全部类型</option>${["标准回复", "异常案例", "使用指引", "视频指引", "培训材料"].map((item) => `<option ${item === previous.type ? "selected" : ""}>${item}</option>`).join("")}</select>
+                  <select data-qa-filter="line"><option value="">全部产品线</option>${["八电极秤", "体脂秤", "筋膜枪", "全产品线"].map((item) => `<option ${item === previous.line ? "selected" : ""}>${item}</option>`).join("")}</select>
+                  <select data-qa-filter="status"><option value="">全部状态</option>${["草稿", "待审核", "已发布", "已停用"].map((item) => `<option ${item === previous.status ? "selected" : ""}>${item}</option>`).join("")}</select>
+                </div>
+                <table class="local-config-table">
+                  <thead><tr><th>知识条目</th><th>类型/分类</th><th>产品线/场景</th><th>标签</th><th>来源追溯</th><th>版本/状态</th><th>操作</th></tr></thead>
+                  <tbody>${filtered.map((item) => `
+                    <tr>
+                      <td><strong>${escapeHtml(item.title)}</strong><span class="local-feedback-sub">${escapeHtml(item.id)} · ${escapeHtml(item.owner)}</span></td>
+                      <td>${escapeHtml(item.type)}<span class="local-feedback-sub">${escapeHtml(item.category || "-")}</span></td>
+                      <td>${escapeHtml(item.line)}<span class="local-feedback-sub">${escapeHtml(item.scenario)}</span></td>
+                      <td><div class="local-tag-row">${(item.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div></td>
+                      <td><span class="local-qa-source">${escapeHtml(item.sourceType)}</span><span class="local-feedback-sub">${escapeHtml(item.sourceId)}</span></td>
+                      <td>${escapeHtml(item.version)}<span class="local-feedback-sub">${escapeHtml(item.status)} · ${escapeHtml(item.updatedAt)}</span></td>
+                      <td><div class="local-table-actions"><button type="button" class="secondary-button" data-qa-view="${item.id}">查看</button><button type="button" class="secondary-button" data-qa-edit="${item.id}">编辑</button></div></td>
+                    </tr>
+                  `).join("") || '<tr><td colspan="7">暂无匹配知识条目</td></tr>'}</tbody>
+                </table>
+              </section>
+            `;
+            pageBody.querySelectorAll("[data-qa-filter]").forEach((field) => {
+              field.addEventListener("change", renderQaPage);
+              if (field.type === "search") field.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") renderQaPage();
+              });
+            });
+            pageBody.querySelectorAll("[data-qa-create]").forEach((button) => button.addEventListener("click", () => openQaEditor(button.dataset.qaCreate)));
+            pageBody.querySelectorAll("[data-qa-view]").forEach((button) => button.addEventListener("click", () => {
+              const item = qaRecords.find((record) => record.id === button.dataset.qaView);
+              if (!item) return;
+              openSimplePreviewModal(item.title, `<div class="local-detail-grid"><article><span>类型</span><strong>${escapeHtml(item.type)}</strong></article><article><span>版本/状态</span><strong>${escapeHtml(item.version)} / ${escapeHtml(item.status)}</strong></article><article><span>来源</span><strong>${escapeHtml(item.sourceType)} / ${escapeHtml(item.sourceId)}</strong></article></div><div class="local-detail-block"><span>适用场景</span><strong>${escapeHtml(item.scenario)}</strong></div><div class="local-detail-block"><span>知识内容</span><strong>${escapeHtml(item.content)}</strong></div>`);
+            }));
+            pageBody.querySelectorAll("[data-qa-edit]").forEach((button) => button.addEventListener("click", () => {
+              const item = qaRecords.find((record) => record.id === button.dataset.qaEdit);
+              if (item) openQaEditor(item.sourceType, item.sourceId, item);
+            }));
+          };
+          renderQaPage();
           return true;
         };
 
@@ -5412,35 +5812,138 @@
           const pageBody = document.querySelector(".page-body");
           if (!pageBody || pageBody.dataset.localSettingsReady === "true") return true;
           pageBody.dataset.localSettingsReady = "true";
-          pageBody.innerHTML = `
-            <section class="local-workspace-page">
-              <div class="local-page-head">
-                <div><h2>系统配置</h2><p>配置渠道、分类标签、角色权限和 SLA 规则。</p></div>
-                <div class="local-page-actions"><button type="button" class="primary-button" data-settings-preview="保存配置">保存配置</button></div>
+          const configMeta = {
+            channels: {
+              title: "渠道字段配置",
+              description: "维护反馈来源渠道，以及每个渠道录入时需要展示的扩展字段。",
+              columns: [["name", "渠道名称"], ["fields", "渠道字段"]],
+            },
+            categories: {
+              title: "三级分类配置",
+              description: "维护一级、二级、三级分类及其上下级关系。",
+              columns: [["level1", "一级分类"], ["level2", "二级分类"], ["level3", "三级分类"]],
+            },
+            permissions: {
+              title: "角色权限配置",
+              description: "配置角色的数据范围和可执行操作。",
+              columns: [["name", "角色名称"], ["dataScope", "数据范围"], ["actions", "操作权限"]],
+            },
+            competitorFields: {
+              title: "竞品详细参数字段配置",
+              description: "维护竞品档案中的参数分组、字段类型和必填规则。",
+              columns: [["name", "字段名称"], ["group", "参数分组"], ["type", "字段类型"], ["required", "必填"]],
+            },
+          };
+          let activeConfigKey = "channels";
+          const openConfigEditor = (key, item = null) => {
+            const meta = configMeta[key];
+            openModal(`
+              <div class="local-modal">
+                <div class="local-modal-head">
+                  <div><span>系统配置</span><h2>${item ? "编辑" : "新增"}${meta.title}</h2><p>${meta.description}</p></div>
+                  <button type="button" class="icon-button" data-local-close aria-label="关闭">×</button>
+                </div>
+                <div class="local-modal-grid">
+                  ${meta.columns.map(([field, label]) => field === "required" ? `
+                    <label>${label}<select data-config-field="${field}"><option value="true" ${item?.[field] ? "selected" : ""}>是</option><option value="false" ${!item?.[field] ? "selected" : ""}>否</option></select></label>
+                  ` : `
+                    <label class="${field === "fields" || field === "actions" ? "wide" : ""}">${label}<input data-config-field="${field}" value="${escapeHtml(item?.[field] || "")}" placeholder="请输入${label}" /></label>
+                  `).join("")}
+                  <label>状态<select data-config-field="enabled"><option value="true" ${item?.enabled !== false ? "selected" : ""}>启用</option><option value="false" ${item?.enabled === false ? "selected" : ""}>停用</option></select></label>
+                </div>
+                <div class="local-modal-actions">
+                  <button type="button" class="secondary-button" data-local-close>取消</button>
+                  <button type="button" class="primary-button" data-config-save>保存</button>
+                </div>
               </div>
-              <div class="local-page-grid three">
-                ${[
-                  ["渠道管理", "维护 Amazon、天猫、京东、抖音、APP、客服沟通等来源。", "7 个渠道"],
-                  ["分类标签", "维护一级职能、二级场景、三级具体问题。", "42 个标签"],
-                  ["角色权限", "配置管理员、产品经理、反馈人员的数据范围。", "4 个角色"],
-                  ["SLA规则", "配置反馈、工单、异常的响应和闭环时限。", "6 条规则"],
-                ].map((item) => `<article class="local-module-card"><h3>${item[0]}</h3><p>${item[1]}</p><div class="local-module-meta"><span>${item[2]}</span></div><button type="button" class="secondary-button" data-settings-preview="${item[0]}">配置</button></article>`).join("")}
-              </div>
-              <table class="local-config-table">
-                <thead><tr><th>配置项</th><th>当前值</th><th>状态</th><th>最近更新</th></tr></thead>
-                <tbody>
-                  <tr><td>异常临时方案时限</td><td>P0/P1 2h</td><td>启用</td><td>2026-06-22</td></tr>
-                  <tr><td>反馈默认去向</td><td>待处理</td><td>启用</td><td>2026-06-22</td></tr>
-                  <tr><td>竞品海外 ASIN 校验</td><td>必填</td><td>启用</td><td>2026-06-22</td></tr>
-                </tbody>
-              </table>
-            </section>
-          `;
-          pageBody.addEventListener("click", (event) => {
-            const button = event.target.closest("[data-settings-preview]");
-            if (!button) return;
-            openSimplePreviewModal(button.dataset.settingsPreview, '<div class="local-detail-block"><span>配置说明</span><strong>当前为原型配置入口，后续接入后台接口后支持编辑、校验、保存和操作日志。</strong></div>');
-          });
+            `);
+            bindModalClose();
+            document.querySelector("[data-config-save]")?.addEventListener("click", () => {
+              const target = item || { id: `${key.toUpperCase()}-${String(settingsData[key].length + 1).padStart(2, "0")}` };
+              meta.columns.forEach(([field]) => {
+                const raw = document.querySelector(`[data-config-field="${field}"]`)?.value || "";
+                target[field] = field === "required" ? raw === "true" : raw.trim();
+              });
+              target.enabled = document.querySelector('[data-config-field="enabled"]')?.value === "true";
+              if (!item) settingsData[key].push(target);
+              closeModal();
+              renderSettingsPage();
+            });
+          };
+          const renderSettingsPage = () => {
+            const meta = configMeta[activeConfigKey];
+            const items = settingsData[activeConfigKey];
+            pageBody.innerHTML = `
+              <section class="local-workspace-page">
+                <div class="local-page-head">
+                  <div><h2>系统配置</h2><p>配置渠道字段、三级分类、角色权限和竞品详细参数字段；配置结果用于各业务页面。</p></div>
+                  <div class="local-page-actions"><button type="button" class="primary-button" data-settings-save-all>保存全部配置</button></div>
+                </div>
+                <div class="local-page-grid three">
+                  ${Object.entries(configMeta).map(([key, item]) => `
+                    <article class="local-module-card">
+                      <h3>${item.title}</h3><p>${item.description}</p>
+                      <div class="local-module-meta"><span>${settingsData[key].length} 项</span><span>${settingsData[key].filter((row) => row.enabled).length} 项启用</span></div>
+                      <button type="button" class="secondary-button" data-settings-open="${key}">进入配置</button>
+                    </article>
+                  `).join("")}
+                </div>
+                <div class="local-settings-tabs">
+                  ${Object.entries(configMeta).map(([key, item]) => `<button type="button" class="local-settings-tab ${key === activeConfigKey ? "active" : ""}" data-settings-tab="${key}">${item.title}</button>`).join("")}
+                </div>
+                <section class="local-settings-panel">
+                  <div class="local-settings-panel-head">
+                    <div><h3>${meta.title}</h3><p>${meta.description}</p></div>
+                    <button type="button" class="primary-button" data-config-add>新增配置项</button>
+                  </div>
+                  <table class="local-config-table">
+                    <thead><tr><th>排序</th>${meta.columns.map(([, label]) => `<th>${label}</th>`).join("")}<th>状态</th><th>操作</th></tr></thead>
+                    <tbody>${items.map((item, index) => `
+                      <tr>
+                        <td><div class="local-sort-actions"><button type="button" class="secondary-button" data-config-move="${index}" data-direction="-1" title="上移">↑</button><button type="button" class="secondary-button" data-config-move="${index}" data-direction="1" title="下移">↓</button></div></td>
+                        ${meta.columns.map(([field]) => `<td>${field === "required" ? (item[field] ? "是" : "否") : escapeHtml(item[field] || "-")}</td>`).join("")}
+                        <td><label class="local-switch"><input type="checkbox" data-config-toggle="${item.id}" ${item.enabled ? "checked" : ""} />${item.enabled ? "启用" : "停用"}</label></td>
+                        <td><div class="local-table-actions"><button type="button" class="secondary-button" data-config-edit="${item.id}">编辑</button><button type="button" class="danger-button" data-config-delete="${item.id}">删除</button></div></td>
+                      </tr>
+                    `).join("") || `<tr><td colspan="${meta.columns.length + 3}">暂无配置项</td></tr>`}</tbody>
+                  </table>
+                </section>
+              </section>
+            `;
+            pageBody.querySelectorAll("[data-settings-open], [data-settings-tab]").forEach((button) => button.addEventListener("click", () => {
+              activeConfigKey = button.dataset.settingsOpen || button.dataset.settingsTab;
+              renderSettingsPage();
+            }));
+            pageBody.querySelector("[data-config-add]")?.addEventListener("click", () => openConfigEditor(activeConfigKey));
+            pageBody.querySelectorAll("[data-config-edit]").forEach((button) => button.addEventListener("click", () => {
+              const item = settingsData[activeConfigKey].find((row) => row.id === button.dataset.configEdit);
+              if (item) openConfigEditor(activeConfigKey, item);
+            }));
+            pageBody.querySelectorAll("[data-config-delete]").forEach((button) => button.addEventListener("click", () => {
+              const index = settingsData[activeConfigKey].findIndex((row) => row.id === button.dataset.configDelete);
+              if (index >= 0) settingsData[activeConfigKey].splice(index, 1);
+              renderSettingsPage();
+            }));
+            pageBody.querySelectorAll("[data-config-toggle]").forEach((input) => input.addEventListener("change", () => {
+              const item = settingsData[activeConfigKey].find((row) => row.id === input.dataset.configToggle);
+              if (item) item.enabled = input.checked;
+              renderSettingsPage();
+            }));
+            pageBody.querySelectorAll("[data-config-move]").forEach((button) => button.addEventListener("click", () => {
+              const index = Number(button.dataset.configMove);
+              const next = index + Number(button.dataset.direction);
+              const rows = settingsData[activeConfigKey];
+              if (next < 0 || next >= rows.length) return;
+              [rows[index], rows[next]] = [rows[next], rows[index]];
+              renderSettingsPage();
+            }));
+            pageBody.querySelector("[data-settings-save-all]")?.addEventListener("click", () => {
+              const button = pageBody.querySelector("[data-settings-save-all]");
+              button.textContent = "已保存";
+              setTimeout(() => { if (button.isConnected) button.textContent = "保存全部配置"; }, 1200);
+            });
+          };
+          renderSettingsPage();
           return true;
         };
 
@@ -5722,7 +6225,6 @@
             if (!event.target.closest(".local-site-multi")) {
               document.querySelectorAll(".local-site-multi-panel").forEach((panel) => { panel.hidden = true; });
             }
-            if (!event.target.closest(".local-modal")) closeModal();
           });
           window.__localFeedbackEnhancerReady = true;
           return true;
