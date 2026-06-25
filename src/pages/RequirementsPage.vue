@@ -1,272 +1,530 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Search, X } from 'lucide-vue-next'
+import { Plus, X, ArrowLeft } from 'lucide-vue-next'
+import { candidateLeadData, requirementPoolData } from '@/api/mock-data'
+import type { CandidateLead, RequirementPoolItem } from '@/types'
 
-interface MockRequirement {
-  id: string
-  title: string
-  source: string
-  priority: string
-  status: string
-  owner: string
-  dept: string
-  date: string
-  desc: string
-}
+// ==================== Toast ====================
+const toast = ref<{ msg: string; type: string } | null>(null)
+function showToast(msg: string, type = 'info') { toast.value = { msg, type }; setTimeout(() => { toast.value = null }, 2500) }
 
-const mockRequirements = ref<MockRequirement[]>([
-  { id: 'REQ-20260618-001', title: '体脂秤开机故障批量修复', source: '反馈清单', priority: 'P0', status: '产品评审', owner: '李工', dept: '八电极产品线', date: '2026-06-18', desc: 'CS20A型号集中出现无法开机问题，需进行硬件设计和电池仓结构优化。' },
-  { id: 'REQ-20260617-002', title: '筋膜枪降噪优化方案', source: '异常处理', priority: 'P1', status: '规划中', owner: '孙工', dept: '筋膜枪产品线', date: '2026-06-17', desc: 'MG20高档位噪音偏大，通过电机调校和结构优化降低运行噪音至50dB以下。' },
-  { id: 'REQ-20260615-003', title: '测脂算法校准与测量引导优化', source: '反馈清单', priority: 'P2', status: '待评审', owner: '刘工', dept: '研发部', date: '2026-06-15', desc: 'AF-30B体脂率数据与专业设备偏差较大，需复核BIA算法并在APP中增加测量引导。' },
-  { id: 'REQ-20260610-004', title: '血压计袖带尺寸适配方案', source: '工单池', priority: 'P3', status: '已排期', owner: '王工', dept: '产品部', date: '2026-06-10', desc: '增加大号袖带可选配件，优化说明书中的尺寸选择指引。' },
-])
+// ==================== Tabs ====================
+const activeTab = ref<'candidates' | 'pool'>('candidates')
 
-const searchQuery = ref('')
-const filterPriority = ref('')
-const filterStatus = ref('')
-const detailReq = ref<MockRequirement | null>(null)
+// ==================== Candidate Leads ====================
+const candidateLeads = ref<CandidateLead[]>([...candidateLeadData])
 
-const stats = computed(() => ({
-  total: mockRequirements.value.length,
-  p0: mockRequirements.value.filter(r => r.priority === 'P0').length,
-  reviewing: mockRequirements.value.filter(r => r.status === '待评审' || r.status === '产品评审').length,
-  scheduled: mockRequirements.value.filter(r => r.status === '已排期').length,
+// ==================== Requirement Pool ====================
+const requirementPool = ref<RequirementPoolItem[]>([...requirementPoolData])
+const filterLevel = ref('')
+const filteredPool = computed(() => {
+  if (!filterLevel.value) return requirementPool.value
+  return requirementPool.value.filter(r => r.level === filterLevel.value)
+})
+const levelCounts = computed(() => ({
+  L1: requirementPool.value.filter(r => r.level === 'L1').length,
+  L2: requirementPool.value.filter(r => r.level === 'L2').length,
+  L3: requirementPool.value.filter(r => r.level === 'L3').length,
+  L4: requirementPool.value.filter(r => r.level === 'L4').length,
 }))
 
-const priorityClass = (p: string) => {
-  if (p === 'P0') return 'level-p0'
-  if (p === 'P1') return 'level-p1'
-  if (p === 'P2') return 'level-p2'
-  return 'level-p3'
+const levelInfo: Record<string, { title: string; desc: string; pill: string }> = {
+  L1: { title: 'L1 紧急修复', desc: '安全/合规/高退货风险，先处置再复盘', pill: 'p1' },
+  L2: { title: 'L2 体验优化', desc: '高频体验问题，进入近期迭代评审', pill: 'p2' },
+  L3: { title: 'L3 功能升级', desc: '竞品或用户价值明确，进入版本规划', pill: 'p3' },
+  L4: { title: 'L4 换代开发', desc: '中长期机会，进入产品规划观察', pill: 'info' },
 }
+const scoreLabels = ['用户价值', '业务影响', '可行性', '竞争影响', '库存影响']
 
-const statusClass = (s: string) => {
-  if (s === '已排期') return 'status-done'
-  if (s === '待评审') return 'status-pending'
-  return 'status-processing'
-}
-
-const filteredRequirements = computed(() => {
-  let result = mockRequirements.value
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    result = result.filter(r => r.id.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q) || r.owner.toLowerCase().includes(q))
-  }
-  if (filterPriority.value) result = result.filter(r => r.priority === filterPriority.value)
-  if (filterStatus.value) result = result.filter(r => r.status === filterStatus.value)
-  return result
+// ==================== Promote Modal ====================
+const showPromoteModal = ref(false)
+const promotingCandidate = ref<CandidateLead | null>(null)
+const promoteForm = ref({
+  reqId: '',
+  title: '',
+  source: '',
+  product: '',
+  level: 'L2',
+  path: '体验优化',
+  status: '评分确认',
+  owner: '产品经理',
+  due: '',
+  scores: { userValue: 3, businessImpact: 3, feasibility: 3, competitiveImpact: 3, inventoryImpact: 3 },
+  evidence: '',
+  description: '',
+  painPoint: '',
+  expectedValue: '',
+  risk: '',
+  nextAction: '',
+  relatedFeedback: '',
 })
 
-const statusOptions = computed(() => [...new Set(mockRequirements.value.map(r => r.status))])
-
-// Toast
-const toast = ref<{ msg: string; type: string } | null>(null)
-function showToast(msg: string, type = 'info') {
-  toast.value = { msg, type }
-  setTimeout(() => { toast.value = null }, 2500)
+function openPromoteModal(c: CandidateLead) {
+  promotingCandidate.value = c
+  promoteForm.value = {
+    reqId: `REQ-${c.id.replace('REQ-CAND-', '')}`,
+    title: c.title,
+    source: c.category,
+    product: c.product,
+    level: 'L2',
+    path: '体验优化',
+    status: '评分确认',
+    owner: '产品经理',
+    due: '',
+    scores: { userValue: 3, businessImpact: 3, feasibility: 3, competitiveImpact: 3, inventoryImpact: 3 },
+    evidence: c.evidence,
+    description: '',
+    painPoint: '',
+    expectedValue: '',
+    risk: '',
+    nextAction: c.nextAction,
+    relatedFeedback: c.sourceFeedback,
+  }
+  showPromoteModal.value = true
 }
 
-// Create Requirement Modal
-const showCreateModal = ref(false)
-const newReq = ref({
-  id: '', title: '', source: '反馈清单', priority: 'P2', status: '待评审', owner: '', dept: '', date: '', desc: '',
+function confirmPromote() {
+  const f = promoteForm.value
+  const newReq: RequirementPoolItem = {
+    id: f.reqId,
+    candidate: promotingCandidate.value?.id || '',
+    title: f.title,
+    source: f.source,
+    evidence: f.evidence,
+    product: f.product,
+    scores: { ...f.scores },
+    level: f.level,
+    path: f.path,
+    status: f.status,
+    owner: f.owner,
+    due: f.due || '待定',
+    description: f.description,
+    painPoint: f.painPoint,
+    expectedValue: f.expectedValue,
+    risk: f.risk,
+    nextAction: f.nextAction,
+    relatedFeedback: f.relatedFeedback,
+  }
+  requirementPool.value.unshift(newReq)
+  showPromoteModal.value = false
+  showToast(`${f.reqId} 已转入产品需求池`, 'success')
+}
+
+function convertToWorkOrder(c: CandidateLead) {
+  showToast(`已为线索 ${c.id} 生成工单`, 'success')
+}
+
+// ==================== Detail Drawer ====================
+const showDetail = ref(false)
+const detailReq = ref<RequirementPoolItem | null>(null)
+const processSteps = ['候选导入', '信息补齐', '五维评分', 'L级分级', '审批/评审', '下游立项', '复盘回写']
+
+function openDetail(req: RequirementPoolItem) {
+  detailReq.value = req
+  const idx = processSteps.indexOf('审批/评审')
+  const curStep = req.status === '待审批' ? 3 : req.status === '已入池' ? 5 : req.status === '观察池' ? 3 : req.status === '评分确认' ? 1 : 4
+  showDetail.value = true
+  void idx // keep for future use
+  void curStep
+}
+
+function getStepClass(req: RequirementPoolItem, stepIdx: number): string {
+  const stepMap: Record<string, number> = {
+    '待补充': 0, '待评分': 1, '评分确认': 2, '待审批': 3, '已入池': 4, '观察池': 2,
+  }
+  const cur = stepMap[req.status] ?? 0
+  if (stepIdx < cur) return 'done'
+  if (stepIdx === cur) return 'active'
+  return ''
+}
+
+// ==================== New Candidate Modal ====================
+const showNewCandidateModal = ref(false)
+const newCandidate = ref({
+  id: '',
+  sourceFeedback: '',
+  category: '',
+  title: '',
+  evidence: '',
+  product: '',
+  status: '待补充',
+  nextAction: '',
 })
 
-function openCreateModal() {
-  const now = new Date()
-  const d = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  newReq.value = {
-    id: `REQ-${d.replace(/-/g, '')}-${String(mockRequirements.value.length + 1).padStart(3, '0')}`,
-    title: '', source: '反馈清单', priority: 'P2', status: '待评审', owner: '', dept: '', date: d, desc: '',
+function openNewCandidate() {
+  const n = candidateLeads.value.length + 1
+  newCandidate.value = {
+    id: `REQ-CAND-${String(n).padStart(3, '0')}`,
+    sourceFeedback: '',
+    category: '',
+    title: '',
+    evidence: '',
+    product: '',
+    status: '待补充',
+    nextAction: '',
   }
-  showCreateModal.value = true
+  showNewCandidateModal.value = true
 }
 
-function submitRequirement() {
-  if (!newReq.value.title.trim()) { showToast('请填写需求标题', 'warning'); return }
-  mockRequirements.value.unshift({ ...newReq.value })
-  showCreateModal.value = false
-  showToast(`需求 ${newReq.value.id} 已创建`, 'success')
-}
-
-function openDetail(req: MockRequirement) {
-  detailReq.value = detailReq.value?.id === req.id ? null : req
+function createCandidate() {
+  candidateLeads.value.unshift({ ...newCandidate.value })
+  showNewCandidateModal.value = false
+  showToast(`已创建线索 ${newCandidate.value.id}`, 'success')
 }
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
-    <!-- Header -->
-    <div class="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-      <div>
-        <h2 class="text-lg font-extrabold text-gray-900">需求管理</h2>
-        <p class="text-xs text-gray-400 mt-0.5">承接反馈清单/异常处理/工单池的转需求事项，进入需求池评审和规划排期。</p>
-      </div>
-      <button class="btn-primary flex items-center gap-1 h-8 text-xs" @click="openCreateModal">
-        <Plus class="w-3.5 h-3.5" /> 新建候选需求
-      </button>
+  <div class="p-6 max-w-full overflow-auto">
+    <!-- Toast -->
+    <div v-if="toast" class="fixed top-6 right-6 z-[100] rounded-lg px-4 py-2.5 text-sm font-extrabold shadow-lg text-white"
+      :class="toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'">{{ toast.msg }}</div>
+
+    <!-- Page Header -->
+    <div class="mb-4">
+      <span class="text-xs text-gray-400">需求管理</span>
+      <h1 class="text-xl font-extrabold text-gray-900 mt-0.5">需求管理</h1>
+      <p class="text-xs text-gray-400 mt-0.5">承接反馈清单/异常处理/工单池/竞品分析的转需求事项，完成候选线索收集、五维评分、L1-L4分级后导入产品需求池。</p>
     </div>
 
-    <!-- Stats -->
-    <div class="px-6 pt-4 grid grid-cols-4 gap-3 flex-shrink-0">
-      <div class="bg-white border border-gray-200 rounded-lg p-3 text-center">
-        <div class="text-2xl font-extrabold text-gray-900">{{ stats.total }}</div>
-        <div class="text-[11px] font-bold text-gray-500 mt-0.5">需求总数</div>
-      </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-3 text-center">
-        <div class="text-2xl font-extrabold text-red-600">{{ stats.p0 }}</div>
-        <div class="text-[11px] font-bold text-gray-500 mt-0.5">P0需求</div>
-      </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-3 text-center">
-        <div class="text-2xl font-extrabold text-orange-600">{{ stats.reviewing }}</div>
-        <div class="text-[11px] font-bold text-gray-500 mt-0.5">评审中</div>
-      </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-3 text-center">
-        <div class="text-2xl font-extrabold text-green-600">{{ stats.scheduled }}</div>
-        <div class="text-[11px] font-bold text-gray-500 mt-0.5">已排期</div>
-      </div>
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-4">
+      <button
+        class="px-4 py-1.5 rounded-md text-xs font-extrabold transition-colors"
+        :class="activeTab === 'candidates' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'"
+        @click="activeTab = 'candidates'"
+      >候选线索（{{ candidateLeads.length }}）</button>
+      <button
+        class="px-4 py-1.5 rounded-md text-xs font-extrabold transition-colors"
+        :class="activeTab === 'pool' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'"
+        @click="activeTab = 'pool'"
+      >产品需求池（{{ requirementPool.length }}）</button>
     </div>
 
-    <!-- Filters -->
-    <div class="px-6 py-3 flex items-center gap-3 flex-shrink-0">
-      <div class="relative flex-1 max-w-xs">
-        <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-        <input v-model="searchQuery" type="search" placeholder="搜索需求ID、标题、负责人..." class="w-full pl-8 pr-3 h-8 text-xs border border-gray-300 rounded-md outline-none focus:border-blue-500 font-bold" />
+    <!-- ==================== Candidate Leads Tab ==================== -->
+    <template v-if="activeTab === 'candidates'">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-extrabold text-gray-800">候选需求线索（反馈承接区）</span>
+        </div>
+        <button class="btn-primary text-xs h-8 px-3 flex items-center gap-1" @click="openNewCandidate"><Plus class="w-3.5 h-3.5" />新增线索</button>
       </div>
-      <select v-model="filterPriority" class="h-8 text-xs border border-gray-300 rounded-md px-2.5 font-bold bg-white">
-        <option value="">全部优先级</option>
-        <option>P0</option><option>P1</option><option>P2</option><option>P3</option>
-      </select>
-      <select v-model="filterStatus" class="h-8 text-xs border border-gray-300 rounded-md px-2.5 font-bold bg-white">
-        <option value="">全部状态</option>
-        <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
-      </select>
-      <span class="text-[11px] text-gray-400 ml-auto">{{ filteredRequirements.length }} 条需求</span>
-    </div>
 
-    <!-- Table -->
-    <div class="flex-1 overflow-auto px-6 pb-6">
-      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table class="w-full text-xs">
+      <div class="overflow-x-auto">
+        <table class="data-table w-full text-xs border-collapse">
           <thead>
-            <tr class="bg-gray-50 border-b border-gray-200">
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">需求ID</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">需求标题</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">来源</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">优先级</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">状态</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">负责人</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">部门</th>
-              <th class="text-left px-3 py-2.5 font-extrabold text-gray-600">日期</th>
-              <th class="text-center px-3 py-2.5 font-extrabold text-gray-600">操作</th>
+            <tr class="border-b border-gray-200 text-left">
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">线索ID</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">来源反馈</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">分类</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">线索标题</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">证据摘要</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">适用产品</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">状态</th>
+              <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">下一步动作</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="req in filteredRequirements" :key="req.id" class="border-b border-gray-100 hover:bg-gray-50">
-              <td class="px-3 py-2.5 font-extrabold text-blue-600">{{ req.id }}</td>
-              <td class="px-3 py-2.5 text-gray-700 font-bold max-w-[260px] truncate">{{ req.title }}</td>
-              <td class="px-3 py-2.5 font-bold text-gray-600">{{ req.source }}</td>
-              <td class="px-3 py-2.5"><span :class="priorityClass(req.priority)">{{ req.priority }}</span></td>
-              <td class="px-3 py-2.5"><span :class="statusClass(req.status)">{{ req.status }}</span></td>
-              <td class="px-3 py-2.5 font-bold">{{ req.owner }}</td>
-              <td class="px-3 py-2.5 text-gray-500 font-bold">{{ req.dept }}</td>
-              <td class="px-3 py-2.5 text-gray-400">{{ req.date }}</td>
-              <td class="px-3 py-2.5 text-center">
-                <button class="btn-secondary text-[11px] h-6 px-3" @click="openDetail(req)">详情</button>
+            <tr v-for="c in candidateLeads" :key="c.id" class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-3 py-2.5"><button class="link-button text-xs font-extrabold text-blue-600 hover:underline">{{ c.id }}</button></td>
+              <td class="px-3 py-2.5 text-xs">{{ c.sourceFeedback }}</td>
+              <td class="px-3 py-2.5 text-xs">{{ c.category }}</td>
+              <td class="px-3 py-2.5 text-xs font-extrabold max-w-[260px] truncate">{{ c.title }}</td>
+              <td class="px-3 py-2.5"><em class="text-xs text-gray-500">{{ c.evidence }}</em></td>
+              <td class="px-3 py-2.5 text-xs">{{ c.product }}</td>
+              <td class="px-3 py-2.5"><span class="status-tag text-[10px] px-2 py-0.5 rounded font-extrabold" :class="c.status === '待评分' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'">{{ c.status }}</span></td>
+              <td class="px-3 py-2.5">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <button class="mini-action text-[10px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">合并</button>
+                  <button class="mini-action text-[10px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">补证据</button>
+                  <button class="mini-action primary text-[10px] px-2 py-0.5 rounded bg-blue-500 text-white hover:bg-blue-600 font-bold" @click="openPromoteModal(c)">转产品需求</button>
+                  <button class="mini-action warning text-[10px] px-2 py-0.5 rounded border border-orange-400 text-orange-600 hover:bg-orange-50 font-bold" @click="convertToWorkOrder(c)">转为工单</button>
+                </div>
               </td>
             </tr>
-            <tr v-if="filteredRequirements.length === 0">
-              <td colspan="9" class="text-center py-16 text-sm font-bold text-gray-400">未找到匹配的需求</td>
+            <tr v-if="candidateLeads.length === 0">
+              <td colspan="8" class="text-center py-10 text-gray-400 text-sm font-bold">暂无候选线索</td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </template>
 
-    <!-- Detail Drawer -->
-    <div v-if="detailReq" class="fixed inset-y-0 right-0 z-40 w-[480px] bg-white shadow-2xl border-l border-gray-200 overflow-auto">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 sticky top-0 bg-white z-10">
-        <div>
-          <span class="text-xs text-gray-400">需求详情</span>
-          <h3 class="text-sm font-extrabold text-gray-900">{{ detailReq.id }}</h3>
-        </div>
-        <button class="text-gray-400 hover:text-gray-600" @click="detailReq = null"><X class="w-4 h-4" /></button>
+    <!-- ==================== Product Requirement Pool Tab ==================== -->
+    <template v-if="activeTab === 'pool'">
+      <!-- L1-L4 Filter Cards -->
+      <div class="grid grid-cols-4 gap-3 mb-4">
+        <button
+          v-for="lvl in ['L1', 'L2', 'L3', 'L4']"
+          :key="lvl"
+          class="text-left p-3 rounded-lg border transition-all hover:shadow-md"
+          :class="filterLevel === lvl ? 'border-blue-400 bg-blue-50 shadow' : 'border-gray-200 bg-white'"
+          @click="filterLevel = filterLevel === lvl ? '' : lvl"
+        >
+          <div class="flex items-center gap-2 mb-1">
+            <span class="pill text-[10px] px-2 py-0.5 rounded font-extrabold" :class="lvl === 'L1' ? 'bg-red-100 text-red-700' : lvl === 'L2' ? 'bg-orange-100 text-orange-700' : lvl === 'L3' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'">{{ lvl }}</span>
+            <strong class="text-xs text-gray-800">{{ levelInfo[lvl].title }}</strong>
+          </div>
+          <em class="text-[10px] text-gray-500 block">{{ levelInfo[lvl].desc }}</em>
+          <b class="text-lg font-extrabold text-gray-800 mt-1">{{ (levelCounts as any)[lvl] }}</b>
+        </button>
       </div>
-      <div class="p-5 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">优先级</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.priority }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">状态</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.status }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">来源</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.source }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">负责人</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.owner }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">部门</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.dept }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">创建日期</span>
-            <strong class="block mt-0.5 text-sm">{{ detailReq.date }}</strong>
-          </div>
-        </div>
-        <div>
-          <h4 class="text-xs font-extrabold text-gray-700 mb-1.5">需求标题</h4>
-          <p class="text-sm font-bold text-gray-900">{{ detailReq.title }}</p>
-        </div>
-        <div>
-          <h4 class="text-xs font-extrabold text-gray-700 mb-1.5">详细描述</h4>
-          <p class="text-xs text-gray-600 leading-relaxed font-bold">{{ detailReq.desc }}</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- Create Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mt-10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-extrabold text-gray-800">产品需求池（MVP试运行）</span>
+        <button class="text-xs text-blue-600 font-extrabold hover:underline">导出评分表</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="data-table w-full text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-gray-200 text-left">
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">需求ID</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">候选来源</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">需求标题</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">来源/证据</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">适用产品</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">五维评分</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">等级</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">处理路径</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">状态</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">责任人</th>
+              <th class="px-2.5 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">完成时限</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in filteredPool" :key="r.id" class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" @click="openDetail(r)">
+              <td class="px-2.5 py-2.5"><button class="link-button text-xs font-extrabold text-blue-600 hover:underline">{{ r.id }}</button></td>
+              <td class="px-2.5 py-2.5 text-xs">{{ r.candidate }}</td>
+              <td class="px-2.5 py-2.5 text-xs font-extrabold max-w-[240px] truncate">{{ r.title }}</td>
+              <td class="px-2.5 py-2.5">
+                <strong class="text-xs block">{{ r.source }}</strong>
+                <em class="text-[10px] text-gray-500">{{ r.evidence }}</em>
+              </td>
+              <td class="px-2.5 py-2.5 text-xs">{{ r.product }}</td>
+              <td class="px-2.5 py-2.5">
+                <div class="score-bars flex items-end gap-1 h-9">
+                  <div v-for="(label, si) in scoreLabels" :key="si" class="flex flex-col items-center gap-0.5" :title="`${label}：${(r.scores as any)[Object.keys(r.scores)[si]]}分`">
+                    <b class="text-[9px] font-extrabold">{{ (r.scores as any)[Object.keys(r.scores)[si]] }}</b>
+                    <i class="w-3 rounded-t" :style="{ height: (r.scores as any)[Object.keys(r.scores)[si]] * 18 + '%', backgroundColor: si === 0 ? '#1f73e8' : si === 1 ? '#22a06b' : si === 2 ? '#ffb020' : si === 3 ? '#8b5cf6' : '#06b6d4' }"></i>
+                  </div>
+                </div>
+              </td>
+              <td class="px-2.5 py-2.5">
+                <span class="pill text-[10px] px-2 py-0.5 rounded font-extrabold"
+                  :class="r.level === 'L1' ? 'bg-red-100 text-red-700' : r.level === 'L2' ? 'bg-orange-100 text-orange-700' : r.level === 'L3' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'"
+                >{{ r.level }}</span>
+              </td>
+              <td class="px-2.5 py-2.5 text-xs">{{ r.path }}</td>
+              <td class="px-2.5 py-2.5"><span class="status-tag text-[10px] px-2 py-0.5 rounded font-extrabold bg-blue-100 text-blue-700">{{ r.status }}</span></td>
+              <td class="px-2.5 py-2.5 text-xs">{{ r.owner }}</td>
+              <td class="px-2.5 py-2.5 text-xs">{{ r.due }}</td>
+            </tr>
+            <tr v-if="filteredPool.length === 0">
+              <td colspan="11" class="text-center py-10 text-gray-400 text-sm font-bold">暂无匹配的需求</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- ==================== Promote Modal ==================== -->
+    <div v-if="showPromoteModal" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mt-6">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
           <div>
-            <span class="text-xs text-gray-400">需求管理</span>
-            <h3 class="text-base font-extrabold text-gray-900">新建候选需求</h3>
-            <p class="text-[11px] text-gray-400">录入候选需求信息，提交后进入评审流程。</p>
+            <span class="text-xs text-gray-400">候选线索转产品需求</span>
+            <h3 class="text-base font-extrabold text-gray-900">转产品需求</h3>
+            <p class="text-[11px] text-gray-400">{{ promotingCandidate?.id }} / {{ promotingCandidate?.title }}</p>
           </div>
-          <button class="text-gray-400 hover:text-gray-600" @click="showCreateModal = false"><X class="w-5 h-5" /></button>
+          <button class="text-gray-400 hover:text-gray-600" @click="showPromoteModal = false"><X class="w-5 h-5" /></button>
         </div>
-        <div class="p-5 space-y-3">
-          <div class="grid grid-cols-2 gap-3">
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">需求ID</span><input v-model="newReq.id" readonly class="h-8 text-xs border border-gray-200 rounded-md px-2 font-bold bg-gray-50" /></label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">来源</span>
-              <select v-model="newReq.source" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>反馈清单</option><option>异常处理</option><option>工单池</option><option>竞品分析</option></select>
+        <div class="p-5 max-h-[70vh] overflow-y-auto">
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">需求ID</span><input v-model="promoteForm.reqId" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">当前状态</span>
+              <select v-model="promoteForm.status" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold">
+                <option>评分确认</option><option>待审批</option><option>已入池</option><option>观察池</option>
+              </select>
             </label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">优先级</span>
-              <select v-model="newReq.priority" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select>
+            <label class="flex flex-col gap-1 col-span-2"><span class="text-[11px] font-bold text-gray-600">需求标题</span><input v-model="promoteForm.title" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">来源/证据类型</span><input v-model="promoteForm.source" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">适用产品</span><input v-model="promoteForm.product" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">需求等级</span>
+              <select v-model="promoteForm.level" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold">
+                <option>L1 紧急修复</option><option>L2 体验优化</option><option>L3 功能升级</option><option>L4 换代开发</option>
+              </select>
             </label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">状态</span>
-              <select v-model="newReq.status" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>待评审</option><option>产品评审</option><option>规划中</option><option>已排期</option></select>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">处理路径</span>
+              <select v-model="promoteForm.path" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold">
+                <option>紧急修复</option><option>体验优化</option><option>功能升级</option><option>换代开发观察</option>
+              </select>
             </label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">负责人</span><input v-model="newReq.owner" placeholder="填写负责人" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">部门</span><input v-model="newReq.dept" placeholder="填写部门" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">责任人</span><input v-model="promoteForm.owner" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">完成时限</span><input type="date" v-model="promoteForm.due" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
           </div>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">需求标题 <span class="text-red-500">*</span></span><input v-model="newReq.title" placeholder="请输入需求标题" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">详细描述</span><textarea v-model="newReq.desc" rows="4" placeholder="请输入需求详细描述" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+
+          <!-- Five-dimension Scoring -->
+          <fieldset class="border border-gray-200 rounded-lg p-3 mb-4">
+            <legend class="text-[11px] font-extrabold text-gray-600 px-1">五维评分</legend>
+            <div class="grid grid-cols-5 gap-3">
+              <label v-for="(label, si) in scoreLabels" :key="si" class="flex flex-col items-center gap-1">
+                <span class="text-[10px] font-bold text-gray-500">{{ label }}</span>
+                <select
+                  class="h-8 w-full text-xs border border-gray-300 rounded-md px-2 font-bold text-center"
+                  :value="(promoteForm.scores as any)[Object.keys(promoteForm.scores)[si]]"
+                  @change="(e: Event) => { const t = e.target as HTMLSelectElement; (promoteForm.scores as any)[Object.keys(promoteForm.scores)[si]] = Number(t.value) }"
+                >
+                  <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="space-y-3">
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">证据摘要</span><textarea v-model="promoteForm.evidence" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">需求描述</span><textarea v-model="promoteForm.description" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">用户痛点</span><textarea v-model="promoteForm.painPoint" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">预期价值</span><textarea v-model="promoteForm.expectedValue" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">风险与待确认</span><textarea v-model="promoteForm.risk" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">下一步动作</span><textarea v-model="promoteForm.nextAction" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+          </div>
         </div>
-        <div class="flex justify-end gap-2 px-5 py-3.5 bg-gray-50 rounded-b-xl border-t border-gray-200">
-          <button class="btn-secondary text-xs h-8 px-4" @click="showCreateModal = false">取消</button>
-          <button class="btn-primary text-xs h-8 px-5" @click="submitRequirement">提交需求</button>
+        <div class="flex justify-end gap-2 px-5 py-3 bg-gray-50 rounded-b-xl border-t border-gray-200">
+          <button class="btn-primary text-xs h-8 px-4" @click="confirmPromote">确认转入产品需求池</button>
+          <button class="btn-secondary text-xs h-8 px-4" @click="showPromoteModal = false">取消</button>
         </div>
       </div>
     </div>
 
-    <!-- Toast -->
-    <div v-if="toast" class="fixed top-4 right-4 z-[60] px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white" :class="toast.type === 'warning' ? 'bg-orange-500' : toast.type === 'success' ? 'bg-green-600' : 'bg-blue-600'">{{ toast.msg }}</div>
+    <!-- ==================== New Candidate Modal ==================== -->
+    <div v-if="showNewCandidateModal" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mt-10">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
+          <div>
+            <h3 class="text-base font-extrabold text-gray-900">新增候选线索</h3>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600" @click="showNewCandidateModal = false"><X class="w-5 h-5" /></button>
+        </div>
+        <div class="p-5 space-y-3">
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">线索ID</span><input v-model="newCandidate.id" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">来源反馈</span><input v-model="newCandidate.sourceFeedback" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">分类</span><input v-model="newCandidate.category" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">线索标题</span><input v-model="newCandidate.title" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">证据摘要</span><textarea v-model="newCandidate.evidence" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">适用产品</span><input v-model="newCandidate.product" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">状态</span>
+            <select v-model="newCandidate.status" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>待补充</option><option>待评分</option></select>
+          </label>
+          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">下一步动作</span><input v-model="newCandidate.nextAction" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-3 bg-gray-50 rounded-b-xl border-t border-gray-200">
+          <button class="btn-primary text-xs h-8 px-4" @click="createCandidate">创建线索</button>
+          <button class="btn-secondary text-xs h-8 px-4" @click="showNewCandidateModal = false">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Detail Drawer ==================== -->
+    <div v-if="showDetail && detailReq" class="fixed inset-y-0 right-0 z-50 w-[480px] max-w-[90vw] bg-white shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
+        <button class="flex items-center gap-1.5 text-xs font-extrabold text-gray-600 hover:text-gray-800" @click="showDetail = false"><ArrowLeft class="w-4 h-4" />返回</button>
+        <span class="text-[10px] text-gray-400">需求详情</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5">
+        <!-- Process Steps -->
+        <div class="process-bar flex items-center gap-0 mb-5">
+          <template v-for="(step, si) in processSteps" :key="step">
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold"
+                :class="getStepClass(detailReq, si) === 'done' ? 'bg-emerald-500 text-white' : getStepClass(detailReq, si) === 'active' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-400'"
+              >{{ si + 1 }}</div>
+              <span class="text-[9px] font-bold text-gray-400 whitespace-nowrap">{{ step }}</span>
+            </div>
+            <div v-if="si < processSteps.length - 1" class="flex-1 h-0.5 mx-0.5" :class="getStepClass(detailReq, si) === 'done' ? 'bg-emerald-300' : 'bg-gray-200'"></div>
+          </template>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <h2 class="text-sm font-extrabold text-gray-900 mb-2">{{ detailReq.title }}</h2>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+              <div><span class="text-gray-400">候选来源：</span><span class="font-bold">{{ detailReq.candidate }}</span></div>
+              <div><span class="text-gray-400">需求等级：</span><span class="font-bold">{{ detailReq.level }}</span></div>
+              <div><span class="text-gray-400">处理路径：</span><span class="font-bold">{{ detailReq.path }}</span></div>
+              <div><span class="text-gray-400">当前状态：</span><span class="font-bold">{{ detailReq.status }}</span></div>
+              <div><span class="text-gray-400">责任人：</span><span class="font-bold">{{ detailReq.owner }}</span></div>
+              <div><span class="text-gray-400">完成时限：</span><span class="font-bold">{{ detailReq.due }}</span></div>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100 pt-3">
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">需求描述</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.description }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">用户痛点</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.painPoint }}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div><span class="text-[10px] text-gray-400">来源与证据</span><p class="text-xs font-bold mt-0.5">{{ detailReq.source }} / {{ detailReq.evidence }}</p></div>
+            <div><span class="text-[10px] text-gray-400">适用产品</span><p class="text-xs font-bold mt-0.5">{{ detailReq.product }}</p></div>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">五维评分</h4>
+            <div class="score-bars flex items-end gap-2 h-14">
+              <div v-for="(label, si) in scoreLabels" :key="si" class="flex flex-col items-center gap-0.5" :title="`${label}：${(detailReq.scores as any)[Object.keys(detailReq.scores)[si]]}分`">
+                <b class="text-[10px] font-extrabold">{{ (detailReq.scores as any)[Object.keys(detailReq.scores)[si]] }}</b>
+                <i class="w-4 rounded-t" :style="{ height: (detailReq.scores as any)[Object.keys(detailReq.scores)[si]] * 18 + '%', backgroundColor: si === 0 ? '#1f73e8' : si === 1 ? '#22a06b' : si === 2 ? '#ffb020' : si === 3 ? '#8b5cf6' : '#06b6d4' }"></i>
+                <span class="text-[9px] text-gray-400 font-bold">{{ label }}</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2">L级分级说明：{{ detailReq.level === 'L1' ? '紧急修复：安全、合规、批量质量或高退货风险，需要快速审批和资源优先配置。' : detailReq.level === 'L2' ? '体验优化：高频痛点或满意度问题，纳入近期迭代评审。' : detailReq.level === 'L3' ? '功能升级：用户价值和竞争影响明确，进入版本规划和资源评估。' : '换代开发：中长期机会或平台级能力，进入产品规划观察池。' }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">预期价值</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.expectedValue }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">风险与待确认</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.risk }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">下一步动作</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.nextAction }}</p>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-gray-500 mb-2">关联记录</h4>
+            <p class="text-xs text-gray-700">{{ detailReq.relatedFeedback || '无' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 px-5 py-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+        <button class="btn-primary text-xs h-8 px-3">进入审批</button>
+        <button class="btn-secondary text-xs h-8 px-3">退回补充</button>
+        <button class="btn-secondary text-xs h-8 px-3">加入观察池</button>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.data-table { background: white; border-radius: 8px; overflow: hidden; }
+.data-table th { background: #f8f9fa; }
+.scale-x-reverse { transform: scaleX(-1); }
+.link-button { background: none; border: none; cursor: pointer; padding: 0; font: inherit; }
+.link-button:hover { text-decoration: underline; }
+.mini-action { white-space: nowrap; cursor: pointer; transition: all 0.15s; }
+.mini-action.primary:hover { background: #1d4ed8 !important; }
+.mini-action.warning:hover { background: #fff7ed !important; }
+.status-tag { white-space: nowrap; }
+.process-bar { min-width: 0; }
+</style>

@@ -84,12 +84,94 @@ export interface EmergencyException {
 
 // 竞品
 export interface Competitor {
+  id: string
+  category: string
+  type: string
+  brand: string
   name: string
-  asin: string
-  line: string
-  price: string
-  channels: string
-  params: string
+  model: string
+  productType: string
+  position: string
+  launch: string
+  platform: string
+  region: string
+  officialPrice: string
+  dealPrice: string
+  rating: string
+  reviews: string
+  sellingPoints: string[] | string  // array or string separated by " / "
+  specs: Record<string, string> | string
+  pain: string
+  // 登记字段
+  channelType?: string
+  asin?: string
+  price?: number | string
+  params?: string
+  channels?: string
+  tags?: string[]
+  // 监控状态
+  monitorStatus?: string      // 正常监控 / 已解除监控 / 已归档
+  archived?: boolean
+  registerFields?: Record<string, string>
+}
+
+// 竞品登记参数字段定义
+export interface CompetitorFieldDef {
+  category: string
+  name: string
+  type: 'text' | 'select' | 'url' | 'date' | 'number' | 'lineSelect'
+  required: boolean
+  options?: string[]
+  placeholder?: string
+}
+
+// L1-L4 监控记录
+export interface LevelRecord {
+  level: string
+  source: string
+  content: string
+  action: string
+  status: string
+  date: string
+}
+
+// 竞品监控快照
+export interface MonitorSnapshot {
+  [weekKey: string]: string
+}
+
+// 候选线索
+export interface CandidateLead {
+  id: string
+  sourceFeedback: string
+  category: string
+  title: string
+  evidence: string
+  product: string
+  status: string
+  nextAction: string
+}
+
+// 产品需求池
+export interface RequirementPoolItem {
+  id: string
+  candidate: string
+  title: string
+  source: string
+  evidence: string
+  product: string
+  scores: { userValue: number; businessImpact: number; feasibility: number; competitiveImpact: number; inventoryImpact: number }
+  level: string
+  path: string
+  status: string
+  owner: string
+  due: string
+  description: string
+  painPoint: string
+  expectedValue: string
+  risk: string
+  nextAction: string
+  relatedFeedback: string
 }
 
 // 用户角色
