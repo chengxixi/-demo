@@ -1,0 +1,1761 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>企业系统整体框架与数据流向</title>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --paper: #ffffff;
+      --ink: #18243a;
+      --muted: #5c6573;
+      --line: #465262;
+      --panel: #d9dde3;
+      --panel-light: #e9edf2;
+      --panel-dark: #5d6673;
+      --panel-deep: #45505d;
+      --blue: #4d7ee8;
+      --orange: #ed7d22;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    main {
+      width: 1320px;
+      max-width: calc(100vw - 40px);
+      margin: 24px auto 48px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+
+    .page-tip {
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      border: 1px solid #c7d0db;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 14px;
+      border-bottom: 2px solid #cfd6df;
+    }
+
+    .tab-button {
+      appearance: none;
+      border: 1px solid #b9c4d0;
+      border-bottom: 0;
+      background: linear-gradient(#f7f9fc, #dde4ed);
+      color: var(--ink);
+      padding: 10px 28px;
+      min-height: 54px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 0;
+    }
+
+    .tab-button.active {
+      background: var(--paper);
+      color: #0f4c81;
+      position: relative;
+      top: 2px;
+      border-color: #f59e0b;
+      box-shadow: inset 0 4px 0 #f59e0b;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .sheet {
+      background: var(--paper);
+      border: 1px solid #d7dce5;
+      padding: 24px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, 0.08);
+      overflow-x: auto;
+    }
+
+    .diagram {
+      position: relative;
+      width: 1260px;
+      min-height: 1160px;
+      margin: 0 auto;
+      border: 2px solid #b9c0cb;
+      background: #f8fafc;
+      padding: 18px 22px 24px;
+    }
+
+    .bi-roof {
+      width: 980px;
+      height: 86px;
+      margin: 0 auto 10px;
+      background: #68717d;
+      clip-path: polygon(50% 0, 100% 82%, 0 82%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 30px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .diagram-title {
+      position: absolute;
+      left: 42px;
+      top: 22px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 250px 250px 250px 250px;
+      gap: 18px;
+      justify-content: center;
+      margin: -4px auto 18px;
+    }
+
+    .top-card {
+      border: 1px solid #aeb6c1;
+      background: linear-gradient(#eef1f5, #cfd5dd);
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.35;
+      padding: 8px;
+    }
+
+    .canvas {
+      position: relative;
+      min-height: 900px;
+      display: grid;
+      grid-template-columns: 250px 250px 250px 250px;
+      grid-template-rows: 218px 218px 196px 142px;
+      gap: 30px 18px;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .system {
+      border: 1.5px solid #a8b0bc;
+      background: linear-gradient(#e9edf2, #cdd3dc);
+      padding: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .system.dark {
+      background: linear-gradient(#717b88, #535d6a);
+      border-color: #46515d;
+      color: #fff;
+    }
+
+    .system.blue {
+      background: linear-gradient(#638fed, #4473df);
+      border-color: #3d68c9;
+      color: #fff;
+    }
+
+    .crm,
+    .req {
+      padding-top: 14px;
+    }
+    .crm .modules,
+    .req .modules {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .crm .mini,
+    .req .mini {
+      min-height: 28px;
+      font-size: 11.5px;
+    }
+
+    .system.orange {
+      background: linear-gradient(#f19037, #e27618);
+      border-color: #b95d11;
+      color: #111;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+
+    .modules.one { grid-template-columns: 1fr; }
+    .modules.three { grid-template-columns: repeat(3, 1fr); }
+
+    .mini {
+      background: rgba(255,255,255,0.36);
+      border: 1px solid rgba(91,100,115,0.32);
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5px 6px;
+      font-size: 12px;
+      line-height: 1.22;
+      position: relative;
+    }
+
+    .mini[data-detail] {
+      cursor: help;
+    }
+
+    .mini[data-detail]::after {
+      content: attr(data-detail);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      width: 220px;
+      max-width: 260px;
+      background: #111827;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.22);
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      box-shadow: 0 8px 18px rgba(17,24,39,0.28);
+    }
+
+    .mini[data-detail]:hover::after {
+      opacity: 1;
+    }
+
+    .dark .mini,
+    .blue .mini {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .orange .mini {
+      background: rgba(255,255,255,0.24);
+      border-color: rgba(104,48,4,0.28);
+    }
+
+    .wide { grid-column: span 2; }
+
+    .crm { grid-column: 1; grid-row: 1; }
+    .req { grid-column: 2; grid-row: 1; }
+    .plm { grid-column: 3; grid-row: 1 / span 2; }
+    .erp { grid-column: 4; grid-row: 1 / span 2; }
+    .srm { grid-column: 1; grid-row: 2; }
+    .mes { grid-column: 2; grid-row: 2; }
+    .qms { grid-column: 1; grid-row: 3; }
+    .wms { grid-column: 2 / span 2; grid-row: 3; }
+    .tms { grid-column: 4; grid-row: 3; }
+    .automation { grid-column: 1 / span 4; grid-row: 4; }
+
+    .automation .mini {
+      min-height: 34px;
+    }
+
+    .wms .modules {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .tms .modules {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .plm .modules {
+      gap: 6px;
+    }
+
+    .plm .mini {
+      min-height: 28px;
+      font-size: 11.5px;
+    }
+
+    .note {
+      margin: 14px 4px 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .flow-box {
+      position: relative;
+      border: 2px solid #9a9a9a;
+      border-radius: 30px;
+      background: linear-gradient(#f8f8f8 0%, #f0f0f0 58%, #dadada 100%);
+      padding: 20px 22px 22px;
+      margin-top: 24px;
+      min-width: 1110px;
+    }
+
+    .flow-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .branch-return {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 82px;
+      height: 150px;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .branch-return svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    .branch-label {
+      position: absolute;
+      left: 520px;
+      top: 84px;
+      border: 1px solid #f28b66;
+      background: #fff8f4;
+      color: #c94b22;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(201, 75, 34, 0.12);
+      white-space: nowrap;
+      z-index: 4;
+    }
+
+    .whole-flow {
+      display: grid;
+      grid-template-columns: 1fr 42px 1fr 42px 1fr 42px 1fr;
+      grid-template-rows: auto 42px auto 22px auto 22px auto;
+      gap: 8px 10px;
+      align-items: center;
+      margin-top: 6px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .whole-card {
+      min-height: 74px;
+      border: 1px solid #6f8eee;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 9px 10px;
+      font-size: 15px;
+      line-height: 1.28;
+    }
+
+    .whole-card.gray {
+      border-color: #b8b8b8;
+      background: linear-gradient(#f4f4f4, #d7d7d7);
+      color: var(--ink);
+    }
+
+    .whole-card.orange-card {
+      border-color: #c55d0f;
+      background: var(--orange);
+      color: #111;
+    }
+
+    .whole-arrow {
+      color: var(--line);
+      font-size: 24px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .decision-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 20px;
+    }
+
+    .decision-arrow span {
+      display: inline-block;
+      border: 1px solid #d77a28;
+      background: #fff6ec;
+      color: #a94e0f;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .whole-down {
+      color: var(--line);
+      font-size: 24px;
+      text-align: center;
+      font-weight: 700;
+      min-height: 22px;
+    }
+
+    .whole-note-grid {
+      border-top: 1px solid #bfc0c5;
+      margin-top: 18px;
+      padding-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .whole-note {
+      min-height: 50px;
+      border: 1px solid #b8b8b8;
+      background: linear-gradient(#f4f4f4, #d7d7d7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 7px 8px;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .placeholder {
+      min-height: 520px;
+      border: 2px dashed #b8c3d0;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #526071;
+      font-size: 18px;
+      line-height: 1.8;
+      padding: 32px;
+    }
+
+    .current-board {
+      border: 2px solid #b9c0cb;
+      background: #f8fafc;
+      padding: 20px;
+    }
+
+    .current-image {
+      width: 100%;
+      min-width: 1110px;
+      border: 1px solid #c7d0db;
+      background: #fff;
+      display: block;
+      margin-bottom: 18px;
+    }
+
+    .current-summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .current-card {
+      border: 1px solid #c7d0db;
+      background: linear-gradient(#f7f9fc, #e3e8ef);
+      padding: 12px 14px;
+      min-height: 118px;
+    }
+
+    .current-card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .current-card p {
+      margin: 0;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .current-flow {
+      display: none;
+      min-width: 1480px;
+      border: 1px solid #c7d0db;
+      background: #ffffff;
+      margin-bottom: 18px;
+    }
+
+    .current-flow-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      padding: 14px 10px;
+      border-bottom: 1px solid #c7d0db;
+      background: linear-gradient(#f8fafc, #e8edf3);
+    }
+
+    .swimlane {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      border-bottom: 1px solid #d7dde6;
+      min-height: 114px;
+    }
+
+    .swimlane:last-child {
+      border-bottom: 0;
+    }
+
+    .lane-head {
+      border-right: 1px solid #c7d0db;
+      background: linear-gradient(#f3f6fa, #dfe6ee);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.35;
+      padding: 8px;
+    }
+
+    .lane-body {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      overflow-x: auto;
+      scrollbar-color: #8c8c8c #eef2f6;
+    }
+
+    .process-node {
+      flex: 0 0 158px;
+      min-height: 60px;
+      border: 1px solid #aeb8c5;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .process-node.system {
+      background: #eaf2ff;
+      border-color: #74a7e8;
+      color: #174a7c;
+      font-weight: 700;
+    }
+
+    .process-node.paused {
+      background: #fff1f1;
+      border-color: #ef4444;
+      color: #b42318;
+      font-weight: 700;
+    }
+
+    .process-node.manual {
+      background: #fff7d6;
+      border-color: #d6a500;
+      color: #7a5300;
+      font-weight: 700;
+    }
+
+    .process-node.need {
+      background: #e6f4ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .process-arrow {
+      flex: 0 0 auto;
+      color: #465262;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .current-notes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .current-note {
+      border: 1px solid #c7d0db;
+      background: #fffbea;
+      padding: 12px;
+      min-height: 96px;
+    }
+
+    .current-note h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .current-note ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .current-redraw {
+      border: 1px solid #c7d0db;
+      background: #fff;
+      margin-bottom: 18px;
+      overflow: auto;
+      width: 100%;
+      max-height: 820px;
+    }
+
+    .current-redraw img {
+      width: 1680px;
+      max-width: none;
+      display: block;
+    }
+
+    .current-redraw iframe {
+      width: 4500px;
+      height: 1620px;
+      border: 0;
+      display: block;
+      background: #fff;
+      transform: scale(0.55);
+      transform-origin: top left;
+      margin-right: -2025px;
+      margin-bottom: -729px;
+    }
+    .diff-board {
+      border: 2px solid #b9c0cb;
+      background: #f8fafc;
+      padding: 20px;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .legend-item,
+    .status-chip {
+      border: 1px solid #bdc7d4;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .done { background: #8f98a5; color: #fff; }
+    .missing { background: #ffe1e1; color: #b42318; border-color: #ef9a9a; }
+    .planned { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+    .offline { background: #ffedd5; color: #c2410c; border-color: #fb923c; }
+
+    .diff-host {
+      overflow-x: auto;
+    }
+
+    .diff-host .diagram {
+      margin-top: 0;
+    }
+
+    .diff-host .flow-box {
+      display: none;
+    }
+
+
+    .diff-diagram .system,
+    .diff-diagram .system.blue,
+    .diff-diagram .system.orange,
+    .diff-diagram .system.dark {
+      background: linear-gradient(#eef1f5, #cfd5dd) !important;
+      border-color: #a8b0bc !important;
+      color: #18243a !important;
+    }
+
+    .diff-diagram .system .title,
+    .diff-diagram .system.dark .title,
+    .diff-diagram .system.blue .title,
+    .diff-diagram .system.orange .title {
+      color: #18243a !important;
+    }
+
+    .diff-diagram .bi-roof {
+      background: linear-gradient(#7b8490, #626c78) !important;
+      color: #fff !important;
+    }
+    .diff-diagram .mini,
+    .diff-diagram .blue .mini,
+    .diff-diagram .dark .mini,
+    .diff-diagram .orange .mini {
+      background: #8f98a5 !important;
+      border-color: #747d8c !important;
+      color: #fff !important;
+      border-width: 1.5px;
+      box-shadow: none !important;
+    }
+
+    .diff-diagram .mini.status-done {
+      background: #8f98a5 !important;
+      border-color: #747d8c !important;
+      color: #fff !important;
+      font-weight: 700;
+    }
+
+    .diff-diagram .mini.status-missing {
+      background: #ffe1e1 !important;
+      border-color: #ef4444 !important;
+      color: #b42318 !important;
+      font-weight: 700;
+    }
+
+    .diff-diagram .mini.status-planned {
+      background: #dbeafe !important;
+      border-color: #2563eb !important;
+      color: #1d4ed8 !important;
+      font-weight: 700;
+    }
+
+    .diff-diagram .mini.status-pending {
+      background: #8f98a5 !important;
+      border-color: #747d8c !important;
+      color: #fff !important;
+      font-weight: 700;
+    }
+
+
+    .diff-diagram .mini.status-offline {
+      background: #ffedd5 !important;
+      border-color: #fb923c !important;
+      color: #c2410c !important;
+      font-weight: 700;
+    }
+    .diff-diagram .system.status-system-gap {
+      outline: 3px solid #ef4444;
+      outline-offset: 3px;
+    }
+
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .diff-system {
+      border: 1px solid #c7d0db;
+      background: linear-gradient(#eef2f7, #d9e0e8);
+      padding: 12px;
+      min-height: 180px;
+    }
+
+    .diff-system h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .status-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+    .module-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.38);
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .module-modal.open {
+      display: flex;
+    }
+
+    .module-dialog {
+      width: 520px;
+      max-width: calc(100vw - 48px);
+      background: #fff;
+      border: 1px solid #9aa7b8;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.26);
+      padding: 18px 20px 20px;
+    }
+
+    .module-dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #d8dee8;
+      padding-bottom: 10px;
+    }
+
+    .module-dialog-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .module-close {
+      border: 1px solid #aeb8c5;
+      background: #f3f6fa;
+      color: #172033;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .module-dialog-meta {
+      margin: 0 0 10px;
+      color: #445066;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .module-dialog-body {
+      margin: 0;
+      color: #172033;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .plm .mini {
+      min-height: 25px;
+      font-size: 11px;
+    }
+
+    .mes .mini {
+      min-height: 26px;
+      font-size: 11px;
+    }
+
+    .bi-modules {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      width: 980px;
+      margin: -12px auto 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .bi-modules .mini {
+      min-height: 28px;
+      font-size: 11.5px;
+      background: #e8edf3;
+      border: 1px solid #aeb8c5;
+      color: #172033;
+    }  </style>
+</head>
+<body>
+  <main>
+    <h1>企业系统整体框架与数据流向</h1>
+    <p class="page-tip">备注：点击各系统模块可查看功能说明、公司现状和规划备注；差异说明页通过颜色标识已实现、不完善、暂未实现和线下管理。</p>
+    <div class="tabs" role="tablist" aria-label="架构视图切换">
+      <button class="tab-button active" type="button" data-tab="standard">标准</button>
+      <button class="tab-button" type="button" data-tab="company">公司现状</button>
+      <button class="tab-button" type="button" data-tab="diff">差异说明</button>
+    </div>
+
+    <section class="sheet tab-panel active" data-panel="standard">
+      <div class="diagram">
+        <div class="diagram-title">企业数字化系统全景</div>
+        <div class="bi-roof">BI 商业智能分析与经营决策</div>
+        <div class="bi-modules">
+          <div class="mini" data-detail="销售、研发、采购、生产、质量、库存、财务综合分析">经营分析</div><div class="mini" data-detail="销售额、客户贡献、商机转化、订单趋势">销售分析</div><div class="mini" data-detail="项目进度、需求完成率、变更次数、研发投入">研发分析</div><div class="mini" data-detail="采购金额、交期达成、价格趋势、供应商绩效">采购分析</div>
+          <div class="mini" data-detail="产量、效率、达成率、设备稼动、工单异常">生产分析</div><div class="mini" data-detail="不良率、客诉、供应商质量、质量成本">质量分析</div><div class="mini" data-detail="库存周转、呆滞料、缺料、库龄">库存分析</div><div class="mini" data-detail="成本、毛利、回款、应收应付、利润分析">财务分析</div>
+        </div>
+        <div class="top-row">
+          <div class="top-card">客户 / 市场<br />需求、询价、反馈、售后</div>
+          <div class="top-card">销售 / 售前<br />商机、报价、合同、订单意向</div>
+          <div class="top-card">研发 / 工程<br />项目、图纸、BOM、工艺、变更</div>
+          <div class="top-card">供应链 / 工厂 / 财务<br />采购、生产、仓储、质量、结算</div>
+        </div>
+
+        <div class="canvas">
+          <div class="system crm blue">
+            <div class="title">CRM 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="线索录入、渠道来源、线索分配、线索跟进、状态管理、线索转客户">线索管理</div><div class="mini" data-detail="客户档案、客户等级、行业区域、客户标签、客户归属、公海客户">客户管理</div><div class="mini" data-detail="联系人信息、角色关系、决策链、联系方式、沟通偏好">联系人管理</div>
+              <div class="mini" data-detail="商机阶段、预计金额、赢率、成交时间、竞争对手、丢单原因">商机管理</div><div class="mini" data-detail="报价申请、价格版本、折扣审批、报价输出、报价有效期">报价管理</div><div class="mini" data-detail="合同创建、合同审批、合同签署、合同归档、履约状态">合同管理</div>
+              <div class="mini" data-detail="客户痛点、定制需求、功能需求、交期要求、预算、需求附件">客户需求</div><div class="mini" data-detail="电话、拜访、微信、邮件、会议纪要、下次跟进提醒">跟进记录</div><div class="mini" data-detail="交付回访、满意度、续约提醒、客户投诉、复购机会">售后回访</div>
+            </div>
+          </div>
+
+          <div class="system req blue">
+            <div class="title">需求池 / 产品需求</div>
+            <div class="modules">
+              <div class="mini" data-detail="来自 CRM、市场、自研规划、售后、质量、法规、竞品分析的需求归集">需求收集</div><div class="mini" data-detail="按客户定制、标准产品、新品研发、降本优化、质量改善、法规合规等维度分类">需求分类</div>
+              <div class="mini" data-detail="识别重复需求、相似客户痛点、同类产品诉求，合并成统一需求项，避免重复立项">需求合并</div><div class="mini" data-detail="将过大的综合需求拆成可评审、可开发、可验证的子需求或阶段需求">需求拆分</div>
+              <div class="mini" data-detail="价值评估、技术可行性、成本评估、交期评估、资源评估，判断做不做和怎么做">需求评审</div><div class="mini" data-detail="按客户价值、战略价值、收入规模、风险等级、紧急程度排序，形成排期依据">优先级</div>
+              <div class="mini" data-detail="评审通过的新产品、定制开发、改型需求转入 PLM/项目管理系统，形成项目立项、计划和里程碑">转项目</div><div class="mini" data-detail="已有产品的设计、BOM、工艺、物料、版本等改动转入 PLM 变更流程，形成 ECR/ECN/ECO">转变更</div>
+              <div class="mini" data-detail="不做、暂缓、重复、无效或条件不成熟的需求关闭，或进入储备池等待后续重新评估">关闭/储备</div>
+            </div>
+          </div>
+
+          <div class="system plm">
+            <div class="title">PLM / 项目管理系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="项目立项、计划、任务、里程碑、资源、风险、项目结项">项目立项</div><div class="mini" data-detail="研发任务拆解、责任人、节点计划、进度跟踪、延期预警">任务/里程碑</div>
+              <div class="mini" data-detail="产品需求、客户定制需求、研发需求、变更需求、需求状态">需求管理</div><div class="mini" data-detail="产品层级、部件关系、配置关系、版本结构、系列化结构">产品结构</div>
+              <div class="mini" data-detail="配置规则、选配关系、超级 BOM、系列产品配置、选配约束">产品配置</div><div class="mini" data-detail="标准件库、标准模板、编码规则、标准工艺、标准图文档">标准化管理</div>
+              <div class="mini" data-detail="TR阶段门评审、评审材料、问题清单、通过/整改/暂停结论、责任人闭环">TR/阶段评审</div><div class="mini" data-detail="EVT工程样验证、DVT设计验证、PVT小批量/量产验证、成熟度评审结论">EVT/DVT/PVT</div>
+              <div class="mini" data-detail="2D/3D 图纸、规格书、测试报告、承认书、版本和签审">图文档</div><div class="mini" data-detail="物料申请、物料编码、规格参数、替代料、生命周期状态">物料管理</div>
+              <div class="mini" data-detail="设计 BOM，表达研发设计结构、零部件关系、版本和替代关系">EBOM</div><div class="mini" data-detail="工艺/制造 BOM，承接设计 BOM，结合工艺路线、工序、损耗和生产用料">PBOM/MBOM</div>
+              <div class="mini" data-detail="配置规则、选配关系、系列产品配置，支撑多型号、多选配产品">超级 BOM</div><div class="mini" data-detail="工艺路线、工序、工装夹具、作业指导书、工艺参数">工艺管理</div>
+              <div class="mini" data-detail="样品申请、样机 BOM、领料、试制记录、测试验证、问题整改">样机试制</div><div class="mini" data-detail="供应商送样、样品检测、承认资料、环保资料、承认结果">物料承认</div>
+              <div class="mini" data-detail="模具档案、模具编号、寿命、维修保养、试模记录、模具变更">模具管理</div><div class="mini" data-detail="固件版本、烧录文件、适配硬件、版本发布、回退记录">固件版本</div>
+              <div class="mini" data-detail="客户签样、封样资料、样品状态、签核记录、版本追溯">签样/封样</div><div class="mini" data-detail="DFMEA、PFMEA、风险识别、风险优先级、改善措施">FMEA</div>
+              <div class="mini" data-detail="设计变更请求、工程变更通知、变更执行、影响范围和版本切换">ECR/ECN/ECO</div><div class="mini" data-detail="产品资料冻结、BOM/图纸/工艺发布、版本生效、下发 ERP/MES">产品发布</div>
+              <div class="mini" data-detail="产品维护、生命周期状态、停产、退市、替代方案">产品维护/退市</div>
+            </div>
+          </div>
+
+          <div class="system erp orange">
+            <div class="title">ERP 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="销售订单、订单评审、交期确认、订单变更、发货状态">销售订单</div><div class="mini" data-detail="客户、供应商、物料、BOM、价格、组织、仓库等基础资料">主数据</div>
+              <div class="mini" data-detail="需求计划、物料需求、采购建议、生产建议、缺料分析">MRP 计划</div><div class="mini" data-detail="采购申请、采购订单、交期跟踪、到货、对账">采购管理</div>
+              <div class="mini" data-detail="生产计划、生产订单、齐套检查、工单下发、计划调整">生产计划</div><div class="mini" data-detail="库存数量、库存金额、出入库账、批次、库龄">库存账务</div>
+              <div class="mini" data-detail="质量状态、检验结果、质量信息接收、质量反馈、库存质量控制">质量管理</div><div class="mini" data-detail="审批、通知、流程协作、跨部门协同、OA流程">协同办公/OA</div>
+              <div class="mini" data-detail="材料成本、人工成本、制造费用、产品成本、差异分析">成本核算</div><div class="mini" data-detail="应收账款、应付账款、收付款、发票、核销">应收应付</div>
+              <div class="mini" data-detail="标准品或 ODM 现有产品满足时，CRM 报价/合同后直接生成销售订单">现有产品下单</div><div class="mini" data-detail="总账凭证、财务报表、经营报表、成本和利润分析">总账报表</div>
+            </div>
+          </div>
+
+          <div class="system srm">
+            <div class="title">SRM 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="供应商注册、准入评审、分类分级、黑白名单">供应商准入</div><div class="mini" data-detail="营业执照、体系证书、环保资料、合规文件、有效期预警">资质管理</div>
+              <div class="mini" data-detail="询价单、报价单、比价议价、定价、价格有效期">询价报价</div><div class="mini" data-detail="采购需求、订单确认、交期回复、发货通知、对账信息">采购协同</div>
+              <div class="mini" data-detail="送样申请、样品资料、承认资料、检验结果、承认状态">送样/承认</div><div class="mini" data-detail="交期、质量、价格、服务、整改、供应商评分">绩效评价</div>
+            </div>
+          </div>
+
+          <div class="system mes dark">
+            <div class="title">MES 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="接收 ERP 生产订单、工单拆分、工单状态、工单关闭">生产工单</div><div class="mini" data-detail="产线排程、人员设备派工、工序计划、产能负荷">排产派工</div>
+              <div class="mini" data-detail="按工单领料、投料校验、批次绑定、退料补料">领料投料</div><div class="mini" data-detail="工序开工、过程记录、作业指导、设备和人员采集">工序执行</div>
+              <div class="mini" data-detail="完工数量、工时、用料、不良、入库申请、成本数据">生产报工</div><div class="mini" data-detail="按工单、批次、物料、设备、人员、工序追溯">生产追溯</div>
+              <div class="mini" data-detail="设备状态、产量、参数、报警、停机记录、设备履历">设备采集</div><div class="mini" data-detail="工装夹具、模具工装、点检保养、寿命、借还记录">工装管理</div>
+              <div class="mini" data-detail="线边物料、在制品、工位库存、消耗记录、补料需求">线边库存</div><div class="mini" data-detail="生产进度、异常、产能、效率、质量可视化">电子看板</div>
+            </div>
+          </div>
+
+          <div class="system qms">
+            <div class="title">QMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="来料检验、检验标准、抽样方案、检验判定">IQC 来料</div><div class="mini" data-detail="制程巡检、首检、过程参数、异常预警">IPQC 过程</div>
+              <div class="mini" data-detail="成品检验、出货检验、放行判定、检验报告">OQC 出货</div><div class="mini" data-detail="不良登记、隔离、返工、报废、让步接收">不合格品</div>
+              <div class="mini" data-detail="客户投诉、问题分析、责任判定、改善闭环">客诉管理</div><div class="mini" data-detail="纠正预防措施、责任人、计划、验证关闭">8D/CAPA</div>
+              <div class="mini" data-detail="供应商质量问题、整改、质量评分、复评">供应商质量</div><div class="mini" data-detail="按批次、工单、物料、设备、人员追溯质量问题">质量追溯</div>
+            </div>
+          </div>
+
+          <div class="system wms">
+            <div class="title">WMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="采购到货、检验放行、入库上架、入库单回传">收货入库</div><div class="mini" data-detail="库区、库位、容量、库位策略、上架规则">库位管理</div>
+              <div class="mini" data-detail="物料条码、批次条码、托盘码、序列号、扫码追溯">批次条码</div><div class="mini" data-detail="销售出库、生产领料、拣货任务、复核发货">拣货出库</div>
+              <div class="mini" data-detail="盘点计划、盘点差异、调整审批、库存准确率">库存盘点</div><div class="mini" data-detail="仓库间调拨、库位移库、批次转移、库存状态切换">物料移库</div>
+              <div class="mini" data-detail="按工单、工序、产线需求进行物料配送">线边配送</div><div class="mini" data-detail="立体库、输送线、AGV、自动包装等设备联动">自动化接口</div>
+              <div class="mini" data-detail="发货任务、出库复核、交付状态、物流交接">发货出库</div><div class="mini" data-detail="客户签收、回单状态、交付异常、签收结果回传">签收回传</div>
+            </div>
+          </div>
+
+          <div class="system tms">
+            <div class="title">TMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="发货任务、装车计划、路线计划、发运批次">发货计划</div><div class="mini" data-detail="承运商档案、线路价格、服务评价、合同">承运商</div>
+              <div class="mini" data-detail="车辆、运输节点、在途状态、异常预警">运输跟踪</div><div class="mini" data-detail="客户签收、回单上传、签收异常、交付确认">签收回单</div>
+              <div class="mini" data-detail="运输异常、破损短少、延迟、责任判定">异常处理</div><div class="mini" data-detail="运费规则、运费核算、对账、结算">运费结算</div>
+            </div>
+          </div>
+
+          <div class="system automation dark">
+            <div class="title">自动化集成 / 现场数据底座</div>
+            <div class="modules three">
+              <div class="mini" data-detail="采集设备、产线、传感器、PLC、SCADA 等现场数据">数据采集与监控</div><div class="mini" data-detail="设备状态、运行参数、报警、节拍、能耗等数据">设备 / PLC / SCADA</div><div class="mini" data-detail="产线指令下发、执行反馈、生产节拍、异常联动">产线控制系统</div>
+              <div class="mini" data-detail="AGV 调度、机器人作业、自动搬运、任务回传">AGV / 机器人</div><div class="mini" data-detail="物料位置、车辆位置、库内路径、配送状态">物流定位</div><div class="mini" data-detail="工业网络、接口协议、边缘网关、数据通道">网络与通信</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">说明：上方主图展示标准系统框架与各系统内部模块；点击任一模块可查看模块说明。CRM 中标准品/ODM 现有产品可直接进入 ERP 下单；需要研发、改型、定制或变更时，进入需求池并流转到 PLM/项目管理系统。</p>
+
+      <div class="flow-box">
+        <div class="flow-title">企业核心业务系统整体流向</div>
+        <div class="branch-return">
+          <svg viewBox="0 0 1040 150" aria-hidden="true">
+            <defs>
+              <marker id="branchArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f06f3f"></path>
+              </marker>
+            </defs>
+            <path d="M 650 54 C 585 98 310 92 78 112" fill="none" stroke="#f06f3f" stroke-width="2.5" stroke-linecap="round" marker-end="url(#branchArrow)" opacity="0.9"></path>
+          </svg>
+          <div class="branch-label">不满足：进入需求池评审</div>
+        </div>
+
+        <div class="whole-flow">
+          <div class="whole-card gray">客户 / 市场<br />需求、询价、反馈</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">CRM<br />线索、客户、商机、报价</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">业务判断<br />现有产品满足 / 需要研发</div>
+          <div class="whole-arrow decision-arrow"><span>满足</span>→</div>
+          <div class="whole-card orange-card">ERP<br />ODM现有产品、标准品直接下订单</div>
+
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+
+          <div class="whole-card">需求池<br />客户需求、市场需求、自研需求</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">PLM / 项目管理系统<br />立项、计划、任务、里程碑</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">PLM 产品数据<br />CAD、图纸、物料、BOM、工艺、变更</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card orange-card">ERP<br />计划、采购、库存、成本</div>
+
+          <div></div>
+          <div></div>
+          <div class="whole-down">↓</div>
+          <div></div>
+          <div class="whole-down">↓</div>
+          <div></div>
+          <div class="whole-down">↓</div>
+
+          <div class="whole-card">SRM<br />供应商、询价、送样、交期</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">WMS<br />收货、入库、库位、拣货、出库</div>
+          <div class="whole-arrow">↔</div>
+          <div class="whole-card">MES<br />工单、派工、领料、报工、追溯</div>
+          <div class="whole-arrow">↔</div>
+          <div class="whole-card">QMS<br />来料、过程、成品、客诉</div>
+
+          <div></div>
+          <div></div>
+          <div class="whole-down">↖</div>
+          <div></div>
+          <div class="whole-down">↓</div>
+          <div></div>
+          <div class="whole-down">↓</div>
+
+          <div class="whole-card">TMS<br />发货、运输、签收、运费</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card gray">客户 / 售后<br />签收、问题、满意度、复购</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">CRM / QMS<br />回访、投诉、质量问题</div>
+          <div class="whole-arrow">→</div>
+          <div class="whole-card">需求池 / PLM / BI<br />改进需求、设计变更、经营分析</div>
+        </div>
+
+        <div class="whole-note-grid">
+          <div class="whole-note">CRM 输出<br />客户、商机、订单意向</div>
+          <div class="whole-note">需求池输出<br />项目立项、产品需求、变更需求</div>
+          <div class="whole-note">PLM 输出<br />项目计划、物料、BOM、图纸、工艺</div>
+          <div class="whole-note">ERP 输出<br />计划、采购、生产、成本</div>
+          <div class="whole-note">MES/WMS/QMS 输出<br />执行、库存、质量数据</div>
+          <div class="whole-note">BI 汇总<br />经营分析与决策</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet tab-panel" data-panel="company">
+      <div class="current-board">
+        <div class="current-redraw">
+          <iframe src="axure-export-flow/2、系统流程梳理.html" title="公司现状整体流程图"></iframe>
+        </div>
+        <div class="current-flow">
+          <div class="current-flow-title">公司现状流程重绘版</div>
+
+          <div class="swimlane">
+            <div class="lane-head">市场端<br />业务 / 商务</div>
+            <div class="lane-body">
+              <div class="process-node manual">市场需求<br />客户需求</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">OEM/ODM<br />有价值需求</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS样机订单<br />ORM样品订单</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">样机输出送样</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">型号系统<br />型号申请</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS出货申请<br />订单关闭</div>
+            </div>
+          </div>
+
+          <div class="swimlane">
+            <div class="lane-head">产品经理<br />POM / PM</div>
+            <div class="lane-body">
+              <div class="process-node system">售后管理系统</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">POM总需求池</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node paused">POM规划池<br />流程暂停</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">POM研发池</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PM项目规划</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PM项目立项</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PM项目计划控制</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">资源风险<br />资源冲突</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node paused">产品发布<br />偏线下</div>
+            </div>
+          </div>
+
+          <div class="swimlane">
+            <div class="lane-head">项目管理</div>
+            <div class="lane-body">
+              <div class="process-node">EVT成熟度评审</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">DVT成熟度评审</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS试产订单</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS试产BOM</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS完成试产总结</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PVT成熟度评审</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">试产问题<br />整改闭环</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">文件受控</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">生产BOM</div>
+            </div>
+          </div>
+
+          <div class="swimlane">
+            <div class="lane-head">工程</div>
+            <div class="lane-body">
+              <div class="process-node">POM目标-日清维护</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">物料打样<br />与承认</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PCB打样<br />PCBA打样</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">图件版本<br />上传</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">临时BOM维护<br />及审核</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">设计BOM维护<br />及审核</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">TR评审</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">ECR工程变更</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node need">模具管理<br />需优化</div>
+            </div>
+          </div>
+
+          <div class="swimlane">
+            <div class="lane-head">PMC / 采购<br />K3</div>
+            <div class="lane-body">
+              <div class="process-node">物料申请</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">K3维护参数</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS试产订单</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS量产订单</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">变更通知</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">生产计划管理</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">K3系统维护资料</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">K3采购物料<br />价格维护</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">K3采购申请<br />采购订单</div>
+            </div>
+          </div>
+
+          <div class="swimlane">
+            <div class="lane-head">生产 / 品质<br />仓库</div>
+            <div class="lane-body">
+              <div class="process-node">来料检验入库<br />领料生产</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">MES辅助生产</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">首件送检<br />打印标签</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">MES首件检验<br />OQC检验</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">PMS订单结案<br />标签签核</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">K3自动生成<br />生产入库单</div>
+              <div class="process-arrow">→</div>
+              <div class="process-node">销售出库<br />MES出库管理</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="current-notes">
+          <div class="current-note">
+            <h3>当前已具备基础</h3>
+            <ul>
+              <li>CRM、POM/PM、ORM、PMS、K3、MES、质量系统已覆盖客户、需求、项目、BOM、订单、生产、检验等主流程。</li>
+              <li>项目管理中已有 EVT/DVT/PVT 成熟度评审、TR评审、项目计划和试产订单等关键节点。</li>
+              <li>EBOM、PBOM/MBOM、物料承认、固件版本、样机试制、生产追溯等核心能力已有系统承载。</li>
+            </ul>
+          </div>
+          <div class="current-note">
+            <h3>主要差异与短板</h3>
+            <ul>
+              <li>需求池的需求拆分、需求合并暂未实现，售后/质量/市场需求回流还没有形成统一闭环。</li>
+              <li>PLM侧工艺管理、FMEA暂未实现；图文档、超级BOM、ECR/ECN/ECO、模具管理存在不完善。</li>
+              <li>WMS/TMS 多个环节仍线下或未系统化，如批次条码、签收回传、承运商、异常处理、运费结算。</li>
+              <li>BI经营、采购、库存、财务分析未形成完整看板，跨系统经营决策数据仍需汇总治理。</li>
+            </ul>
+          </div>
+          <div class="current-note">
+            <h3>优化建议</h3>
+            <ul>
+              <li>优先打通“售后/质量/市场反馈 → 需求池 → 项目/变更 → PLM发布”的闭环，补齐需求合并、拆分和状态追踪。</li>
+              <li>将项目评审、EVT/DVT/PVT、TR、试产总结、问题整改沉淀到PLM/项目管理系统，避免评审资料分散。</li>
+              <li>推进图文档、工艺、FMEA、ECR/ECO、模具、签样/封样的统一管理，减少线下邮件和个人文件沉淀。</li>
+              <li>仓储物流侧优先建设批次条码、签收回传、承运商与异常处理，形成交付与质量追溯数据。</li>
+            </ul>
+          </div>
+          <div class="current-note">
+            <h3>阶段规划</h3>
+            <ul>
+              <li>短期：校准Excel差异清单，明确每个红/蓝/橙模块的责任部门、现状系统、目标系统和优先级。</li>
+              <li>中期：以需求池和PLM/项目管理为核心，打通CRM/QMS/MES/WMS/K3关键数据，先解决研发和供应链断点。</li>
+              <li>长期：建立主数据、流程引擎、接口平台和BI看板，形成从需求、研发、采购、生产、交付到经营分析的一体化闭环。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet tab-panel" data-panel="diff">
+      <div class="diff-board">
+        <div class="legend">
+          <div class="legend-item done">已实现：深灰</div>
+          <div class="legend-item missing">暂未实现：红色</div>
+          <div class="legend-item planned">已实现但不完善：蓝色</div>
+          <div class="legend-item offline">线下管理：橙色</div>
+        </div>
+
+        <p class="note">说明：差异说明直接基于“标准框架图”标色展示。深灰表示公司已实现；蓝色表示已实现但不完善；红色表示公司暂未实现此流程；橙色表示公司有此流程但仍以线下方式管理。</p>
+
+        <div id="diff-standard-host" class="diff-host">
+      <div class="diagram diff-diagram">
+        <div class="diagram-title">企业数字化系统全景</div>
+        <div class="bi-roof">BI 商业智能分析与经营决策</div>
+        <div class="bi-modules">
+          <div class="mini" data-detail="销售、研发、采购、生产、质量、库存、财务综合分析">经营分析</div><div class="mini" data-detail="销售额、客户贡献、商机转化、订单趋势">销售分析</div><div class="mini" data-detail="项目进度、需求完成率、变更次数、研发投入">研发分析</div><div class="mini" data-detail="采购金额、交期达成、价格趋势、供应商绩效">采购分析</div>
+          <div class="mini" data-detail="产量、效率、达成率、设备稼动、工单异常">生产分析</div><div class="mini" data-detail="不良率、客诉、供应商质量、质量成本">质量分析</div><div class="mini" data-detail="库存周转、呆滞料、缺料、库龄">库存分析</div><div class="mini" data-detail="成本、毛利、回款、应收应付、利润分析">财务分析</div>
+        </div>
+        <div class="top-row">
+          <div class="top-card">客户 / 市场<br />需求、询价、反馈、售后</div>
+          <div class="top-card">销售 / 售前<br />商机、报价、合同、订单意向</div>
+          <div class="top-card">研发 / 工程<br />项目、图纸、BOM、工艺、变更</div>
+          <div class="top-card">供应链 / 工厂 / 财务<br />采购、生产、仓储、质量、结算</div>
+        </div>
+
+        <div class="canvas">
+          <div class="system crm blue">
+            <div class="title">CRM 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="线索录入、渠道来源、线索分配、线索跟进、状态管理、线索转客户">线索管理</div><div class="mini" data-detail="客户档案、客户等级、行业区域、客户标签、客户归属、公海客户">客户管理</div><div class="mini" data-detail="联系人信息、角色关系、决策链、联系方式、沟通偏好">联系人管理</div>
+              <div class="mini" data-detail="商机阶段、预计金额、赢率、成交时间、竞争对手、丢单原因">商机管理</div><div class="mini" data-detail="报价申请、价格版本、折扣审批、报价输出、报价有效期">报价管理</div><div class="mini" data-detail="合同创建、合同审批、合同签署、合同归档、履约状态">合同管理</div>
+              <div class="mini" data-detail="客户痛点、定制需求、功能需求、交期要求、预算、需求附件">客户需求</div><div class="mini" data-detail="电话、拜访、微信、邮件、会议纪要、下次跟进提醒">跟进记录</div><div class="mini" data-detail="交付回访、满意度、续约提醒、客户投诉、复购机会">售后回访</div>
+            </div>
+          </div>
+
+          <div class="system req blue">
+            <div class="title">需求池 / 产品需求</div>
+            <div class="modules">
+              <div class="mini" data-detail="来自 CRM、市场、自研规划、售后、质量、法规、竞品分析的需求归集">需求收集</div><div class="mini" data-detail="按客户定制、标准产品、新品研发、降本优化、质量改善、法规合规等维度分类">需求分类</div>
+              <div class="mini" data-detail="识别重复需求、相似客户痛点、同类产品诉求，合并成统一需求项，避免重复立项">需求合并</div><div class="mini" data-detail="将过大的综合需求拆成可评审、可开发、可验证的子需求或阶段需求">需求拆分</div>
+              <div class="mini" data-detail="价值评估、技术可行性、成本评估、交期评估、资源评估，判断做不做和怎么做">需求评审</div><div class="mini" data-detail="按客户价值、战略价值、收入规模、风险等级、紧急程度排序，形成排期依据">优先级</div>
+              <div class="mini" data-detail="评审通过的新产品、定制开发、改型需求转入 PLM/项目管理系统，形成项目立项、计划和里程碑">转项目</div><div class="mini" data-detail="已有产品的设计、BOM、工艺、物料、版本等改动转入 PLM 变更流程，形成 ECR/ECN/ECO">转变更</div>
+              <div class="mini" data-detail="不做、暂缓、重复、无效或条件不成熟的需求关闭，或进入储备池等待后续重新评估">关闭/储备</div>
+            </div>
+          </div>
+
+          <div class="system plm">
+            <div class="title">PLM / 项目管理系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="项目立项、计划、任务、里程碑、资源、风险、项目结项">项目立项</div><div class="mini" data-detail="研发任务拆解、责任人、节点计划、进度跟踪、延期预警">任务/里程碑</div>
+              <div class="mini" data-detail="产品需求、客户定制需求、研发需求、变更需求、需求状态">需求管理</div><div class="mini" data-detail="产品层级、部件关系、配置关系、版本结构、系列化结构">产品结构</div>
+              <div class="mini" data-detail="配置规则、选配关系、超级 BOM、系列产品配置、选配约束">产品配置</div><div class="mini" data-detail="标准件库、标准模板、编码规则、标准工艺、标准图文档">标准化管理</div>
+              <div class="mini" data-detail="TR阶段门评审、评审材料、问题清单、通过/整改/暂停结论、责任人闭环">TR/阶段评审</div><div class="mini" data-detail="EVT工程样验证、DVT设计验证、PVT小批量/量产验证、成熟度评审结论">EVT/DVT/PVT</div>
+              <div class="mini" data-detail="2D/3D 图纸、规格书、测试报告、承认书、版本和签审">图文档</div><div class="mini" data-detail="物料申请、物料编码、规格参数、替代料、生命周期状态">物料管理</div>
+              <div class="mini" data-detail="设计 BOM，表达研发设计结构、零部件关系、版本和替代关系">EBOM</div><div class="mini" data-detail="工艺/制造 BOM，承接设计 BOM，结合工艺路线、工序、损耗和生产用料">PBOM/MBOM</div>
+              <div class="mini" data-detail="配置规则、选配关系、系列产品配置，支撑多型号、多选配产品">超级 BOM</div><div class="mini" data-detail="工艺路线、工序、工装夹具、作业指导书、工艺参数">工艺管理</div>
+              <div class="mini" data-detail="样品申请、样机 BOM、领料、试制记录、测试验证、问题整改">样机试制</div><div class="mini" data-detail="供应商送样、样品检测、承认资料、环保资料、承认结果">物料承认</div>
+              <div class="mini" data-detail="模具档案、模具编号、寿命、维修保养、试模记录、模具变更">模具管理</div><div class="mini" data-detail="固件版本、烧录文件、适配硬件、版本发布、回退记录">固件版本</div>
+              <div class="mini" data-detail="客户签样、封样资料、样品状态、签核记录、版本追溯">签样/封样</div><div class="mini" data-detail="DFMEA、PFMEA、风险识别、风险优先级、改善措施">FMEA</div>
+              <div class="mini" data-detail="设计变更请求、工程变更通知、变更执行、影响范围和版本切换">ECR/ECN/ECO</div><div class="mini" data-detail="产品资料冻结、BOM/图纸/工艺发布、版本生效、下发 ERP/MES">产品发布</div>
+              <div class="mini" data-detail="产品维护、生命周期状态、停产、退市、替代方案">产品维护/退市</div>
+            </div>
+          </div>
+
+          <div class="system erp orange">
+            <div class="title">ERP 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="销售订单、订单评审、交期确认、订单变更、发货状态">销售订单</div><div class="mini" data-detail="客户、供应商、物料、BOM、价格、组织、仓库等基础资料">主数据</div>
+              <div class="mini" data-detail="需求计划、物料需求、采购建议、生产建议、缺料分析">MRP 计划</div><div class="mini" data-detail="采购申请、采购订单、交期跟踪、到货、对账">采购管理</div>
+              <div class="mini" data-detail="生产计划、生产订单、齐套检查、工单下发、计划调整">生产计划</div><div class="mini" data-detail="库存数量、库存金额、出入库账、批次、库龄">库存账务</div>
+              <div class="mini" data-detail="质量状态、检验结果、质量信息接收、质量反馈、库存质量控制">质量管理</div><div class="mini" data-detail="审批、通知、流程协作、跨部门协同、OA流程">协同办公/OA</div>
+              <div class="mini" data-detail="材料成本、人工成本、制造费用、产品成本、差异分析">成本核算</div><div class="mini" data-detail="应收账款、应付账款、收付款、发票、核销">应收应付</div>
+              <div class="mini" data-detail="标准品或 ODM 现有产品满足时，CRM 报价/合同后直接生成销售订单">现有产品下单</div><div class="mini" data-detail="总账凭证、财务报表、经营报表、成本和利润分析">总账报表</div>
+            </div>
+          </div>
+
+          <div class="system srm">
+            <div class="title">SRM 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="供应商注册、准入评审、分类分级、黑白名单">供应商准入</div><div class="mini" data-detail="营业执照、体系证书、环保资料、合规文件、有效期预警">资质管理</div>
+              <div class="mini" data-detail="询价单、报价单、比价议价、定价、价格有效期">询价报价</div><div class="mini" data-detail="采购需求、订单确认、交期回复、发货通知、对账信息">采购协同</div>
+              <div class="mini" data-detail="送样申请、样品资料、承认资料、检验结果、承认状态">送样/承认</div><div class="mini" data-detail="交期、质量、价格、服务、整改、供应商评分">绩效评价</div>
+            </div>
+          </div>
+
+          <div class="system mes dark">
+            <div class="title">MES 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="接收 ERP 生产订单、工单拆分、工单状态、工单关闭">生产工单</div><div class="mini" data-detail="产线排程、人员设备派工、工序计划、产能负荷">排产派工</div>
+              <div class="mini" data-detail="按工单领料、投料校验、批次绑定、退料补料">领料投料</div><div class="mini" data-detail="工序开工、过程记录、作业指导、设备和人员采集">工序执行</div>
+              <div class="mini" data-detail="完工数量、工时、用料、不良、入库申请、成本数据">生产报工</div><div class="mini" data-detail="按工单、批次、物料、设备、人员、工序追溯">生产追溯</div>
+              <div class="mini" data-detail="设备状态、产量、参数、报警、停机记录、设备履历">设备采集</div><div class="mini" data-detail="工装夹具、模具工装、点检保养、寿命、借还记录">工装管理</div>
+              <div class="mini" data-detail="线边物料、在制品、工位库存、消耗记录、补料需求">线边库存</div><div class="mini" data-detail="生产进度、异常、产能、效率、质量可视化">电子看板</div>
+            </div>
+          </div>
+
+          <div class="system qms">
+            <div class="title">QMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="来料检验、检验标准、抽样方案、检验判定">IQC 来料</div><div class="mini" data-detail="制程巡检、首检、过程参数、异常预警">IPQC 过程</div>
+              <div class="mini" data-detail="成品检验、出货检验、放行判定、检验报告">OQC 出货</div><div class="mini" data-detail="不良登记、隔离、返工、报废、让步接收">不合格品</div>
+              <div class="mini" data-detail="客户投诉、问题分析、责任判定、改善闭环">客诉管理</div><div class="mini" data-detail="纠正预防措施、责任人、计划、验证关闭">8D/CAPA</div>
+              <div class="mini" data-detail="供应商质量问题、整改、质量评分、复评">供应商质量</div><div class="mini" data-detail="按批次、工单、物料、设备、人员追溯质量问题">质量追溯</div>
+            </div>
+          </div>
+
+          <div class="system wms">
+            <div class="title">WMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="采购到货、检验放行、入库上架、入库单回传">收货入库</div><div class="mini" data-detail="库区、库位、容量、库位策略、上架规则">库位管理</div>
+              <div class="mini" data-detail="物料条码、批次条码、托盘码、序列号、扫码追溯">批次条码</div><div class="mini" data-detail="销售出库、生产领料、拣货任务、复核发货">拣货出库</div>
+              <div class="mini" data-detail="盘点计划、盘点差异、调整审批、库存准确率">库存盘点</div><div class="mini" data-detail="仓库间调拨、库位移库、批次转移、库存状态切换">物料移库</div>
+              <div class="mini" data-detail="按工单、工序、产线需求进行物料配送">线边配送</div><div class="mini" data-detail="立体库、输送线、AGV、自动包装等设备联动">自动化接口</div>
+              <div class="mini" data-detail="发货任务、出库复核、交付状态、物流交接">发货出库</div><div class="mini" data-detail="客户签收、回单状态、交付异常、签收结果回传">签收回传</div>
+            </div>
+          </div>
+
+          <div class="system tms">
+            <div class="title">TMS 系统</div>
+            <div class="modules">
+              <div class="mini" data-detail="发货任务、装车计划、路线计划、发运批次">发货计划</div><div class="mini" data-detail="承运商档案、线路价格、服务评价、合同">承运商</div>
+              <div class="mini" data-detail="车辆、运输节点、在途状态、异常预警">运输跟踪</div><div class="mini" data-detail="客户签收、回单上传、签收异常、交付确认">签收回单</div>
+              <div class="mini" data-detail="运输异常、破损短少、延迟、责任判定">异常处理</div><div class="mini" data-detail="运费规则、运费核算、对账、结算">运费结算</div>
+            </div>
+          </div>
+
+          <div class="system automation dark">
+            <div class="title">自动化集成 / 现场数据底座</div>
+            <div class="modules three">
+              <div class="mini" data-detail="采集设备、产线、传感器、PLC、SCADA 等现场数据">数据采集与监控</div><div class="mini" data-detail="设备状态、运行参数、报警、节拍、能耗等数据">设备 / PLC / SCADA</div><div class="mini" data-detail="产线指令下发、执行反馈、生产节拍、异常联动">产线控制系统</div>
+              <div class="mini" data-detail="AGV 调度、机器人作业、自动搬运、任务回传">AGV / 机器人</div><div class="mini" data-detail="物料位置、车辆位置、库内路径、配送状态">物流定位</div><div class="mini" data-detail="工业网络、接口协议、边缘网关、数据通道">网络与通信</div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+      </div>
+    </section>
+    <div class="module-modal" id="moduleModal" aria-hidden="true">
+      <div class="module-dialog" role="dialog" aria-modal="true" aria-labelledby="moduleModalTitle">
+        <div class="module-dialog-head">
+          <h2 class="module-dialog-title" id="moduleModalTitle">模块说明</h2>
+          <button class="module-close" type="button" id="moduleModalClose" aria-label="关闭">×</button>
+        </div>
+        <p class="module-dialog-meta" id="moduleModalMeta"></p>
+        <p class="module-dialog-body" id="moduleModalBody"></p>
+      </div>
+    </div>
+  </main>
+  <script>
+    const buttons = document.querySelectorAll(".tab-button");
+    const panels = document.querySelectorAll(".tab-panel");
+
+
+    const diffStatus = [
+      { system: "CRM 系统", module: "线索管理", status: "status-done", type: "功能已实现", standard: "线索录入、渠道来源、线索分配、线索跟进、状态管理、线索转客户", remark: "CRM系统" },
+      { system: "CRM 系统", module: "客户管理", status: "status-done", type: "功能已实现", standard: "客户档案、客户等级、行业区域、客户标签、客户归属、公海客户", remark: "" },
+      { system: "CRM 系统", module: "联系人管理", status: "status-done", type: "功能已实现", standard: "联系人信息、角色关系、决策链、联系方式、沟通偏好", remark: "" },
+      { system: "CRM 系统", module: "商机管理", status: "status-done", type: "功能已实现", standard: "商机阶段、预计金额、赢率、成交时间、竞争对手、丢单原因", remark: "" },
+      { system: "CRM 系统", module: "报价管理", status: "status-done", type: "功能已实现", standard: "报价申请、价格版本、折扣审批、报价单输出、报价有效期", remark: "" },
+      { system: "CRM 系统", module: "合同管理", status: "status-done", type: "功能已实现", standard: "合同创建、合同审批、合同签署、合同归档、履约状态", remark: "" },
+      { system: "CRM 系统", module: "客户需求", status: "status-done", type: "功能已实现", standard: "客户痛点、定制需求、功能需求、交期要求、预算、需求附件", remark: "" },
+      { system: "CRM 系统", module: "跟进记录", status: "status-done", type: "功能已实现", standard: "电话、拜访、微信、邮件、会议纪要、下次跟进提醒", remark: "" },
+      { system: "CRM 系统", module: "售后回访", status: "status-done", type: "功能已实现", standard: "交付回访、满意度、续约提醒、客户投诉、复购机会", remark: "" },
+
+      { system: "需求池 / 产品需求", module: "需求收集", status: "status-done", type: "功能已实现", standard: "来自 CRM、市场、自研规划、售后、质量、法规、竞品分析的需求归集", remark: "公司POM系统-公海需求池" },
+      { system: "需求池 / 产品需求", module: "需求分类", status: "status-done", type: "功能已实现", standard: "客户定制、标准产品、新品研发、降本优化、质量改善、法规合规", remark: "公司POM系统-公海需求池" },
+      { system: "需求池 / 产品需求", module: "需求评审", status: "status-done", type: "功能已实现", standard: "价值评估、技术可行性、成本评估、交期评估、资源评估", remark: "公司POM系统-公海需求池" },
+      { system: "需求池 / 产品需求", module: "优先级", status: "status-done", type: "功能已实现", standard: "按客户价值、战略价值、收入规模、风险等级、紧急程度排序", remark: "公司POM系统-公海需求池" },
+      { system: "需求池 / 产品需求", module: "需求拆分", status: "status-missing", type: "暂未实现", standard: "把大需求拆为功能点、设计任务、项目任务、变更任务", remark: "后面做反馈管理系统对接需求池时考虑实现" },
+      { system: "需求池 / 产品需求", module: "需求合并", status: "status-missing", type: "暂未实现", standard: "合并重复需求、相似需求、同类客户需求，形成产品需求包", remark: "后面做反馈管理系统对接需求池时考虑实现" },
+      { system: "需求池 / 产品需求", module: "转项目", status: "status-done", type: "功能已实现", standard: "评审通过后转入 PLM/项目管理系统，形成项目立项、计划和里程碑", remark: "公司POM系统-研发需求池" },
+      { system: "需求池 / 产品需求", module: "转变更", status: "status-offline", type: "线下", standard: "已有产品改动转入 PLM 变更流程，形成 ECR/ECN/ECO", remark: "线下邮件通知走ECR系统导入" },
+      { system: "需求池 / 产品需求", module: "关闭/储备", status: "status-done", type: "已有此功能", standard: "不做、暂缓、重复、无效需求关闭或进入储备池", remark: "公司POM系统" },
+
+      { system: "PLM / 项目管理系统", module: "需求管理", status: "status-done", type: "已有此功能", standard: "产品需求、客户定制需求、研发需求、变更需求、需求状态", remark: "公司POM系统" },
+      { system: "PLM / 项目管理系统", module: "产品结构", status: "status-done", type: "已有此功能", standard: "产品层级、部件关系、配置关系、版本结构、系列化结构", remark: "ORM-型号管理系统" },
+      { system: "PLM / 项目管理系统", module: "项目立项", status: "status-done", type: "已有此功能", standard: "项目立项、计划、任务、里程碑、资源、风险、项目结项", remark: "项目管理系统" },
+      { system: "PLM / 项目管理系统", module: "任务/里程碑", status: "status-done", type: "已有此功能", standard: "项目立项、计划、任务、里程碑、资源、风险、项目结项", remark: "项目管理系统" },
+      { system: "PLM / 项目管理系统", module: "产品配置", status: "status-done", type: "已有此功能", standard: "配置规则、选配关系、超级 BOM、系列产品配置", remark: "ORM-型号管理系统" },
+      { system: "PLM / 项目管理系统", module: "标准化管理", status: "status-done", type: "已有此功能", standard: "标准件库、标准模板、编码规则、标准工艺、标准图文档", remark: "已实现" },
+      { system: "PLM / 项目管理系统", module: "TR/阶段评审", status: "status-done", type: "已有此功能", standard: "TR阶段门评审、评审材料、问题清单、通过/整改/暂停结论、责任人闭环", remark: "公司现状流程中已有TR评审节点；业务责任侧在项目管理，建议由PLM/项目管理系统承载评审材料、结论和问题闭环。" },
+      { system: "PLM / 项目管理系统", module: "EVT/DVT/PVT", status: "status-done", type: "已有此功能", standard: "EVT工程样验证、DVT设计验证、PVT小批量/量产验证、成熟度评审结论", remark: "公司现状流程中已有EVT、DVT、PVT成熟度评审节点；业务责任侧在项目管理，建议由PLM/项目管理系统沉淀验证结论和阶段准入状态。" },
+      { system: "PLM / 项目管理系统", module: "图文档", status: "status-planned", type: "已有此功能但没有完全实现", standard: "2D/3D 图纸、规格书、测试报告、承认书、版本和签审", remark: "文控系统目前不完全满足" },
+      { system: "PLM / 项目管理系统", module: "物料管理", status: "status-done", type: "已有此功能", standard: "物料申请、物料编码、规格参数、替代料、生命周期状态", remark: "ORM-物料管理" },
+      { system: "PLM / 项目管理系统", module: "EBOM", status: "status-done", type: "已有此功能", standard: "临时 BOM、EBOM、PBOM、超级 BOM、MBOM、BOM 比对", remark: "超级BOM逻辑没有完全应用起来，需要和K3对接" },
+      { system: "PLM / 项目管理系统", module: "PBOM/MBOM", status: "status-done", type: "已有此功能", standard: "临时 BOM、EBOM、PBOM、超级 BOM、MBOM、BOM 比对", remark: "超级BOM逻辑没有完全应用起来，需要和K3对接" },
+      { system: "PLM / 项目管理系统", module: "超级 BOM", status: "status-planned", type: "已有此功能但没有完全实现", standard: "配置规则、选配关系、超级 BOM、系列产品配置", remark: "超级BOM逻辑没有完全应用起来，需要和K3对接" },
+      { system: "PLM / 项目管理系统", module: "工艺管理", status: "status-missing", type: "暂未实现", standard: "工艺路线、工序、工装夹具、作业指导书、工艺参数", remark: "Excel标注暂未实现" },
+      { system: "PLM / 项目管理系统", module: "样机试制", status: "status-done", type: "已有此功能", standard: "样品申请、样机 BOM、领料、试制记录、测试验证、问题整改", remark: "PMS-样机订单、试产订单" },
+      { system: "PLM / 项目管理系统", module: "物料承认", status: "status-done", type: "已有此功能", standard: "供应商送样、样品检测、承认资料、环保资料、承认结果", remark: "ORM-物料管理" },
+      { system: "PLM / 项目管理系统", module: "模具管理", status: "status-planned", type: "已有但不完善", standard: "模具档案、模具编号、寿命、维修保养、试模记录、模具变更", remark: "模具管理系统当前不满足使用" },
+      { system: "PLM / 项目管理系统", module: "固件版本", status: "status-done", type: "已有此功能", standard: "固件版本、烧录文件、适配硬件、版本发布、回退记录", remark: "ORM-终端版本已经实现此功能" },
+      { system: "PLM / 项目管理系统", module: "签样/封样", status: "status-offline", type: "线下管理", standard: "客户签样、封样资料、样品状态、签核记录、版本追溯", remark: "线下管理" },
+      { system: "PLM / 项目管理系统", module: "FMEA", status: "status-missing", type: "暂未实现", standard: "DFMEA、PFMEA、风险识别、风险优先级、改善措施", remark: "Excel标注暂未实现" },
+      { system: "PLM / 项目管理系统", module: "ECR/ECN/ECO", status: "status-planned", type: "已有此功能但没有完全实现", standard: "ECR申请、影响评估、ECN通知、ECO执行、新旧版本切换", remark: "ORM-ECR管理；ECO执行线下进行" },
+      { system: "PLM / 项目管理系统", module: "产品发布", status: "status-offline", type: "线下管理", standard: "BOM发布、图纸冻结、工艺发布、量产状态", remark: "线下管理。转量申请已经在PM系统实现" },
+
+      { system: "PLM / 项目管理系统", module: "产品维护/退市", status: "status-offline", type: "线下管理", standard: "产品维护、生命周期状态、停产、退市、替代方案", remark: "Excel标注线下管理" },      { system: "ERP 系统", module: "销售订单", status: "status-done", type: "已有此功能", standard: "订单录入、价格、交期、客户信用、订单状态、出货需求", remark: "PMS-订单管理" },
+      { system: "ERP 系统", module: "主数据", status: "status-done", type: "已有此功能", standard: "客户、供应商、物料、BOM、组织、仓库、价格等主数据", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "MRP 计划", status: "status-done", type: "已有此功能", standard: "需求计算、缺料分析、采购建议、生产建议、计划调整", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "采购管理", status: "status-done", type: "已有此功能", standard: "采购申请、采购订单、到货、收票、付款、采购价格", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "生产计划", status: "status-done", type: "已有此功能", standard: "生产订单、计划排程、齐套检查、完工入库", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "库存账务", status: "status-done", type: "已有此功能", standard: "入库、出库、调拨、盘点、库存冻结、库存金额", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "成本核算", status: "status-done", type: "已有此功能", standard: "标准成本、实际成本、材料成本、人工制造费用、成本差异", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "质量管理", status: "status-done", type: "已有此功能", standard: "质量信息接收、质量状态、检验结果、质量反馈", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "协同办公/OA", status: "status-done", type: "已有此功能", standard: "审批、通知、流程协作、跨部门协同", remark: "企业微信-OA审批" },      { system: "ERP 系统", module: "应收应付", status: "status-done", type: "已有此功能", standard: "销售开票、客户回款、采购发票、供应商付款", remark: "K3标准功能" },
+      { system: "ERP 系统", module: "现有产品下单", status: "status-done", type: "已有此功能", standard: "标准品/ODM现有产品直接下单", remark: "PMS-订单管理" },
+      { system: "ERP 系统", module: "总账报表", status: "status-done", type: "已有此功能", standard: "总账凭证、财务报表、经营报表、成本和利润分析", remark: "K3标准功能" },
+
+      { system: "SRM 系统", module: "供应商准入", status: "status-done", type: "我不了解", standard: "注册、准入申请、分类分级、黑白名单", remark: "Excel标注：我不了解；按已实现展示" },
+      { system: "SRM 系统", module: "资质管理", status: "status-done", type: "我不了解", standard: "营业执照、体系证书、认证资料、有效期预警", remark: "Excel标注：我不了解；按已实现展示" },
+      { system: "SRM 系统", module: "询价报价", status: "status-done", type: "我不了解", standard: "RFQ、供应商报价、比价、议价、定价", remark: "Excel标注：我不了解；按已实现展示" },
+      { system: "SRM 系统", module: "采购协同", status: "status-done", type: "我不了解", standard: "采购订单确认、交期回复、变更确认", remark: "Excel标注：我不了解；按已实现展示" },
+      { system: "SRM 系统", module: "送样/承认", status: "status-done", type: "已有此功能", standard: "新品送样、样品进度、样品资料、送样记录；承认书、规格资料、环保资料、测试报告", remark: "ORM-物料承认；其他资料没有做到统一管理" },
+      { system: "SRM 系统", module: "绩效评价", status: "status-done", type: "我不了解", standard: "价格、交期、质量、服务、综合评分", remark: "Excel标注：我不了解；按已实现展示" },
+
+      { system: "MES 系统", module: "生产工单", status: "status-planned", type: "已有此功能但没有完全实现", standard: "生产工单接收、工单拆分、任务下达、生产状态", remark: "内部生产计划/工单通过K3/PMS实现；送检工单、检验工单通过MES实现" },
+      { system: "MES 系统", module: "排产派工", status: "status-done", type: "已有此功能", standard: "工序排程、人员派工、设备派工、班组安排", remark: "PMS=生产计划管理实现" },
+      { system: "MES 系统", module: "领料投料", status: "status-offline", type: "线下管理", standard: "按工单领料、投料校验、批次绑定、缺料反馈", remark: "Excel标注线下管理" },
+      { system: "MES 系统", module: "工序执行", status: "status-offline", type: "线下管理", standard: "工序开工、完工、工艺参数、作业指导", remark: "Excel标注线下管理" },
+      { system: "MES 系统", module: "生产报工", status: "status-offline", type: "线下管理", standard: "数量报工、工时报工、完工入库反馈", remark: "Excel标注线下管理" },
+      { system: "MES 系统", module: "生产追溯", status: "status-done", type: "已有此功能", standard: "人、机、料、法、环、测全流程追溯", remark: "PMS/K3/MES多个系统" },
+
+      { system: "MES 系统", module: "设备采集", status: "status-offline", type: "线下管理", standard: "设备状态、产量、参数、报警、停机记录", remark: "Excel标注线下管理" },
+      { system: "MES 系统", module: "工装管理", status: "status-offline", type: "线下管理", standard: "工装夹具、模具工装、点检保养、寿命、借还记录", remark: "线下管理" },
+      { system: "MES 系统", module: "线边库存", status: "status-done", type: "已有此功能", standard: "线边物料、在制品、工位库存、消耗记录", remark: "K3" },
+      { system: "MES 系统", module: "电子看板", status: "status-done", type: "已有此功能", standard: "生产进度、异常、产能、效率、质量可视化", remark: "BI看板已实现" },      { system: "QMS 系统", module: "IQC 来料", status: "status-done", type: "已有此功能", standard: "来料检验、检验标准、抽样方案、检验判定", remark: "K3系统实现" },
+      { system: "QMS 系统", module: "IPQC 过程", status: "status-done", type: "已有此功能", standard: "制程巡检、首检、过程参数、异常预警", remark: "MES系统实现" },
+      { system: "QMS 系统", module: "OQC 出货", status: "status-done", type: "已有此功能", standard: "成品检验、出货检验、放行判定、检验报告", remark: "MES系统实现" },
+      { system: "QMS 系统", module: "不合格品", status: "status-offline", type: "线下管理", standard: "不良登记、隔离、返工、报废、让步接收", remark: "Excel标注线下管理" },
+      { system: "QMS 系统", module: "客诉管理", status: "status-offline", type: "线下管理", standard: "客户投诉、问题分析、责任判定、改善闭环", remark: "K3有客户检验结果登记，但是没有形成整个流程闭环" },
+      { system: "QMS 系统", module: "8D/CAPA", status: "status-offline", type: "线下管理", standard: "纠正预防措施、责任人、计划、验证关闭", remark: "8D报告没有上传到系统形成文档及经验库" },
+      { system: "QMS 系统", module: "供应商质量", status: "status-offline", type: "线下管理", standard: "供应商质量问题、整改、质量评分、复评", remark: "Excel标注线下管理" },
+      { system: "QMS 系统", module: "质量追溯", status: "status-planned", type: "已有此功能但没有完全实现", standard: "按批次、工单、物料、设备、人员追溯质量问题", remark: "PMS/K3/MES后台等系统联合起来可以实现" },
+
+      { system: "WMS 系统", module: "收货入库", status: "status-offline", type: "线下管理", standard: "采购到货、ASN收货、条码收货、异常收货", remark: "入库是在K3实现，但是收货是线下进行" },
+      { system: "WMS 系统", module: "库位管理", status: "status-planned", type: "已有此功能但没有完全实现", standard: "仓库、库区、库位、容量、库位策略", remark: "K3有仓库管理但没有深入使用；多数仓库信息线下管理" },
+      { system: "WMS 系统", module: "批次条码", status: "status-missing", type: "暂未实现", standard: "物料条码、批次条码、托盘码、序列号、扫码追溯", remark: "客户批次条码要求会单独提需求开发" },
+      { system: "WMS 系统", module: "拣货出库", status: "status-planned", type: "已有此功能但没有完全实现", standard: "销售拣货、生产领料、波次拣货、复核出库", remark: "主要靠人工实现备料出货；MES能看到出货信息但没有仓库和库存信息；PMS出货前会核对数据" },
+      { system: "WMS 系统", module: "库存盘点", status: "status-offline", type: "线下管理", standard: "动态盘点、周期盘点、差异处理、盘点报表", remark: "Excel标注线下管理" },
+      { system: "WMS 系统", module: "线边配送", status: "status-offline", type: "线下管理", standard: "线边补料、配送任务、AGV/叉车任务协同", remark: "Excel标注线下管理" },
+      { system: "WMS 系统", module: "发货出库", status: "status-planned", type: "已有此功能但没有完全实现", standard: "发货任务、出库复核、交付状态、物流交接", remark: "出库相关流程部分由PMS/MES/K3承接，但仓储信息未完全系统化" },
+      { system: "WMS 系统", module: "签收回传", status: "status-missing", type: "暂未实现", standard: "客户签收、回单状态、交付异常、签收结果回传", remark: "暂未实现" },
+
+      { system: "WMS 系统", module: "物料移库", status: "status-done", type: "已有此功能", standard: "仓库间调拨、库位移库、批次转移、库存状态切换", remark: "K3系统实现" },
+      { system: "WMS 系统", module: "自动化接口", status: "status-missing", type: "暂未实现", standard: "立体库、输送线、AGV、自动包装等设备联动", remark: "Excel自动化设备接口标注暂未实现" },      { system: "TMS 系统", module: "发货计划", status: "status-offline", type: "线下管理", standard: "发货任务、装车计划、路线计划、发运批次", remark: "出货计划会有出货申请和看板，但是发货信息没有线上管理" },
+      { system: "TMS 系统", module: "承运商", status: "status-missing", type: "暂未实现", standard: "承运商档案、线路价格、服务评价、合同", remark: "Excel标注暂未实现" },
+      { system: "TMS 系统", module: "运输跟踪", status: "status-offline", type: "线下管理", standard: "车辆、运输节点、在途状态、异常预警", remark: "Excel标注线下管理" },
+      { system: "TMS 系统", module: "签收回单", status: "status-offline", type: "线下管理", standard: "客户签收、回单上传、签收异常、交付确认", remark: "Excel标注线下管理" },
+      { system: "TMS 系统", module: "异常处理", status: "status-missing", type: "暂未实现", standard: "运输异常、破损短少、延迟、责任判定", remark: "暂未实现。通常由仓库/物流发货人员发起记录，承运商或司机反馈运输过程异常，销售/客服反馈客户签收异常，仓库/物流跟进处理，财务参与运费或赔付确认，最终由物流负责人关闭异常。" },
+      { system: "TMS 系统", module: "运费结算", status: "status-offline", type: "线下管理", standard: "运费规则、运费核算、对账、结算", remark: "Excel标注线下管理" },
+
+      { system: "BI", module: "经营分析", status: "status-missing", type: "暂未实现", standard: "销售、研发、采购、生产、质量、库存、财务综合分析", remark: "没有形成看板管理" },
+      { system: "BI", module: "销售分析", status: "status-done", type: "已有此功能", standard: "销售额、客户贡献、商机转化、订单趋势", remark: "CRM和ORM预测管理" },
+      { system: "BI", module: "研发分析", status: "status-done", type: "已有此功能", standard: "项目进度、需求完成率、变更次数、研发投入", remark: "PM系统和SSO看板" },
+      { system: "BI", module: "采购分析", status: "status-missing", type: "暂未实现", standard: "采购金额、交期达成、价格趋势、供应商绩效", remark: "可能是借助K3进行线下管理，没有形成看板" },
+      { system: "BI", module: "生产分析", status: "status-done", type: "已有此功能", standard: "产量、效率、达成率、设备稼动、工单异常", remark: "Excel标注已有此功能" },
+      { system: "BI", module: "质量分析", status: "status-done", type: "已有此功能", standard: "不良率、客诉、供应商质量、质量成本", remark: "质量管理系统" },
+      { system: "BI", module: "库存分析", status: "status-offline", type: "线下管理", standard: "库存周转、呆滞料、缺料、库龄", remark: "借助K3进行线下管理，没有形成看板" },
+      { system: "BI", module: "财务分析", status: "status-offline", type: "线下管理", standard: "成本、毛利、回款、应收应付、利润分析", remark: "借助K3进行线下管理，没有形成看板" },
+      { system: "自动化集成 / 现场数据底座", module: "数据采集与监控", status: "status-planned", type: "已有此功能但没有完全实现", standard: "采集设备、产线、传感器、PLC、SCADA 等现场数据", remark: "Excel标注已有此功能但没有完全实现" },
+      { system: "自动化集成 / 现场数据底座", module: "设备 / PLC / SCADA", status: "status-planned", type: "已有此功能但没有完全实现", standard: "设备状态、运行参数、报警、节拍、能耗等数据", remark: "归入数据采集与监控；已实现但不完善" },
+      { system: "自动化集成 / 现场数据底座", module: "产线控制系统", status: "status-missing", type: "暂未实现", standard: "产线指令下发、执行反馈、生产节拍、异常联动", remark: "Excel标注暂未实现" },
+      { system: "自动化集成 / 现场数据底座", module: "AGV / 机器人", status: "status-missing", type: "暂未实现", standard: "AGV调度、机器人作业、自动搬运、任务回传", remark: "Excel标注暂未实现" },
+      { system: "自动化集成 / 现场数据底座", module: "物流定位", status: "status-planned", type: "已有此功能但没有完全实现", standard: "物料位置、车辆位置、库内路径、配送状态", remark: "K3有此功能，MES等未实现" },
+      { system: "自动化集成 / 现场数据底座", module: "网络与通信", status: "status-planned", type: "已有此功能但没有完全实现", standard: "工业网络、接口协议、边缘网关、数据通道", remark: "Excel标注已有此功能但没有完全实现" }
+    ];
+
+    const statusText = {
+      "status-done": "已实现",
+      "status-missing": "暂未实现",
+      "status-planned": "已实现但不完善",
+      "status-pending": "已实现",
+      "status-offline": "线下管理"
+    };
+
+    function applyDiffStatus() {
+      document.querySelectorAll(".diff-diagram .mini, .diff-diagram .bi-modules .mini").forEach((mini) => {
+        mini.classList.remove("status-done", "status-missing", "status-planned", "status-pending", "status-offline");
+        const system = mini.closest(".system")?.querySelector(".title")?.textContent.trim() || (mini.closest(".bi-modules") ? "BI" : "");
+        const module = mini.textContent.trim();
+        const rule = diffStatus.find((item) => item.system === system && item.module === module);
+        const status = rule?.status || "status-pending";
+        mini.classList.add(status);
+        mini.dataset.statusText = statusText[status];
+        mini.dataset.excelType = rule?.type || "已有此功能";
+        mini.dataset.excelStandard = getModuleExplanation(system, module, rule?.standard || mini.dataset.detail || "Excel未列出该模块内容，需后续补充确认。");
+        mini.dataset.remark = rule?.remark || "Excel未列出该模块备注，默认按已实现处理；后续可继续校准。";
+      });
+    }
+
+
+    function getModuleExplanation(system, module, baseText) {
+      const base = baseText || "";
+      const exact = {
+        "线索管理": "用于记录市场、官网、展会、销售拜访等来源的潜在客户线索，销售或市场人员负责录入和跟进，输出可转客户或商机的线索信息。",
+        "客户管理": "用于维护客户主数据、客户等级、归属销售、行业区域和客户标签，是报价、合同、订单、售后回访的客户基础。",
+        "联系人管理": "用于维护客户侧联系人、角色关系、决策链和联系方式，帮助销售判断谁影响需求、报价、合同和回款。",
+        "商机管理": "用于管理从客户意向到成交/丢单的销售机会，销售团队跟进阶段、金额、赢率、预计成交时间和竞争情况。",
+        "报价管理": "用于把客户需求转为报价方案，销售/商务发起报价，价格、折扣和有效期经过审批后输出报价单。",
+        "合同管理": "用于合同起草、审批、签署、归档和履约状态跟踪，承接报价结果并为订单执行提供依据。",
+        "客户需求": "用于记录客户痛点、定制要求、交期、预算、附件和关键约束，是进入需求池或直接下单判断的输入。",
+        "跟进记录": "用于沉淀电话、拜访、微信、邮件、会议纪要和下次跟进计划，保证客户沟通过程可追溯。",
+        "售后回访": "用于交付后的满意度、投诉、续约、复购机会和问题反馈收集，质量或产品改进需求可回流到需求池。",
+        "需求收集": "用于汇总来自CRM、市场、自研规划、售后、质量、法规和竞品分析的需求，形成统一需求入口。",
+        "需求分类": "用于把需求按客户定制、标准产品、新品研发、降本优化、质量改善、法规合规等类型分组，方便评审和排期。",
+        "需求合并": "用于把来自不同客户、销售、售后或市场的重复/相似需求归并成一个产品需求包。通常由产品经理或需求负责人维护，合并时保留来源客户、优先级、业务价值和差异点，输出统一的评审对象，避免重复立项、重复开发和版本分裂。",
+        "需求拆分": "用于把过大的综合需求拆成可开发、可验证、可排期的功能点、设计任务、项目任务或变更任务。拆分后每个子项需要有负责人、验收标准、优先级和关联项目，便于后续研发、工程、测试和变更闭环。",
+        "需求评审": "用于从客户价值、战略价值、技术可行性、成本、交期、资源和风险角度判断需求是否要做、什么时候做、由谁负责。评审结论通常输出为直接下单、转项目、转变更、暂缓储备或关闭。",
+        "优先级": "用于按照客户价值、战略价值、收入规模、风险和紧急程度排序，形成研发、项目和资源排期依据。",
+        "转项目": "用于把评审通过的新产品、定制开发或改型需求转成项目立项、计划、任务和里程碑。",
+        "转变更": "用于把已有产品改动转入ECR/ECN/ECO变更流程，确保图纸、BOM、工艺和版本受控。",
+        "关闭/储备": "用于关闭不做、重复、无效或条件不成熟的需求，也可以进入储备池等待后续重新评估。",
+        "项目立项": "用于把通过评审的产品或客户项目正式建档，明确目标、范围、负责人、计划、风险和结项标准。",
+        "任务/里程碑": "用于拆解研发任务，分配责任人，维护节点计划和进度状态，对延期和风险进行预警。",
+        "需求管理": "用于在PLM/项目系统中承接产品需求、客户定制需求、研发需求和变更需求，跟踪需求状态和实现结果。",
+        "产品结构": "用于维护产品层级、部件关系、配置关系和版本结构，是BOM、图纸、工艺和ERP主数据的基础。",
+        "产品配置": "用于管理选配规则、配置约束和系列化产品组合，支撑多型号、多配置产品的快速报价和生产。",
+        "标准化管理": "用于沉淀标准件、标准模板、编码规则、标准工艺和标准图文档，减少重复设计和非标扩散。",
+        "TR/阶段评审": "用于管理研发项目的阶段门评审，例如TR评审材料准备、评审结论、问题清单、责任人、整改期限和关闭状态。它更偏项目过程控制，保证项目在进入下一阶段前风险、资源、技术方案和交付物被确认。",
+        "EVT/DVT/PVT": "用于管理样机和产品成熟度验证节点：EVT通常关注工程样和关键功能验证，DVT关注设计验证和可靠性验证，PVT关注小批量/量产前验证。评审结果会影响是否进入下一阶段、是否整改、是否允许转量或发布。",
+        "图文档": "用于管理2D/3D图纸、规格书、测试报告、承认书等文档版本、权限、签审和发布。",
+        "物料管理": "用于物料申请、编码、规格参数、替代料和生命周期管理，输出ERP/MES可使用的物料主数据。",
+        "EBOM": "用于表达研发设计结构和零部件关系，通常由研发/工程维护，是PBOM/MBOM转换的源头。",
+        "PBOM/MBOM": "用于把设计BOM转换为制造可用BOM，结合工艺路线、工序、损耗和实际生产用料。",
+        "超级 BOM": "用于维护系列产品的配置规则和选配关系，支持不同型号按规则生成具体BOM。",
+        "工艺管理": "用于维护工艺路线、工序、工装夹具、作业指导书和工艺参数，是MES执行和现场作业的依据。",
+        "样机试制": "用于管理样品申请、样机BOM、领料、试制记录、测试验证和问题整改。",
+        "物料承认": "用于供应商送样、样品检测、规格/环保/测试资料收集和承认结果确认。",
+        "模具管理": "用于管理模具档案、编号、寿命、维修保养、试模记录和模具变更。",
+        "固件版本": "用于管理固件版本、烧录文件、适配硬件、发布记录和回退记录，保证硬件与软件版本匹配。",
+        "签样/封样": "用于记录客户签样、封样资料、样品状态和签核记录，支撑后续生产、检验和客诉追溯。",
+        "FMEA": "用于识别设计或过程风险，维护风险等级、改善措施和验证结果。",
+        "ECR/ECN/ECO": "用于管理工程变更申请、影响评估、变更通知、执行和新旧版本切换。",
+        "产品发布": "用于冻结并发布BOM、图纸、工艺和版本状态，向ERP/MES下发可执行产品数据。",
+        "产品维护/退市": "用于维护产品生命周期、停产、退市和替代方案，避免老产品无序使用。",
+        "生产工单": "用于接收ERP/PMS生产任务，形成现场可执行工单，跟踪工单开工、执行、完工和关闭。",
+        "排产派工": "用于安排产线、人员、设备、工序和班组，输出可执行的生产排程。",
+        "领料投料": "用于按工单领料、投料校验、批次绑定和退补料记录，保证生产用料受控。",
+        "工序执行": "用于记录工序开工、完工、作业指导、工艺参数和过程执行结果。",
+        "生产报工": "用于记录完工数量、工时、用料、不良、入库申请和成本相关数据。",
+        "生产追溯": "用于按工单、批次、物料、设备、人员和工序追溯生产全过程。",
+        "设备采集": "用于采集设备状态、产量、参数、报警、停机记录和设备履历。",
+        "工装管理": "用于管理工装夹具、模具工装、点检保养、寿命和借还记录。",
+        "线边库存": "用于管理产线旁物料、在制品、工位库存和消耗记录，支持补料与生产连续性。",
+        "电子看板": "用于展示生产进度、异常、产能、效率和质量状态，辅助现场调度和管理决策。",
+        "收货入库": "用于采购到货、检验放行、上架和入库单回传，仓库负责执行并同步库存。",
+        "库位管理": "用于维护库区、库位、容量、上架策略和库位规则。",
+        "批次条码": "用于物料条码、批次条码、托盘码或序列号管理，实现仓储和生产扫码追溯。",
+        "拣货出库": "用于销售出库、生产领料、拣货任务和复核发货。",
+        "库存盘点": "用于周期盘点、动态盘点、差异处理和库存准确率管理。",
+        "物料移库": "用于仓库间调拨、库位移库、批次转移和库存状态切换。",
+        "线边配送": "用于按工单、工序或产线需求生成配送任务，把物料送到指定线边或工位。",
+        "自动化接口": "用于连接立体库、输送线、AGV、自动包装等设备，实现仓储设备联动。",
+        "发货出库": "用于执行发货任务、出库复核、物流交接和发货状态回传。",
+        "签收回传": "用于记录客户签收、回单状态、交付异常和签收结果回传，形成交付闭环。",
+        "发货计划": "用于制定发货任务、装车计划、路线计划和发运批次。",
+        "承运商": "用于维护承运商档案、线路价格、服务评价和运输合同。",
+        "运输跟踪": "用于跟踪车辆、运输节点、在途状态和异常预警。",
+        "签收回单": "用于记录客户签收、回单上传、签收异常和交付确认。",
+        "异常处理": "用于记录运输/配送异常，如延迟、破损、少件、丢件、拒收、签收异常和运费异常。通常由仓库/物流发货人员发起记录，承运商或司机反馈在途异常，销售/客服反馈客户侧签收问题，仓库/物流跟进处理，财务参与运费或赔付确认，最终由物流负责人判责并关闭。",
+        "运费结算": "用于运费规则、运费核算、对账和结算。"
+      };
+      const prefix = exact[module] || (base ? `${module}用于${base}。` : `${module}用于承接本系统相关业务活动，明确责任、状态、输出和上下游流转。`);
+      return prefix;
+    }
+
+    function bindModuleModal() {
+      const modal = document.getElementById("moduleModal");
+      const title = document.getElementById("moduleModalTitle");
+      const meta = document.getElementById("moduleModalMeta");
+      const body = document.getElementById("moduleModalBody");
+      const close = document.getElementById("moduleModalClose");
+      if (!modal || !title || !meta || !body || !close) return;
+
+      function closeModal() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      document.querySelectorAll(".diagram .mini, .diagram .bi-modules .mini").forEach((mini) => {
+        mini.addEventListener("click", () => {
+          const system = mini.closest(".system")?.querySelector(".title")?.textContent.trim() || (mini.closest(".bi-modules") ? "BI" : "系统");
+          const module = mini.textContent.trim();
+          title.textContent = `${system} - ${module}`;
+          meta.textContent = "";
+          const isDiff = Boolean(mini.closest(".diff-diagram"));
+          const explanation = isDiff ? (mini.dataset.excelStandard || "暂无模块内容。") : getModuleExplanation(system, module, mini.dataset.detail || "");
+          body.textContent = isDiff ? `状态：${mini.dataset.excelType || "已有此功能"}\n\n功能说明：${explanation}\n\n公司实际情况/规划：${mini.dataset.remark || "暂无备注。"}` : `功能说明：${explanation}`;
+          modal.classList.add("open");
+          modal.setAttribute("aria-hidden", "false");
+        });
+      });
+
+      close.addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModal();
+      });
+    }
+
+    applyDiffStatus();
+    bindModuleModal();
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.tab;
+        buttons.forEach((item) => item.classList.toggle("active", item === button));
+        panels.forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === target));
+      });
+    });
+
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
