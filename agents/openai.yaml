@@ -1,0 +1,4 @@
+interface:
+  display_name: "PM 甘特关键路径"
+  short_description: "读取指定版本关键路径，并解释预测完成率、基准版本、核算任务和变更天数。"
+  default_prompt: "输入 token、pm.yolanda.hk/editGantt 或 projectDetail 链接、版本或项目 ID，输出任务级关键路径、工作日天数、横向流程图；如询问完成率，按公司内部 PM 系统口径解释预测完成率、当前核算任务、基准版本和变更天数。"
