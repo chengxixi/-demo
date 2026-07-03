@@ -118,5 +118,8 @@ Rules for the template:
 - `basic_version_label`: write `V0 / 立项计划` for `V0`; otherwise write the exact version such as `V12`.
 - `latest_version_label`: use the latest approved plan version, such as `V2`.
 - `latest_or_actual_date`: if the task is closed or delayed and has an actual date, use the actual date; otherwise use the latest plan end date.
-- `as_of_date`: always include this phrase. Use the current PM/statistics accounting date available in context; if not explicit, use today's date in the user's timezone. This is important because a future latest plan end date may look like one extra day if the report is only calculated through today.
+- `as_of_date`: always include this phrase. This is the date value the system uses for completion-rate calculation, not automatically today's date. Choose it in this order:
+  1. If the current accounting task has `actual_end_date`, use that actual date.
+  2. If there is no actual date, use the accounting/statistics date returned by the API, such as `forecast_list_new.end_date` when it represents the current accounting task's system value.
+  3. If neither an actual date nor a usable API accounting date exists, use the current accounting task's latest planned finish date.
 - `denominator` = `plan_cycle + delay_days - change_days`.
