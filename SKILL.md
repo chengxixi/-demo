@@ -1,6 +1,6 @@
 ---
 name: pm-gantt-critical-path
-description: Read Yolanda PM Gantt plans from a user-provided token, project URL or project id, and requested plan version such as V1 or V2. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, and export horizontal flow outputs. Also simulate completion-rate changes when a task is delayed, shifted, split, or when change tasks are inserted, using a user-provided completion algorithm specification.
+description: Read Yolanda PM Gantt plans from a user-provided token, project URL or project id, and requested plan version such as V1 or V2. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, and export horizontal flow outputs. Simulate completion-rate changes and monitor daily forecast completion-rate drops, including Enterprise WeChat robot reminders.
 ---
 
 # PM Gantt Critical Path
@@ -13,6 +13,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 - horizontal flow output in Mermaid, SVG, or PNG
 - completion-rate impact when a task changes or a change task is inserted
 - forecast completion-rate explanation, including baseline version, current accounting task, change days, and the fixed summary sentence
+- daily forecast completion-rate monitoring with Enterprise WeChat robot alerts
 
 ## Workflow
 
@@ -30,6 +31,40 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 8. Output all critical paths in the requested format.
 9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the algorithm/output format exactly as written there.
 
+## Daily Forecast Monitor
+
+Use `scripts/monitor_forecast_rate.mjs` when the user asks to monitor each project's forecast completion rate and alert when it drops.
+
+Required runtime environment variables:
+
+- `PM_TOKEN`: PM system token.
+- `WECOM_WEBHOOK` or `WECHAT_WEBHOOK`: Enterprise WeChat robot webhook. Never store this in source files.
+
+Optional runtime environment variables:
+
+- `YEAR`: forecast report year. Defaults to the current year.
+- `THRESHOLD_POINTS`: alert threshold in percentage points. Defaults to `5`.
+- `SNAPSHOT_DIR`: local snapshot directory. Defaults to `pm-forecast-snapshots` under the current working directory.
+- `SNAPSHOT_DATE`: override the snapshot date in `yyyy-mm-dd` format.
+- `DRY_RUN=1`: print the Enterprise WeChat markdown without sending it.
+- `SEND_EMPTY=1`: send a no-alert message when no project crosses the threshold.
+
+Monitoring behavior:
+
+1. Fetch `/v1/statistics/forecast_list_new?year=<yyyy>`.
+2. Load the latest previous local snapshot. The PM API does not provide historical daily forecast-rate snapshots.
+3. Compare by `project_id`.
+4. Trigger when `yesterday rate - today rate > THRESHOLD_POINTS`.
+5. Save today's snapshot after comparison.
+6. Send Enterprise WeChat markdown with this shape:
+
+```text
+项目名称
+昨天预测完成率：xx%
+今天预测完成率：xx%
+下降：x.xx 个百分点
+变化原因：核算任务、基准版本、延期天数、变更天数、核算任务变化或基准版本变化
+```
 ## Input Contract
 
 Expect these inputs from the user:
@@ -95,6 +130,8 @@ Never omit the accounting date phrase.
   Build task-only critical paths and compute working-day durations.
 - `scripts/export_flow_svg.mjs`
   Export a horizontal SVG flow diagram from critical-path JSON.
+- `scripts/monitor_forecast_rate.mjs`
+  Save daily `forecast_list_new` snapshots, compare against the previous snapshot, and send Enterprise WeChat robot alerts when a project forecast completion rate drops beyond the threshold.
 
 ## Validation
 
@@ -104,3 +141,4 @@ Before finishing work with this skill:
 2. Confirm durations use working-day rules.
 3. Confirm actual-end-date preference was applied where available.
 4. If completion-rate logic is used, confirm the exact algorithm source.
+5. If daily monitoring is used, confirm a previous local snapshot exists before interpreting rate drops.
