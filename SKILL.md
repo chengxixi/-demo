@@ -128,7 +128,7 @@ For forecast completion-rate explanation, use the standard five-part output in `
 系统当前按截至 {as_of_date} 核算
 ```
 
-Never omit the accounting date phrase. Do not default `{as_of_date}` to today's date. Use the accounting task's actual end date first; if missing, use the API accounting/statistics date; if still missing, use the accounting task's latest planned finish date.
+Never omit the accounting date phrase. Do not default `{as_of_date}` to today's date. Use the accounting task's actual end date first; if missing, use the API accounting/statistics date; if still missing, use the accounting task's latest planned finish date. Keep the latest planned finish date separate from the actual date; do not replace the latest plan date with `actual_end_date`.
 
 ## Scripts
 

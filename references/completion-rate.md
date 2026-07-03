@@ -110,14 +110,15 @@ If the user did not ask for change-day details, omit item 4 and keep item 5 as t
 Fixed final sentence template:
 
 ```text
-当前核算任务 {account_task_name} 在基准版本 {basic_version_label} 里的计划结束时间是 {baseline_end_date}，当前最新 {latest_version_label} 计划结束时间/实际日期是 {latest_or_actual_date}。系统当前按截至 {as_of_date} 核算，对比基准版本往后调整了 {delay_days}个工作日，其中 {change_days}天 是变更天数。所以预测完成率 = {plan_cycle} / ({plan_cycle} + {delay_days} - {change_days}) = {plan_cycle} / {denominator} = {rate}%。
+当前核算任务 {account_task_name} 在基准版本 {basic_version_label} 里的计划结束时间是 {baseline_end_date}，当前最新 {latest_version_label} 计划结束时间是 {latest_plan_end_date}{actual_date_clause}。系统当前按截至 {as_of_date} 核算，对比基准版本往后调整了 {delay_days}个工作日，其中 {change_days}天 是变更天数。所以预测完成率 = {plan_cycle} / ({plan_cycle} + {delay_days} - {change_days}) = {plan_cycle} / {denominator} = {rate}%。
 ```
 
 Rules for the template:
 
 - `basic_version_label`: write `V0 / 立项计划` for `V0`; otherwise write the exact version such as `V12`.
 - `latest_version_label`: use the latest approved plan version, such as `V2`.
-- `latest_or_actual_date`: if the task is closed or delayed and has an actual date, use the actual date; otherwise use the latest plan end date.
+- `latest_plan_end_date`: always use the current accounting task's latest version planned finish date, not the actual date.
+- `actual_date_clause`: if the current accounting task has `actual_end_date`, write `，实际日期是 {actual_end_date}`; otherwise write nothing.
 - `as_of_date`: always include this phrase. This is the date value the system uses for completion-rate calculation, not automatically today's date. Choose it in this order:
   1. If the current accounting task has `actual_end_date`, use that actual date.
   2. If there is no actual date, use the accounting/statistics date returned by the API, such as `forecast_list_new.end_date` when it represents the current accounting task's system value.
