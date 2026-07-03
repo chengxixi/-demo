@@ -29,7 +29,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
    - else use planned `end_date`
    - count only PM-system working days from the holiday API
 8. Output all critical paths in the requested format.
-9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the algorithm/output format exactly as written there.
+9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the numbered output format exactly as written there.
 
 ## Daily Forecast Monitor
 
@@ -100,6 +100,14 @@ If the user asks for an export file, use `scripts/export_flow_svg.mjs` to create
 ## Completion-Rate Simulation
 
 Do not invent the completion-rate formula or final explanation wording.
+
+For forecast completion-rate explanation, never answer with a free-form "解读", "项目状态良好", "关键节点", risk summary, or emoji-led section. Use the fixed numbered format in `references/completion-rate.md`:
+
+1. 这个项目的预测完成率是多少
+2. 是怎么计算出来的
+3. 当前核算任务是哪个任务
+4. 变更天数是哪些, only when the user asks for change-day details
+5. 最终说明, ending with the fixed one-sentence summary
 
 Always do these steps:
 

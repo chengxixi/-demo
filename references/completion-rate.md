@@ -81,13 +81,31 @@ If `change_days = 0`, say there are no change-day details and do not fabricate a
 
 ## Standard Explanation Output
 
-When the user asks "forecast completion rate / why / current accounting task", answer in this order:
+When the user asks "forecast completion rate / why / current accounting task", the answer MUST use the fixed numbered format below. Do not replace it with a free-form interpretation, status summary, risk summary, "项目状态良好", "解读", "关键节点", or emoji-led sections.
 
-1. Forecast completion rate.
-2. How it was calculated.
-3. Current accounting task.
-4. Change-day details only if requested and nonzero.
-5. End with the fixed one-sentence summary below.
+Required output format:
+
+```text
+1、这个项目的预测完成率是多少
+{rate}%
+
+2、是怎么计算出来的
+计划周期 = {plan_cycle} 个工作日
+延期天数 = {delay_days} 个工作日
+变更天数 = {change_days} 天
+预测完成率 = {plan_cycle} / ({plan_cycle} + {delay_days} - {change_days}) = {plan_cycle} / {denominator} = {rate}%
+
+3、当前核算任务是哪个任务
+{account_task_name}
+
+4、变更天数是哪些
+{Only include this section when the user asks for change-day details. If change_days = 0, write: 无变更天数明细。 If nonzero, list: 任务名称 - 对应天数 - 延隔时间（如有）}
+
+5、最终说明
+{fixed final sentence}
+```
+
+If the user did not ask for change-day details, omit item 4 and keep item 5 as the final item. Do not add extra "解读", "项目状态", "风险", or "关键节点" sections after the final sentence.
 
 Fixed final sentence template:
 
