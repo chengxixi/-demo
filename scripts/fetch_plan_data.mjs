@@ -66,7 +66,7 @@ async function main() {
   const outDir = args.out_dir || process.cwd();
 
   if (!token || !project || !version) {
-    throw new Error("Usage: --token <token> --project <url-or-id> --version <V0|V1|V2> [--out_dir <dir>]");
+    throw new Error("Usage: --token <token> --project <url-or-id> --version <Vn> [--out_dir <dir>]");
   }
 
   const projectId = parseProjectId(project);

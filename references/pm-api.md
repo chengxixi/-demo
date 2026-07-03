@@ -22,18 +22,41 @@ Get project plan versions by project id:
 GET /v1/project_initiation_plans?project_id=<project_id>
 ```
 
-Use this to resolve:
+Response shape:
+
+```text
+data.rows[] = plan versions
+```
+
+Use every row in `data.rows`. Do not infer available versions from only the first few rows or from a filtered UI list.
+
+Use `version` to resolve the PM version label:
 
 - `version = 0` -> `V0`
 - `version = 1` -> `V1`
 - `version = 2` -> `V2`
+- `version = 3` -> `V3`
+- `version = 4` -> `V4`
+- any integer `n` -> `Vn`
+
+When the UI or user says a sub-version like `V4.1`, first try the exact visible plan/link context. If the API only returns integer `version` values, map it to the matching integer backend plan version, such as `version = 4`, and mention that the backend plan id is the authoritative reference.
 
 Important fields:
 
-- `id`: internal plan id
+- `id`: internal plan id used by `/v1/project_initiation_plans/<plan_id>`
 - `version`: plan version number
 - `status`
+- `application_date`
 - `links`: dependency lines for the plan
+
+Version resolution rules:
+
+1. Fetch `/v1/project_initiation_plans?project_id=<project_id>`.
+2. Read all `data.rows`.
+3. Sort by numeric `version` descending when identifying latest version.
+4. Resolve the requested version by numeric `version`.
+5. Use that row's `id` as the `plan_id` for detail APIs.
+6. If expected versions are missing, re-check the raw `data.rows` before answering; do not say only three versions exist unless the raw API rows contain only three versions.
 
 Get approved version review records by project id:
 
@@ -171,7 +194,7 @@ Use this table when deciding which API field supports each user-facing answer.
 | Output field | Preferred API | Source field |
 | --- | --- | --- |
 | Project plan versions | `/v1/project_initiation_plans?project_id=<project_id>` | `id`, `version`, `status` |
-| Latest plan version | `/v1/project_initiation_plans?project_id=<project_id>` | latest/highest approved `version`, then `id` |
+| Latest plan version | `/v1/project_initiation_plans?project_id=<project_id>` | highest numeric `version` in all `data.rows`, then `id` |
 | Plan dependency lines | `/v1/project_initiation_plans?project_id=<project_id>` | `links` |
 | Task serial number | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | `serial_number` |
 | Task name | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | `name` |

@@ -20,7 +20,13 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 1. Read [references/pm-api.md](references/pm-api.md) before calling PM APIs.
 2. Accept token from the user at runtime. Never hardcode tokens in skill files.
 3. Parse the project id from the PM URL when a URL is provided. If the user gives only an id, use it directly.
-4. Resolve the requested plan version to the internal plan id.
+4. Resolve the requested plan version to the internal plan id:
+   - fetch `/v1/project_initiation_plans?project_id=<project_id>`
+   - read every row in `data.rows`
+   - map API field `version = n` to PM label `Vn`
+   - use API field `id` as the plan detail id
+   - identify latest version by the highest numeric `version` in all rows
+   - never claim only a subset of versions exists unless raw `data.rows` contains only that subset
 5. Fetch plan detail rows and keep only `detail_type = 3` tasks.
 6. Build the critical-task graph using `whether_critical_task = 1` and plan links.
 7. Calculate duration for each task:
