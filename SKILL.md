@@ -103,7 +103,7 @@ flowchart LR
 
 If the user asks for an export file, use `scripts/export_flow_svg.mjs` to create SVG first. PNG can be generated from SVG if the environment supports it.
 
-For flowchart output, always follow [references/flowchart-output.md](references/flowchart-output.md): horizontal left-to-right layout, one complete path per row/subgraph, task name plus working-day duration in every node, no stages, no phase nodes, no non-critical tasks.
+For flowchart output, always follow [references/flowchart-output.md](references/flowchart-output.md): horizontal left-to-right layout, one complete path per row or left-to-right chain, task name plus working-day duration in every node, no stages, no phase nodes, no non-critical tasks. Do not use Mermaid `subgraph` for path grouping because it can render vertically.
 
 ## Completion-Rate Simulation
 

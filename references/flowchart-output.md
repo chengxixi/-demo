@@ -37,23 +37,21 @@ Use this style when the user wants a flowchart in the chat:
 
 ```mermaid
 flowchart LR
-  subgraph P1["路径1"]
-    P1_A["任务A<br/>1天"] --> P1_B["任务B<br/>2天"] --> P1_D["任务D<br/>3天"]
-  end
-
-  subgraph P2["路径2"]
-    P2_A["任务A<br/>1天"] --> P2_C["任务C<br/>2天"] --> P2_D["任务D<br/>3天"]
-  end
+  P1_LABEL["路径1"] --> P1_A["任务A<br/>1天"] --> P1_B["任务B<br/>2天"] --> P1_D["任务D<br/>3天"]
+  P2_LABEL["路径2"] --> P2_A["任务A<br/>1天"] --> P2_C["任务C<br/>2天"] --> P2_D["任务D<br/>3天"]
 
   classDef critical fill:#dc2626,stroke:#991b1b,color:#fff,font-weight:bold;
   classDef actual fill:#b91c1c,stroke:#7f1d1d,color:#fff,font-weight:bold;
+  classDef label fill:#fff7ed,stroke:#fed7aa,color:#7c2d12,font-weight:bold;
   class P1_A,P1_B,P1_D,P2_A,P2_C,P2_D critical;
+  class P1_LABEL,P2_LABEL label;
 ```
 
 Rules:
 
 - Use `flowchart LR`.
-- Use one `subgraph` per critical path when there are multiple paths.
+- Do not use `subgraph` for path grouping; many Mermaid renderers lay out subgraph contents vertically even under `flowchart LR`.
+- For multiple critical paths, render each path as its own left-to-right chain and prefix the chain with a label node such as `路径1`.
 - Use unique node ids per path, even when the same task appears in multiple paths.
 - Node label format is `任务名称<br/>N天`; if actual duration was used, label it as `任务名称<br/>N天（实际）`.
 - Do not merge branches into one graph if that makes a path ambiguous.
