@@ -34,7 +34,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
    - else use `change_end_date` when present
    - else use planned `end_date`
    - count only PM-system working days from the holiday API
-8. Output all critical paths in the requested format.
+8. Output all critical paths in the requested format. If the user asks for a flowchart, horizontal chart, Mermaid, SVG, PNG, or visual export, read [references/flowchart-output.md](references/flowchart-output.md) and follow its format exactly.
 9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the numbered output format exactly as written there.
 
 ## Daily Forecast Monitor
@@ -103,6 +103,8 @@ flowchart LR
 
 If the user asks for an export file, use `scripts/export_flow_svg.mjs` to create SVG first. PNG can be generated from SVG if the environment supports it.
 
+For flowchart output, always follow [references/flowchart-output.md](references/flowchart-output.md): horizontal left-to-right layout, one complete path per row/subgraph, task name plus working-day duration in every node, no stages, no phase nodes, no non-critical tasks.
+
 ## Completion-Rate Simulation
 
 Do not invent the completion-rate formula or final explanation wording.
@@ -143,7 +145,7 @@ Never omit the accounting date phrase. Do not default `{as_of_date}` to today's 
 - `scripts/analyze_critical_path.mjs`
   Build task-only critical paths and compute working-day durations.
 - `scripts/export_flow_svg.mjs`
-  Export a horizontal SVG flow diagram from critical-path JSON.
+  Export a horizontal SVG flow diagram from critical-path JSON. By default, export all critical paths as separate horizontal rows; use `--path_index` only when the user asks for one path.
 - `scripts/monitor_forecast_rate.mjs`
   Save daily `forecast_list_new` snapshots, compare against the previous snapshot, and send Enterprise WeChat robot alerts when a project forecast completion rate drops beyond the threshold.
 
