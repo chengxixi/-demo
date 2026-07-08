@@ -1,103 +1,155 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Search, ChevronDown } from 'lucide-vue-next'
-import { knowledgeData } from '@/api/mock-data'
+import { computed, reactive, ref, shallowRef } from 'vue'
+import { message } from 'ant-design-vue'
+import { knowledgeData } from '@/api/mock'
 
-const searchQuery = ref('')
-const expandedId = ref<string | null>(null)
+const keyword = ref('')
+const category = ref('')
+const editorOpen = shallowRef(false)
 
-const filteredItems = computed(() => {
-  const q = searchQuery.value.toLowerCase()
-  if (!q) return knowledgeData
-  return knowledgeData.filter(item =>
-    item.question.toLowerCase().includes(q) ||
-    item.answer.toLowerCase().includes(q) ||
-    item.tags.some(t => t.toLowerCase().includes(q))
-  )
+const draft = reactive({
+  question: '',
+  answer: '',
+  category: '标准回复',
+  tags: '',
+  sourceType: '手工新建',
+  sourceId: '',
+  status: '待审核',
 })
 
-function toggle(id: string) {
-  expandedId.value = expandedId.value === id ? null : id
+const sourceActions = [
+  { type: '反馈单', label: '从反馈转入', example: 'FB-20260618-0012' },
+  { type: '紧急异常', label: '从异常转入', example: 'P0-20260611-007' },
+  { type: '工单', label: '从工单转入', example: 'WO-20260618-003' },
+]
+
+const categories = computed(() => {
+  return [...new Set(knowledgeData.map((item) => item.category))]
+})
+
+const filteredItems = computed(() => {
+  return knowledgeData.filter((item) => {
+    const text = `${item.question} ${item.answer} ${item.tags.join(' ')}`.toLowerCase()
+    const matchesKeyword = !keyword.value || text.includes(keyword.value.toLowerCase())
+    const matchesCategory = !category.value || item.category === category.value
+
+    return matchesKeyword && matchesCategory
+  })
+})
+
+function openEditorFrom(sourceType = '手工新建', sourceId = '') {
+  draft.sourceType = sourceType
+  draft.sourceId = sourceId
+  draft.status = '待审核'
+  editorOpen.value = true
 }
 
-const toast = ref<string | null>(null)
-function showToast(msg: string) {
-  toast.value = msg
-  setTimeout(() => { toast.value = null }, 2500)
+function saveKnowledge() {
+  message.success('知识条目已保存，可进入审核发布')
+  editorOpen.value = false
 }
 
-function learnMore() {
-  showToast('视频指引教程列表即将上线，敬请期待')
+function publishKnowledge() {
+  message.success('已提交审核，通过后发布到 Q&A/案例库')
 }
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
-    <div class="px-6 py-4 bg-white border-b border-gray-200 flex-shrink-0">
-      <h2 class="text-lg font-extrabold text-gray-900">Q&A/案例库</h2>
-      <p class="text-xs text-gray-400 mt-0.5">用户反馈处理标准问答 - 根据所选反馈整理可复用的客服回复、排查步骤和用户解释口径。</p>
-    </div>
-    <div class="flex-1 overflow-auto p-6">
-      <!-- Banner -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
-        <span class="text-xs font-bold text-blue-700">Q&A新增视频指引 - 部分高频问题的处理步骤已增加短视频教程，可直接转发给用户。</span>
-        <button class="text-[11px] font-bold text-blue-600 hover:underline" @click="learnMore">了解更多</button>
-      </div>
+  <section class="space-y-4 p-4">
+    <a-row :gutter="[12, 12]" justify="space-between" align="middle">
+      <a-col>
+        <a-space direction="vertical" size="small">
+          <a-typography-title :level="4" class="m-0">Q&A/案例库</a-typography-title>
+          <a-typography-text type="secondary">
+            统一沉淀标准回复、异常案例、使用指引和培训材料，支持来源追溯、版本及审核发布。
+          </a-typography-text>
+        </a-space>
+      </a-col>
+      <a-col>
+        <a-button type="primary" @click="openEditorFrom()">新建知识条目</a-button>
+      </a-col>
+    </a-row>
 
-      <!-- Search -->
-      <div class="relative mb-4">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          v-model="searchQuery"
-          type="search"
-          placeholder="搜索Q&A、案例关键词"
-          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
+    <a-row :gutter="[12, 12]">
+      <a-col v-for="item in sourceActions" :key="item.type" :xs="24" :md="8">
+        <a-card size="small" :title="item.label">
+          <a-typography-text type="secondary">保留来源编号、处理结论和版本记录。</a-typography-text>
+          <template #actions>
+            <a-button type="link" @click="openEditorFrom(item.type, item.example)">转入</a-button>
+          </template>
+        </a-card>
+      </a-col>
+    </a-row>
+
+    <a-row :gutter="[12, 12]">
+      <a-col :xs="24" :md="12">
+        <a-input-search v-model:value="keyword" placeholder="搜索问题、答案或标签" allow-clear />
+      </a-col>
+      <a-col :xs="24" :md="6">
+        <a-select
+          v-model:value="category"
+          class="w-full"
+          allow-clear
+          placeholder="类型"
+          :options="categories.map((item) => ({ label: item, value: item }))"
         />
-      </div>
+      </a-col>
+    </a-row>
 
-      <!-- Q&A List -->
-      <div class="space-y-2">
-        <div
-          v-for="item in filteredItems"
-          :key="item.id"
-          class="bg-white border border-gray-200 rounded-lg overflow-hidden"
-        >
-          <button
-            class="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors"
-            @click="toggle(item.id)"
-          >
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-100 text-gray-600">{{ item.category }}</span>
-                <span class="text-[10px] text-gray-400">{{ item.date }}</span>
-              </div>
-              <h3 class="text-sm font-extrabold text-gray-900">{{ item.question }}</h3>
-              <div class="flex flex-wrap gap-1.5 mt-1.5">
-                <span
-                  v-for="tag in item.tags"
-                  :key="tag"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600"
-                >#{{ tag }}</span>
-              </div>
-            </div>
-            <ChevronDown
-              class="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400 transition-transform"
-              :class="{ 'rotate-180': expandedId === item.id }"
-            />
-          </button>
-          <div v-if="expandedId === item.id" class="px-4 pb-4 border-t border-gray-100">
-            <div class="pt-3 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{{ item.answer }}</div>
-          </div>
-        </div>
-        <div v-if="filteredItems.length === 0" class="text-center py-8 text-gray-400 text-sm font-bold">
-          未找到匹配的Q&A内容
-        </div>
-      </div>
-    </div>
+    <vxe-table :data="filteredItems" border stripe height="520" :export-config="{}">
+      <vxe-column field="id" title="编号" width="150" />
+      <vxe-column field="question" title="标题" min-width="220" />
+      <vxe-column field="category" title="类型" width="120" />
+      <vxe-column field="answer" title="内容" min-width="280" />
+      <vxe-column field="date" title="更新时间" width="120" />
+      <vxe-column title="标签" min-width="180">
+        <template #default="{ row }">
+          <a-space wrap>
+            <a-tag v-for="tag in row.tags" :key="tag">{{ tag }}</a-tag>
+          </a-space>
+        </template>
+      </vxe-column>
+      <vxe-column title="状态" width="110">
+        <template #default>
+          <a-tag color="orange">待审核</a-tag>
+        </template>
+      </vxe-column>
+      <vxe-column title="操作" width="160" fixed="right">
+        <template #default="{ row }">
+          <a-space>
+            <a-button size="small" @click="openEditorFrom('手工新建', row.id)">编辑</a-button>
+            <a-button size="small" type="primary" @click="publishKnowledge">发布</a-button>
+          </a-space>
+        </template>
+      </vxe-column>
+    </vxe-table>
 
-    <!-- Toast -->
-    <div v-if="toast" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white bg-blue-600">
-      {{ toast }}
-    </div>
-  </div>
+    <a-modal v-model:open="editorOpen" title="新建知识条目" width="760px" @ok="saveKnowledge">
+      <a-form layout="vertical">
+        <a-row :gutter="12">
+          <a-col :span="12">
+            <a-form-item label="类型">
+              <a-select
+                v-model:value="draft.category"
+                :options="['标准回复', '异常案例', '使用指引', '培训材料'].map((item) => ({ label: item, value: item }))"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="来源类型">
+              <a-select
+                v-model:value="draft.sourceType"
+                :options="['手工新建', '反馈单', '紧急异常', '工单'].map((item) => ({ label: item, value: item }))"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="24"><a-form-item label="标题"><a-input v-model:value="draft.question" /></a-form-item></a-col>
+          <a-col :span="12"><a-form-item label="来源编号"><a-input v-model:value="draft.sourceId" placeholder="反馈、异常或工单编号" /></a-form-item></a-col>
+          <a-col :span="12"><a-form-item label="审核状态"><a-select v-model:value="draft.status" :options="['待审核', '已发布', '需修订'].map((item) => ({ label: item, value: item }))" /></a-form-item></a-col>
+          <a-col :span="24"><a-form-item label="知识内容"><a-textarea v-model:value="draft.answer" :rows="4" /></a-form-item></a-col>
+          <a-col :span="24"><a-form-item label="标签"><a-input v-model:value="draft.tags" placeholder="多个标签用逗号分隔" /></a-form-item></a-col>
+        </a-row>
+      </a-form>
+    </a-modal>
+  </section>
 </template>

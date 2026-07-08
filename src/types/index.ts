@@ -1,17 +1,23 @@
-// 反馈数据类型
 export interface FeedbackItem {
   id: string
   mergeGroup: string
   source: string
   createMode: string
+  region?: string
+  dataSource?: string
   brand: string
   site: string
   productType: string
   model: string
   internal: string
   asin: string
+  orderNo?: string
+  expressNo?: string
   raw: string
   ai: string
+  image?: string
+  video?: string
+  solution?: string
   level1: string
   level2: string
   level3: string
@@ -23,9 +29,9 @@ export interface FeedbackItem {
   feedbackUser: string
   handler: string
   date: string
+  note?: string
 }
 
-// 合并组
 export interface MergeGroup {
   mergeGroup: string
   lead: { data: FeedbackItem; confidence: number }
@@ -33,7 +39,6 @@ export interface MergeGroup {
   expanded: boolean
 }
 
-// 工单
 export interface WorkOrder {
   id: string
   summary: string
@@ -53,7 +58,6 @@ export interface WorkOrder {
   closeNote: string
 }
 
-// 异常
 export interface EmergencyException {
   id: string
   level: string
@@ -82,7 +86,6 @@ export interface EmergencyException {
   step: number
 }
 
-// 竞品
 export interface Competitor {
   id: string
   category: string
@@ -99,23 +102,20 @@ export interface Competitor {
   dealPrice: string
   rating: string
   reviews: string
-  sellingPoints: string[] | string  // array or string separated by " / "
+  sellingPoints: string[] | string
   specs: Record<string, string> | string
   pain: string
-  // 登记字段
   channelType?: string
   asin?: string
   price?: number | string
   params?: string
   channels?: string
   tags?: string[]
-  // 监控状态
-  monitorStatus?: string      // 正常监控 / 已解除监控 / 已归档
+  monitorStatus?: string
   archived?: boolean
   registerFields?: Record<string, string>
 }
 
-// 竞品登记参数字段定义
 export interface CompetitorFieldDef {
   category: string
   name: string
@@ -125,7 +125,6 @@ export interface CompetitorFieldDef {
   placeholder?: string
 }
 
-// L1-L4 监控记录
 export interface LevelRecord {
   level: string
   source: string
@@ -135,12 +134,10 @@ export interface LevelRecord {
   date: string
 }
 
-// 竞品监控快照
 export interface MonitorSnapshot {
   [weekKey: string]: string
 }
 
-// 候选线索
 export interface CandidateLead {
   id: string
   sourceFeedback: string
@@ -152,7 +149,6 @@ export interface CandidateLead {
   nextAction: string
 }
 
-// 产品需求池
 export interface RequirementPoolItem {
   id: string
   candidate: string
@@ -160,7 +156,13 @@ export interface RequirementPoolItem {
   source: string
   evidence: string
   product: string
-  scores: { userValue: number; businessImpact: number; feasibility: number; competitiveImpact: number; inventoryImpact: number }
+  scores: {
+    userValue: number
+    businessImpact: number
+    feasibility: number
+    competitiveImpact: number
+    inventoryImpact: number
+  }
   level: string
   path: string
   status: string
@@ -174,7 +176,6 @@ export interface RequirementPoolItem {
   relatedFeedback: string
 }
 
-// 用户角色
 export interface UserRole {
   key: string
   name: string
@@ -183,25 +184,21 @@ export interface UserRole {
   avatar: string
 }
 
-// 模板
 export interface TemplateConfig {
   name: string
   values: Record<string, string | string[]>
 }
 
-// 过滤选项
 export interface FilterOption {
   label: string
   value: string
 }
 
-// Tab 选项
 export interface TabOption {
   key: string
   label: string
 }
 
-// 报告
 export interface Report {
   id: string
   title: string
@@ -211,7 +208,6 @@ export interface Report {
   summary: string
 }
 
-// Q&A
 export interface KnowledgeItem {
   id: string
   question: string

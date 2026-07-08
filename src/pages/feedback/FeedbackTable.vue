@@ -1,178 +1,360 @@
 <script setup lang="ts">
-import type { FeedbackItem, MergeGroup } from '@/types'
-import { siteOptions, sourceOptions, processRouteOptions, processStateOptions, exceptionLevels, returnOptions } from '@/api/mock-data'
+import { computed, ref } from 'vue'
+import type { FeedbackItem } from '@/types'
+
+type FeedbackTableRow =
+  | {
+      rowType: 'group'
+      id: string
+      mergeGroup: string
+      title: string
+      members: FeedbackItem[]
+      lead: FeedbackItem
+    }
+  | {
+      rowType: 'item'
+      id: string
+      item: FeedbackItem
+      parentGroup?: string
+      childIndex?: number
+    }
 
 const props = defineProps<{
-  filteredGroups: MergeGroup[]
+  items: FeedbackItem[]
   selectedIds: Set<string>
 }>()
 
 const emit = defineEmits<{
-  (e: 'toggleSelect', id: string): void
-  (e: 'toggleSelectAll'): void
-  (e: 'openDetail', item: FeedbackItem): void
-  (e: 'unmergeItem', item: FeedbackItem): void
-  (e: 'manualReview', item: FeedbackItem): void
-  (e: 'toggleGroupExpand', group: MergeGroup): void
+  (event: 'toggleSelect', id: string): void
+  (event: 'toggleSelectMany', ids: string[]): void
+  (event: 'toggleSelectAll'): void
+  (event: 'openDetail', item: FeedbackItem): void
+  (event: 'openMerge', groupId: string): void
+  (event: 'manualReview', item: FeedbackItem): void
 }>()
 
-function getDataSource(item: FeedbackItem): string {
-  if (item.source === '退货原因') return item.site === 'Amazon.com (US)' ? '海外电商-退货反馈' : '国内电商-退货反馈'
-  if (item.source === '商品评论') return item.site === 'Amazon.com (US)' ? '海外电商-商品评论' : '国内电商-商品评论'
-  return item.source
-}
-
-function getDeviceType(item: FeedbackItem): string {
-  return item.productType === '体脂秤' ? '八电极' : item.productType
-}
-
-function getSolution(item: FeedbackItem): string {
-  if (item.processRoute === '待处理') return '待产品经理确认处理方案'
-  if (item.processRoute === '已转工单') return '已转工单跟进质量排查'
-  if (item.processRoute === '已转需求') return '已转需求池评审'
-  if (item.processRoute === '已转异常') return '已转异常处理流程'
-  if (item.processRoute === '已转Q&A') return '已沉淀至Q&A案例库'
-  return '已直接回复并关闭'
-}
-
-function getRegion(item: FeedbackItem): string {
-  return item.site === 'Amazon.com (US)' ? '海外' : '国内'
-}
+const expandedGroups = ref<Set<string>>(new Set())
 
 const allSelected = computed(() => {
-  const items = props.filteredGroups.flatMap(g => g.members.map(m => m.data))
-  return items.length > 0 && items.every(i => props.selectedIds.has(i.id))
+  return props.items.length > 0 && props.items.every((item) => props.selectedIds.has(item.id))
 })
 
 const someSelected = computed(() => {
-  const items = props.filteredGroups.flatMap(g => g.members.map(m => m.data))
-  return items.length > 0 && items.some(i => props.selectedIds.has(i.id)) && !allSelected.value
+  return props.items.some((item) => props.selectedIds.has(item.id)) && !allSelected.value
 })
 
-function handleToggleSelectAll() {
-  emit('toggleSelectAll')
+const groupedRows = computed<FeedbackTableRow[]>(() => {
+  const grouped = new Map<string, FeedbackItem[]>()
+  const singles: FeedbackItem[] = []
+
+  props.items.forEach((item) => {
+    if (!item.mergeGroup) {
+      singles.push(item)
+      return
+    }
+
+    const bucket = grouped.get(item.mergeGroup) || []
+    bucket.push(item)
+    grouped.set(item.mergeGroup, bucket)
+  })
+
+  const rows: FeedbackTableRow[] = []
+
+  grouped.forEach((members, mergeGroup) => {
+    if (members.length === 1) {
+      rows.push({ rowType: 'item', id: members[0].id, item: members[0] })
+      return
+    }
+
+    const lead = members[0]
+    rows.push({
+      rowType: 'group',
+      id: `group-${mergeGroup}`,
+      mergeGroup,
+      title: `${lead.model || lead.internal} ${lead.level3}合并反馈`,
+      members,
+      lead,
+    })
+
+    if (expandedGroups.value.has(mergeGroup)) {
+      members.forEach((item, index) => {
+        rows.push({
+          rowType: 'item',
+          id: item.id,
+          item,
+          parentGroup: mergeGroup,
+          childIndex: index + 1,
+        })
+      })
+    }
+  })
+
+  singles.forEach((item) => {
+    rows.push({ rowType: 'item', id: item.id, item })
+  })
+
+  return rows
+})
+
+function exceptionColor(level: string) {
+  if (level === 'P0' || level === 'P1') {
+    return 'red'
+  }
+
+  if (level === 'P2') {
+    return 'orange'
+  }
+
+  return 'blue'
+}
+
+function isGroupExpanded(group: string) {
+  return expandedGroups.value.has(group)
+}
+
+function toggleGroup(group: string) {
+  const next = new Set(expandedGroups.value)
+
+  if (next.has(group)) {
+    next.delete(group)
+  } else {
+    next.add(group)
+  }
+
+  expandedGroups.value = next
+}
+
+function groupAllSelected(members: FeedbackItem[]) {
+  return members.every((item) => props.selectedIds.has(item.id))
+}
+
+function groupSomeSelected(members: FeedbackItem[]) {
+  return members.some((item) => props.selectedIds.has(item.id)) && !groupAllSelected(members)
+}
+
+function groupIds(members: FeedbackItem[]) {
+  return members.map((item) => item.id)
+}
+
+function groupRawSummary(members: FeedbackItem[]) {
+  return members.map((item) => item.raw).join(' / ')
+}
+
+function groupAiSummary(members: FeedbackItem[]) {
+  return members.map((item) => item.ai).join(' / ')
+}
+
+function rowItem(row: FeedbackTableRow) {
+  return row.rowType === 'group' ? row.lead : row.item
+}
+
+function rowRegion(item: FeedbackItem) {
+  return item.region || (item.site.includes('Amazon') ? '海外' : '国内')
+}
+
+function rowDataSource(item: FeedbackItem) {
+  return item.dataSource || item.source
+}
+
+function rowOrderNo(item: FeedbackItem) {
+  return item.orderNo || item.asin || '-'
+}
+
+function rowExpressNo(item: FeedbackItem) {
+  if (item.expressNo) {
+    return item.expressNo
+  }
+
+  return item.returned === '退货' || item.returned === '换货' || item.returned === '退货+换货'
+    ? '待补充'
+    : '-'
+}
+
+function rowImage(item: FeedbackItem) {
+  return item.image || '-'
+}
+
+function rowVideo(item: FeedbackItem) {
+  return item.video || '-'
+}
+
+function rowSolution(item: FeedbackItem) {
+  return item.solution || item.processRoute || '待产品经理确认处理方案。'
+}
+
+function rowClassName({ row }: { row: FeedbackTableRow }) {
+  if (row.rowType === 'group') {
+    return 'feedback-group-row'
+  }
+
+  if (row.parentGroup) {
+    return 'feedback-child-row'
+  }
+
+  return ''
 }
 </script>
 
 <template>
-  <div class="overflow-auto">
-    <table class="feedback-table">
-      <thead>
-        <tr>
-          <th class="w-12">
-            <input type="checkbox" :checked="allSelected" :indeterminate.prop="someSelected" @change="handleToggleSelectAll()" />
-          </th>
-          <th>编号</th>
-          <th>地区</th>
-          <th>数据来源</th>
-          <th>设备类型</th>
-          <th>品牌</th>
-          <th>内部型号/料号</th>
-          <th>销售型号</th>
-          <th>订单号</th>
-          <th>是否退换货</th>
-          <th>用户反馈</th>
-          <th>AI翻译</th>
-          <th>反馈时间</th>
-          <th>问题回答/处理方案</th>
-          <th>一级职能</th>
-          <th>二级问题</th>
-          <th>三级问题</th>
-          <th>异常级别</th>
-          <th>创建方式</th>
-          <th>处理去向</th>
-          <th>状态</th>
-          <th>反馈人</th>
-          <th>处理人</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="group in filteredGroups" :key="group.lead.data.id">
-          <!-- Merge parent row -->
-          <tr v-if="group.members.length > 1" class="merge-parent cursor-pointer" @click="emit('toggleGroupExpand', group)">
-            <td><input type="checkbox" :checked="selectedIds.has(group.lead.data.id)" @change="emit('toggleSelect', group.lead.data.id)" @click.stop /></td>
-            <td colspan="22">
-              <div class="flex items-center gap-2">
-                <button class="w-5 h-5 flex items-center justify-center border border-blue-200 rounded bg-white text-blue-600 text-xs font-extrabold">
-                  {{ group.expanded ? '−' : '+' }}
-                </button>
-                <div>
-                  <span class="font-extrabold text-sm text-gray-900">{{ group.lead.data.model }} {{ group.lead.data.level3 }}合并反馈</span>
-                  <span class="ml-2 text-xs text-gray-500">
-                    {{ group.lead.data.internal }} / {{ group.members.length }}条明细
-                  </span>
-                </div>
-                <span class="ml-auto text-xs text-gray-400">{{ getDataSource(group.lead.data) }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="flex items-center gap-1">
-                <button class="px-2 py-0.5 text-[11px] font-bold text-blue-600 border border-gray-200 rounded hover:bg-blue-50" @click.stop="emit('openDetail', group.lead.data)">详情</button>
-              </div>
-            </td>
-          </tr>
-          <!-- Children -->
-          <template v-if="group.expanded || group.members.length === 1">
-            <tr
-              v-for="(member, idx) in group.members"
-              :key="member.data.id"
-              :class="group.members.length > 1 ? 'merge-child' : ''"
-            >
-              <td><input type="checkbox" :checked="selectedIds.has(member.data.id)" @change="emit('toggleSelect', member.data.id)" /></td>
-              <td>
-                <template v-if="group.members.length > 1">
-                  <div class="flex items-center gap-1 pl-5">
-                    <span class="text-gray-400 font-extrabold">└</span>
-                    <span>
-                      <span class="font-extrabold text-gray-900 text-xs">{{ member.data.id }}</span>
-                      <span class="block text-[11px] text-gray-400">第 {{ idx + 1 }} 条明细</span>
-                    </span>
-                  </div>
-                </template>
-                <template v-else>
-                  <span class="font-extrabold text-gray-900 text-xs">{{ member.data.id }}</span>
-                </template>
-              </td>
-              <td>{{ getRegion(member.data) }}</td>
-              <td><span class="text-xs font-bold text-gray-600">{{ getDataSource(member.data) }}</span></td>
-              <td>{{ getDeviceType(member.data) }}</td>
-              <td>{{ member.data.brand }}</td>
-              <td>{{ member.data.internal }}</td>
-              <td>{{ member.data.model }}</td>
-              <td>{{ member.data.asin !== '-' ? member.data.asin : 'ORD-' + member.data.id.replace('FB-', '') }}</td>
-              <td>{{ member.data.returned || '-' }}</td>
-              <td class="max-w-[200px] truncate text-xs">{{ member.data.raw }}</td>
-              <td class="max-w-[200px] truncate text-xs">{{ member.data.ai }}</td>
-              <td>{{ member.data.date }}</td>
-              <td class="max-w-[180px] truncate text-xs">{{ getSolution(member.data) }}</td>
-              <td>{{ member.data.level1 }}</td>
-              <td>{{ member.data.level2 }}</td>
-              <td>{{ member.data.level3 }}</td>
-              <td>{{ member.data.exception }}</td>
-              <td>
-                <span :class="member.data.createMode === 'AI自动创建' ? 'badge-ai' : 'badge-manual'">
-                  {{ member.data.createMode }}
-                </span>
-              </td>
-              <td>{{ member.data.processRoute }}</td>
-              <td>{{ member.data.processState }}</td>
-              <td>{{ member.data.feedbackUser }}</td>
-              <td>{{ member.data.handler }}</td>
-              <td>
-                <div class="flex items-center gap-1">
-                  <button class="px-2 py-0.5 text-[11px] font-bold text-blue-600 border border-gray-200 rounded hover:bg-blue-50" @click="emit('openDetail', member.data)">详情</button>
-                  <button v-if="group.members.length > 1 && !['P0', 'P1'].includes(member.data.exception)" class="px-2 py-0.5 text-[11px] font-bold text-gray-500 border border-gray-200 rounded hover:bg-gray-50" @click="emit('unmergeItem', member.data)">移出合并</button>
-                  <button v-if="member.data.processState === '待人工复核'" class="px-2 py-0.5 text-[11px] font-bold text-red-600 border border-red-200 rounded bg-red-50 hover:bg-red-100" @click.stop="emit('manualReview', member.data)">人工复核</button>
-                </div>
-              </td>
-            </tr>
-          </template>
-        </template>
-        <tr v-if="filteredGroups.length === 0">
-          <td colspan="24" class="text-center py-10 text-gray-400 text-sm font-bold">当前筛选条件下没有反馈记录</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <vxe-table
+    :data="groupedRows"
+    border
+    stripe
+    show-overflow
+    height="560"
+    :row-config="{ keyField: 'id' }"
+    :row-class-name="rowClassName"
+    :export-config="{}"
+  >
+    <vxe-column width="54" align="center" fixed="left">
+      <template #header>
+        <a-checkbox
+          :checked="allSelected"
+          :indeterminate="someSelected"
+          @change="emit('toggleSelectAll')"
+        />
+      </template>
+      <template #default="{ row }">
+        <a-checkbox
+          v-if="row.rowType === 'item'"
+          :checked="props.selectedIds.has(row.item.id)"
+          @change="emit('toggleSelect', row.item.id)"
+        />
+        <a-checkbox
+          v-else
+          :checked="groupAllSelected(row.members)"
+          :indeterminate="groupSomeSelected(row.members)"
+          @change="emit('toggleSelectMany', groupIds(row.members))"
+        />
+      </template>
+    </vxe-column>
+
+    <vxe-column title="编号/合并组" width="230" fixed="left">
+      <template #default="{ row }">
+        <a-space v-if="row.rowType === 'group'" direction="vertical" size="small">
+          <a-space>
+            <a-button size="small" @click="toggleGroup(row.mergeGroup)">
+              {{ isGroupExpanded(row.mergeGroup) ? '-' : '+' }}
+            </a-button>
+            <a-typography-text strong>{{ row.title }}</a-typography-text>
+          </a-space>
+          <a-typography-text type="secondary">
+            {{ row.members.length }} 条反馈 / {{ row.lead.source }} / {{ row.lead.feedbackUser }}
+          </a-typography-text>
+        </a-space>
+        <a-space v-else direction="vertical" size="small">
+          <a-typography-text strong>
+            {{ row.parentGroup ? `第 ${row.childIndex} 条明细` : row.item.id }}
+          </a-typography-text>
+          <a-typography-text v-if="row.parentGroup" type="secondary">{{ row.item.id }}</a-typography-text>
+        </a-space>
+      </template>
+    </vxe-column>
+
+    <vxe-column title="地区" width="90">
+      <template #default="{ row }">{{ rowRegion(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="数据来源" width="150">
+      <template #default="{ row }">
+        <a-tag>{{ rowDataSource(rowItem(row)) }}</a-tag>
+      </template>
+    </vxe-column>
+    <vxe-column title="品牌" width="100">
+      <template #default="{ row }">{{ rowItem(row).brand }}</template>
+    </vxe-column>
+    <vxe-column title="设备类型" width="120">
+      <template #default="{ row }">{{ rowItem(row).productType }}</template>
+    </vxe-column>
+    <vxe-column title="内部型号/料号" width="150">
+      <template #default="{ row }">{{ rowItem(row).internal }}</template>
+    </vxe-column>
+    <vxe-column title="销售型号" width="120">
+      <template #default="{ row }">{{ rowItem(row).model }}</template>
+    </vxe-column>
+    <vxe-column title="订单号/ASIN" width="150">
+      <template #default="{ row }">{{ rowOrderNo(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="快递单号" width="130">
+      <template #default="{ row }">{{ rowExpressNo(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="用户反馈" min-width="240">
+      <template #default="{ row }">
+        {{ row.rowType === 'group' ? groupRawSummary(row.members) : row.item.raw }}
+      </template>
+    </vxe-column>
+    <vxe-column title="AI翻译/摘要" min-width="240">
+      <template #default="{ row }">
+        {{ row.rowType === 'group' ? groupAiSummary(row.members) : row.item.ai }}
+      </template>
+    </vxe-column>
+    <vxe-column title="图片补充" width="110">
+      <template #default="{ row }">{{ rowImage(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="视频补充" width="110">
+      <template #default="{ row }">{{ rowVideo(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="问题反馈时间" width="130">
+      <template #default="{ row }">{{ rowItem(row).date }}</template>
+    </vxe-column>
+    <vxe-column title="问题回答/处理方案" min-width="220">
+      <template #default="{ row }">{{ rowSolution(rowItem(row)) }}</template>
+    </vxe-column>
+    <vxe-column title="一级职能划分" width="130">
+      <template #default="{ row }">{{ rowItem(row).level1 }}</template>
+    </vxe-column>
+    <vxe-column title="二级问题场景" width="150">
+      <template #default="{ row }">{{ rowItem(row).level2 }}</template>
+    </vxe-column>
+    <vxe-column title="三级问题" width="140">
+      <template #default="{ row }">{{ rowItem(row).level3 }}</template>
+    </vxe-column>
+    <vxe-column title="异常级别" width="100">
+      <template #default="{ row }">
+        <a-tag :color="exceptionColor(rowItem(row).exception)">
+          {{ rowItem(row).exception }}
+        </a-tag>
+      </template>
+    </vxe-column>
+    <vxe-column title="创建方式" width="130">
+      <template #default="{ row }">{{ rowItem(row).createMode }}</template>
+    </vxe-column>
+    <vxe-column title="处理去向" width="130">
+      <template #default="{ row }">{{ rowItem(row).processRoute }}</template>
+    </vxe-column>
+    <vxe-column title="状态" width="120">
+      <template #default="{ row }">{{ rowItem(row).processState }}</template>
+    </vxe-column>
+    <vxe-column title="反馈人" width="100">
+      <template #default="{ row }">{{ rowItem(row).feedbackUser }}</template>
+    </vxe-column>
+    <vxe-column title="处理人" width="100">
+      <template #default="{ row }">{{ rowItem(row).handler }}</template>
+    </vxe-column>
+    <vxe-column title="操作" width="150" align="center" fixed="right">
+      <template #default="{ row }">
+        <a-space v-if="row.rowType === 'item'" size="small">
+          <a-button size="small" type="link" @click="emit('openDetail', row.item)">详情</a-button>
+          <a-button size="small" @click="emit('manualReview', row.item)">复核</a-button>
+        </a-space>
+        <a-space v-else size="small">
+          <a-button size="small" type="link" @click="emit('openMerge', row.mergeGroup)">详情</a-button>
+          <a-button size="small" @click="toggleGroup(row.mergeGroup)">
+            {{ isGroupExpanded(row.mergeGroup) ? '收起' : '展开' }}
+          </a-button>
+        </a-space>
+      </template>
+    </vxe-column>
+  </vxe-table>
 </template>
+
+<style scoped>
+:deep(.feedback-group-row) {
+  background: #f2f7ff;
+  font-weight: 600;
+}
+
+:deep(.feedback-child-row) {
+  background: #fcfdff;
+  color: #475569;
+}
+</style>

@@ -1,111 +1,426 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { X } from 'lucide-vue-next'
-import { processRouteOptions, processStateOptions } from '@/api/mock-data'
+import { computed, reactive, ref } from 'vue'
+import { message } from 'ant-design-vue'
 
-interface TemplateField {
-  region: string; dataSource: string; deviceType: string; brand: string; internal: string; model: string; orderNo: string; expressNo: string; feedbackDate: string; image: string; video: string; createMode: string; exception: string; processRoute: string; processState: string; feedbackUser: string; level1: string; level2: string; level3: string; raw: string; ai: string; solution: string; note: string
+interface FeedbackTemplateValues {
+  region: string
+  dataSource: string
+  deviceType: string
+  brand: string
+  internal: string
+  model: string
+  orderNo: string
+  returned: string
+  expressNo: string
+  feedbackDate: string
+  raw: string
+  ai: string
+  image: string
+  video: string
+  solution: string
+  level1: string
+  level2: string
+  level3: string
+  exception: string
+  createMode: string
+  processRoute: string
+  processState: string
+  feedbackUser: string
+  note: string
 }
-interface Template { id: string; name: string; isDefault: boolean; fields: TemplateField }
 
-const defaultTemplateFields: TemplateField = {
-  region: '海外', dataSource: '海外电商-退货反馈', deviceType: '八电极',
-  brand: '云康宝', internal: 'YL-CS20A-8', model: 'CS20A',
-  orderNo: 'B0CS20AUS1', expressNo: '', feedbackDate: new Date().toISOString().slice(0, 10),
-  image: '', video: '', createMode: '人工录入', exception: '否',
-  processRoute: '待处理', processState: '待处理', feedbackUser: '张伟',
-  level1: '产品质量', level2: '硬件损坏/无法使用', level3: '无法开机/上电',
-  raw: '', ai: '', solution: '待产品经理确认处理方案。', note: '',
+interface FeedbackTemplate {
+  id: string
+  name: string
+  isDefault: boolean
+  enabled: boolean
+  values: FeedbackTemplateValues
 }
 
-function loadTemplates(): Template[] {
-  try { const d = localStorage.getItem('feedback_templates'); if (d) { const p = JSON.parse(d); if (Array.isArray(p) && p.length > 0) return p } } catch {}
-  return [{ id: 'tpl_default', name: '默认模板', isDefault: true, fields: { ...defaultTemplateFields } }]
+const props = defineProps<{
+  open: boolean
+}>()
+
+const emit = defineEmits<{
+  (event: 'update:open', value: boolean): void
+}>()
+
+const defaultValues: FeedbackTemplateValues = {
+  region: '海外',
+  dataSource: '海外电商-退货反馈',
+  deviceType: '八电极',
+  brand: '云康宝',
+  internal: 'YL-CS20A-8',
+  model: 'CS20A',
+  orderNo: 'B0CS20AUS1',
+  returned: '无需',
+  expressNo: '',
+  feedbackDate: '2026-06-18',
+  raw: '用户反馈体脂秤无法开机，疑似电池或主板异常。',
+  ai: 'The customer reports that the body fat scale cannot power on, possibly due to a battery or mainboard issue.',
+  image: '',
+  video: '',
+  solution: '待产品经理确认处理方案。',
+  level1: '产品质量',
+  level2: '硬件损坏/无法使用',
+  level3: '无法开机/上电',
+  exception: 'P2',
+  createMode: '人工录入',
+  processRoute: '待处理',
+  processState: '待处理',
+  feedbackUser: '张伟',
+  note: '',
 }
 
-const props = defineProps<{ visible: boolean }>()
-const emit = defineEmits<{ (e: 'close'): void; (e: 'toast', msg: string, type: string): void }>()
+const templates = ref<FeedbackTemplate[]>([
+  {
+    id: 'TPL-001',
+    name: '八电极海外退货模板',
+    isDefault: true,
+    enabled: true,
+    values: { ...defaultValues },
+  },
+  {
+    id: 'TPL-002',
+    name: '筋膜枪国内反馈模板',
+    isDefault: false,
+    enabled: true,
+    values: {
+      ...defaultValues,
+      region: '国内',
+      dataSource: '客服沟通',
+      deviceType: '筋膜枪',
+      brand: 'LF',
+      internal: 'LF-MG20-CN',
+      model: 'MG20',
+      orderNo: '',
+      raw: '用户反馈筋膜枪高档位噪音偏大。',
+      ai: '筋膜枪高档位噪音明显，建议检查电机与结构件。',
+      solution: '待筋膜枪产品经理确认处理方案。',
+      level1: '产品体验',
+      level2: '功能效果',
+      level3: '噪音偏大',
+      exception: 'P3',
+      feedbackUser: '王雪',
+    },
+  },
+])
 
-const templates = ref<Template[]>(loadTemplates())
-const editingTemplateIdx = ref(0)
-const renamingIdx = ref(-1)
-const renameInput = ref('')
-const currentEditing = computed(() => templates.value[editingTemplateIdx.value])
+const activeId = ref(templates.value[0]?.id || '')
+const form = reactive<FeedbackTemplate>({
+  id: '',
+  name: '',
+  isDefault: false,
+  enabled: true,
+  values: { ...defaultValues },
+})
 
-function persistTemplates() { localStorage.setItem('feedback_templates', JSON.stringify(templates.value)) }
-function addNewTemplate() { const n = templates.value.length+1; templates.value.push({ id:`tpl_${Date.now()}`, name:`模板 ${n}`, isDefault: templates.value.length===0, fields:{...defaultTemplateFields} }); editingTemplateIdx.value = templates.value.length-1; persistTemplates(); emit('toast', `已新建「模板 ${n}」`, 'success') }
-function deleteCurrentTemplate() { if(templates.value.length<=1){emit('toast','至少保留一个模板','warning');return} const r=templates.value[editingTemplateIdx.value]; templates.value.splice(editingTemplateIdx.value,1); if(r.isDefault&&templates.value.length>0)templates.value[0].isDefault=true; if(editingTemplateIdx.value>=templates.value.length)editingTemplateIdx.value=templates.value.length-1; persistTemplates(); emit('toast',`「${r.name}」已删除`,'success') }
-function setAsDefault(idx: number) { templates.value.forEach((t,i)=>{t.isDefault=i===idx}); persistTemplates(); emit('toast',`已将「${templates.value[idx].name}」设为默认导入模板`, 'success') }
-function duplicateTemplate(idx: number) { const s=templates.value[idx]; templates.value.push({...JSON.parse(JSON.stringify(s)),id:`tpl_${Date.now()}`,name:`${s.name} 副本`,isDefault:false}); editingTemplateIdx.value=templates.value.length-1; persistTemplates(); emit('toast',`已复制「${s.name}」`, 'success') }
-function startRename(idx: number) { renamingIdx.value=idx; renameInput.value=templates.value[idx].name }
-function confirmRename() { if(renamingIdx.value>=0&&renameInput.value.trim()){templates.value[renamingIdx.value].name=renameInput.value.trim();persistTemplates()} renamingIdx.value=-1; renameInput.value='' }
-function cancelRename() { renamingIdx.value=-1; renameInput.value='' }
-function saveTemplate() { persistTemplates(); emit('toast', '模板已保存', 'success') }
-function handleClose() { emit('close') }
+const activeTemplate = computed(() => {
+  return templates.value.find((item) => item.id === activeId.value) || null
+})
+
+const dataSourceOptions = ['海外电商-退货反馈', '海外电商-商品评论', '国内电商-退货反馈', '国内电商-商品评论', '站内信', '客服沟通', 'APP反馈']
+const returnOptions = ['退货', '换货', '退货+换货', '无需']
+const processRouteOptions = ['待处理', '已转工单', '已转需求', '已转异常', '已转Q&A', '已直接回复关闭']
+const processStateOptions = ['待人工复核', '待处理', '已处理']
+
+function loadTemplate(template: FeedbackTemplate | null) {
+  if (!template) {
+    form.id = ''
+    form.name = ''
+    form.isDefault = false
+    form.enabled = true
+    form.values = { ...defaultValues }
+    return
+  }
+
+  form.id = template.id
+  form.name = template.name
+  form.isDefault = template.isDefault
+  form.enabled = template.enabled
+  form.values = { ...template.values }
+}
+
+function closeModal() {
+  emit('update:open', false)
+}
+
+function selectTemplate(id: string) {
+  saveCurrent(false)
+  activeId.value = id
+  loadTemplate(activeTemplate.value)
+}
+
+function addTemplate() {
+  saveCurrent(false)
+  const id = `TPL-${String(templates.value.length + 1).padStart(3, '0')}`
+  templates.value = [
+    ...templates.value,
+    {
+      id,
+      name: `我的模板${templates.value.length + 1}`,
+      isDefault: false,
+      enabled: true,
+      values: { ...defaultValues },
+    },
+  ]
+  activeId.value = id
+  loadTemplate(activeTemplate.value)
+}
+
+function deleteTemplate() {
+  if (!activeId.value) {
+    return
+  }
+
+  const deleted = activeTemplate.value
+  templates.value = templates.value.filter((item) => item.id !== activeId.value)
+
+  if (deleted?.isDefault && templates.value[0]) {
+    templates.value[0].isDefault = true
+  }
+
+  activeId.value = templates.value[0]?.id || ''
+  loadTemplate(activeTemplate.value)
+  message.success('模板已删除')
+}
+
+function saveCurrent(showMessage = true) {
+  const index = templates.value.findIndex((item) => item.id === form.id)
+
+  if (index < 0) {
+    return
+  }
+
+  const next = templates.value.map((item, itemIndex) => {
+    if (itemIndex !== index) {
+      return {
+        ...item,
+        isDefault: form.isDefault ? false : item.isDefault,
+      }
+    }
+
+    return {
+      id: form.id,
+      name: form.name || '未命名模板',
+      enabled: true,
+      isDefault: form.isDefault,
+      values: { ...form.values },
+    }
+  })
+
+  if (!next.some((item) => item.isDefault) && next[0]) {
+    next[0].isDefault = true
+  }
+
+  templates.value = next
+
+  if (showMessage) {
+    message.success('模板已保存')
+  }
+}
+
+function saveAndClose() {
+  saveCurrent()
+  closeModal()
+}
 </script>
 
 <template>
-  <div v-if="visible" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mt-6" style="height:85vh;max-height:800px;">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
-        <div><span class="text-xs text-gray-400">我的模板设置</span><h3 class="text-base font-extrabold text-gray-900">我的模板设置</h3><p class="text-[11px] text-gray-400">支持创建多个模板，自定义命名，设置默认导入模板用于新增反馈时自动预填。</p></div>
-        <button class="text-gray-400 hover:text-gray-600" @click="handleClose"><X class="w-5 h-5" /></button>
-      </div>
-      <div class="flex h-full" style="height:calc(100% - 110px);">
-        <div class="w-56 border-r border-gray-200 flex flex-col flex-shrink-0 bg-gray-50">
-          <div class="p-2 flex items-center justify-between border-b border-gray-200"><span class="text-[11px] font-extrabold text-gray-500">模板列表（{{ templates.length }}）</span><button class="w-6 h-6 flex items-center justify-center rounded text-blue-600 hover:bg-blue-50 text-sm font-extrabold" title="新建模板" @click="addNewTemplate">+</button></div>
-          <div class="flex-1 overflow-y-auto">
-            <div v-for="(tpl, idx) in templates" :key="tpl.id" class="px-3 py-2 cursor-pointer border-b border-gray-100 transition-colors" :class="editingTemplateIdx===idx?'bg-blue-50 border-l-2 border-l-blue-500':'hover:bg-gray-100 border-l-2 border-l-transparent'" @click="editingTemplateIdx=idx">
-              <div class="flex items-center gap-1.5">
-                <template v-if="renamingIdx===idx"><input v-model="renameInput" class="flex-1 h-6 text-xs border border-blue-300 rounded px-1.5 font-bold outline-none" @keyup.enter="confirmRename()" @keyup.escape="cancelRename()" @blur="confirmRename()" @click.stop /></template>
-                <template v-else><span class="text-xs font-extrabold text-gray-800 flex-1 truncate">{{ tpl.name }}</span><span v-if="tpl.isDefault" class="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-extrabold">默认</span></template>
-              </div>
-              <div v-if="renamingIdx!==idx" class="flex items-center gap-1 mt-1" @click.stop>
-                <button class="text-[10px] text-gray-400 hover:text-blue-600 px-1" title="重命名" @click="startRename(idx)">重命名</button>
-                <button v-if="!tpl.isDefault" class="text-[10px] text-gray-400 hover:text-green-600 px-1" title="设为默认" @click="setAsDefault(idx)">默认</button>
-                <button class="text-[10px] text-gray-400 hover:text-purple-600 px-1" title="复制模板" @click="duplicateTemplate(idx)">复制</button>
-                <button class="text-[10px] text-gray-400 hover:text-red-600 px-1" title="删除模板" @click="deleteCurrentTemplate();$event.stopPropagation()">删除</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex-1 flex flex-col min-w-0" v-if="currentEditing">
-          <div class="px-5 py-2 border-b border-gray-100 flex items-center gap-2 flex-shrink-0"><span class="text-xs font-extrabold text-gray-700">编辑：{{ currentEditing.name }}</span><span v-if="currentEditing.isDefault" class="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-extrabold">默认导入模板</span><button v-else class="text-[10px] text-blue-600 hover:underline ml-auto" @click="setAsDefault(editingTemplateIdx)">设为默认</button></div>
-          <div class="flex-1 overflow-y-auto p-5">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">地区</span><select v-model="currentEditing.fields.region" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>海外</option><option>国内</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">数据来源</span><select v-model="currentEditing.fields.dataSource" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>海外电商-退货反馈</option><option>海外电商-商品评论</option><option>国内电商-退货反馈</option><option>国内电商-商品评论</option><option>站内信</option><option>客服沟通</option><option>APP反馈</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">设备类型</span><input v-model="currentEditing.fields.deviceType" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">品牌</span><input v-model="currentEditing.fields.brand" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">内部型号/料号</span><input v-model="currentEditing.fields.internal" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">销售型号</span><input v-model="currentEditing.fields.model" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">订单号</span><input v-model="currentEditing.fields.orderNo" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">快递单号（退换货）</span><input v-model="currentEditing.fields.expressNo" placeholder="退换货时填写" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">问题反馈时间</span><input type="date" v-model="currentEditing.fields.feedbackDate" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">图片补充</span><input v-model="currentEditing.fields.image" placeholder="图片链接或附件说明" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">视频补充</span><input v-model="currentEditing.fields.video" placeholder="视频链接或附件说明" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">创建方式</span><select v-model="currentEditing.fields.createMode" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>人工录入</option><option>AI自动创建</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">异常级别</span><select v-model="currentEditing.fields.exception" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>否</option><option>待确认</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">处理去向</span><select v-model="currentEditing.fields.processRoute" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option v-for="r in processRouteOptions" :key="r" :value="r">{{ r }}</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">状态</span><select v-model="currentEditing.fields.processState" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option v-for="s in processStateOptions" :key="s" :value="s">{{ s }}</option></select></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">反馈人</span><input v-model="currentEditing.fields.feedbackUser" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">一级职能划分</span><input v-model="currentEditing.fields.level1" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">二级问题场景分类</span><input v-model="currentEditing.fields.level2" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">三级具体问题</span><input v-model="currentEditing.fields.level3" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-            </div>
-            <div class="mt-3 space-y-3">
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">用户反馈（客户对话/退货反馈）</span><textarea v-model="currentEditing.fields.raw" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">用户评价翻译（AI自动翻译）</span><textarea v-model="currentEditing.fields.ai" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">问题回答/处理方案</span><textarea v-model="currentEditing.fields.solution" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-              <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">备注</span><textarea v-model="currentEditing.fields.note" rows="2" placeholder="可保存固定话术、默认标签、备注字段" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-end gap-2 px-5 py-2.5 bg-gray-50 rounded-b-xl border-t border-gray-200 flex-shrink-0">
-        <button class="btn-primary text-xs h-8 px-4" @click="saveTemplate">保存全部模板</button>
-        <button class="btn-secondary text-xs h-8 px-4" @click="handleClose">关闭</button>
-      </div>
-    </div>
-  </div>
+  <a-modal
+    :open="props.open"
+    title="我的模板设置"
+    width="1040px"
+    @cancel="closeModal"
+    @after-open-change="(visible) => visible && loadTemplate(activeTemplate)"
+  >
+    <a-alert
+      class="mb-4"
+      type="info"
+      show-icon
+      message="创建多个个人录入模板，并选择一个默认模板用于新增反馈。"
+    />
+
+    <a-row :gutter="[16, 16]">
+      <a-col :xs="24" :md="7">
+        <a-button type="primary" block class="mb-3" @click="addTemplate">新增模板</a-button>
+        <a-space direction="vertical" class="w-full">
+          <a-card
+            v-for="template in templates"
+            :key="template.id"
+            size="small"
+            :class="{ 'template-card-active': template.id === activeId }"
+            @click="selectTemplate(template.id)"
+          >
+            <a-row justify="space-between" align="middle">
+              <a-col>
+                <a-typography-text strong>{{ template.name }}</a-typography-text>
+                <div>
+                  <a-typography-text type="secondary">
+                    {{ template.isDefault ? '默认启用' : template.enabled ? '可用模板' : '已停用' }}
+                  </a-typography-text>
+                </div>
+              </a-col>
+              <a-col>
+                <a-tag v-if="template.isDefault" color="blue">默认</a-tag>
+                <a-tag v-else>选择</a-tag>
+              </a-col>
+            </a-row>
+          </a-card>
+        </a-space>
+      </a-col>
+
+      <a-col :xs="24" :md="17">
+        <a-form layout="vertical">
+          <a-row :gutter="12">
+            <a-col :xs="24" :md="16">
+              <a-form-item label="模板名称">
+                <a-input v-model:value="form.name" placeholder="请输入模板名称" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="默认启用">
+                <a-checkbox v-model:checked="form.isDefault">设为默认启用模板</a-checkbox>
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="地区">
+                <a-select v-model:value="form.values.region" :options="['海外', '国内'].map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="数据来源">
+                <a-select v-model:value="form.values.dataSource" :options="dataSourceOptions.map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="设备类型">
+                <a-input v-model:value="form.values.deviceType" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="品牌">
+                <a-input v-model:value="form.values.brand" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="内部型号/料号">
+                <a-input v-model:value="form.values.internal" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="销售型号">
+                <a-input v-model:value="form.values.model" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="订单号">
+                <a-input v-model:value="form.values.orderNo" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="是否退换货">
+                <a-select v-model:value="form.values.returned" :options="returnOptions.map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="快递单号（退换货）">
+                <a-input v-model:value="form.values.expressNo" placeholder="退换货时填写" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="问题反馈时间">
+                <a-input v-model:value="form.values.feedbackDate" type="date" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="异常级别">
+                <a-select v-model:value="form.values.exception" :options="['否', '待确认', 'P0', 'P1', 'P2', 'P3'].map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="创建方式">
+                <a-select v-model:value="form.values.createMode" :options="['人工录入', 'AI自动创建'].map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="处理去向">
+                <a-select v-model:value="form.values.processRoute" :options="processRouteOptions.map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="状态">
+                <a-select v-model:value="form.values.processState" :options="processStateOptions.map((item) => ({ label: item, value: item }))" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="反馈人">
+                <a-input v-model:value="form.values.feedbackUser" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="一级职能划分">
+                <a-input v-model:value="form.values.level1" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="二级问题场景分类">
+                <a-input v-model:value="form.values.level2" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="8">
+              <a-form-item label="三级具体问题">
+                <a-input v-model:value="form.values.level3" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="12">
+              <a-form-item label="图片补充">
+                <a-input v-model:value="form.values.image" placeholder="图片链接或附件说明" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :md="12">
+              <a-form-item label="视频补充">
+                <a-input v-model:value="form.values.video" placeholder="视频链接或附件说明" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item label="用户反馈（客户对话/退货反馈）">
+                <a-textarea v-model:value="form.values.raw" :rows="3" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item label="用户评价翻译（AI自动翻译）">
+                <a-textarea v-model:value="form.values.ai" :rows="3" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item label="问题回答/处理方案">
+                <a-textarea v-model:value="form.values.solution" :rows="3" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item label="备注">
+                <a-textarea v-model:value="form.values.note" :rows="2" placeholder="可保存固定话术、默认标签、备注字段" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-form>
+      </a-col>
+    </a-row>
+
+    <template #footer>
+      <a-space>
+        <a-button danger @click="deleteTemplate">删除当前模板</a-button>
+        <a-button type="primary" @click="saveAndClose">保存模板</a-button>
+        <a-button @click="closeModal">关闭</a-button>
+      </a-space>
+    </template>
+  </a-modal>
 </template>
+
+<style scoped>
+.template-card-active {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+}
+</style>

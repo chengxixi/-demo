@@ -1,59 +1,60 @@
-<template>
-  <div class="px-6 py-3 flex items-center gap-3 flex-shrink-0">
-    <select
-      :value="productLine"
-      class="h-8 text-xs border border-gray-300 rounded-md px-2.5 font-bold bg-white"
-      @change="handleProductLineChange(($event.target as HTMLSelectElement).value)"
-    >
-      <option value="">全部产品线</option>
-      <option v-for="pl in productLineOptions" :key="pl" :value="pl">{{ pl }}</option>
-    </select>
-    <select
-      :value="status"
-      class="h-8 text-xs border border-gray-300 rounded-md px-2.5 font-bold bg-white"
-      @change="handleStatusChange(($event.target as HTMLSelectElement).value)"
-    >
-      <option value="">全部状态</option>
-      <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
-    </select>
-    <select
-      :value="owner"
-      class="h-8 text-xs border border-gray-300 rounded-md px-2.5 font-bold bg-white"
-      @change="handleOwnerChange(($event.target as HTMLSelectElement).value)"
-    >
-      <option value="">全部处理人</option>
-      <option v-for="o in ownerOptions" :key="o" :value="o">{{ o }}</option>
-    </select>
-    <span class="text-[11px] text-gray-400 ml-auto">{{ filteredCount }} 条工单</span>
-  </div>
-</template>
-
 <script setup lang="ts">
-defineProps<{
-  productLine: string
+import { computed } from 'vue'
+
+interface Filters {
+  keyword: string
   status: string
   owner: string
-  productLineOptions: string[]
-  statusOptions: string[]
-  ownerOptions: string[]
-  filteredCount: number
+}
+
+const props = defineProps<{
+  filters: Filters
 }>()
 
 const emit = defineEmits<{
-  'update:productLine': [value: string]
-  'update:status': [value: string]
-  'update:owner': [value: string]
+  (event: 'update:filters', value: Filters): void
 }>()
 
-function handleProductLineChange(value: string) {
-  emit('update:productLine', value)
-}
+const localFilters = computed({
+  get: () => props.filters,
+  set: (value: Filters) => emit('update:filters', value),
+})
 
-function handleStatusChange(value: string) {
-  emit('update:status', value)
-}
-
-function handleOwnerChange(value: string) {
-  emit('update:owner', value)
+function updateField<K extends keyof Filters>(key: K, value: Filters[K]) {
+  localFilters.value = {
+    ...localFilters.value,
+    [key]: value,
+  }
 }
 </script>
+
+<template>
+  <a-row :gutter="[12, 12]">
+    <a-col :xs="24" :md="10">
+      <a-input
+        :value="localFilters.keyword"
+        placeholder="工单编号 / 摘要 / 产品线"
+        allow-clear
+        @change="updateField('keyword', ($event.target as HTMLInputElement).value)"
+      />
+    </a-col>
+    <a-col :xs="24" :md="7">
+      <a-select
+        :value="localFilters.status"
+        class="w-full"
+        allow-clear
+        placeholder="状态"
+        :options="['处理中', '待确认', '已闭环'].map((item) => ({ label: item, value: item }))"
+        @change="updateField('status', String($event || ''))"
+      />
+    </a-col>
+    <a-col :xs="24" :md="7">
+      <a-input
+        :value="localFilters.owner"
+        placeholder="负责人"
+        allow-clear
+        @change="updateField('owner', ($event.target as HTMLInputElement).value)"
+      />
+    </a-col>
+  </a-row>
+</template>

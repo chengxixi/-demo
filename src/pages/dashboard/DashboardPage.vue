@@ -1,71 +1,72 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { defaultFilters } from '@/api/mock-data'
+import { computed, ref } from 'vue'
+import { defaultFilters } from '@/api/mock'
 import BusinessBoard from './BusinessBoard.vue'
 import QualityBoard from './QualityBoard.vue'
 
-const activeTab = ref<'business' | 'quality'>('business')
+const activeTab = ref('business')
 const comparison = ref<'环比' | '同比'>('环比')
 const filters = ref<Record<string, string>>({ ...defaultFilters })
 
-const changeKey = computed(() => comparison.value === '同比' ? 'yoy' : 'mom')
+const changeKey = computed<'mom' | 'yoy'>(() => {
+  return comparison.value === '同比' ? 'yoy' : 'mom'
+})
 
-function formatNum(n: number): string {
-  return Math.round(n).toLocaleString('zh-CN')
+function formatNum(value: number): string {
+  return Math.round(value).toLocaleString('zh-CN')
 }
 
-function formatChange(n: number): string {
-  return n > 0 ? `↑${n}%` : n < 0 ? `↓${Math.abs(n)}%` : '0%'
-}
+function formatChange(value: number): string {
+  if (value > 0) {
+    return `+${value}%`
+  }
 
-function handleUpdateFilters(value: Record<string, string>) {
-  filters.value = value
-}
+  if (value < 0) {
+    return `${value}%`
+  }
 
-function handleUpdateComparison(value: '环比' | '同比') {
-  comparison.value = value
+  return '0%'
 }
 </script>
 
 <template>
-  <div class="p-6 max-w-[1400px] mx-auto">
-    <!-- Header -->
-    <h1 class="text-lg font-extrabold text-gray-900 mb-4">反馈运营看板</h1>
+  <section class="space-y-4 p-4">
+    <a-row :gutter="[12, 12]" align="middle" justify="space-between">
+      <a-col>
+        <a-space direction="vertical" size="small">
+          <a-typography-title :level="4" class="m-0">反馈运营看板</a-typography-title>
+          <a-typography-text type="secondary">
+            反馈仪表盘查看业务趋势，问题仪表盘查看分类占比、异常动态和质量改善动作。
+          </a-typography-text>
+        </a-space>
+      </a-col>
+      <a-col>
+        <a-segmented
+          v-model:value="comparison"
+          :options="['环比', '同比']"
+        />
+      </a-col>
+    </a-row>
 
-    <!-- Tab Switcher -->
-    <div class="flex items-center gap-2 mb-5 border-b border-gray-200">
-      <button
-        class="px-4 py-2 text-sm font-bold border-b-2 transition-colors"
-        :class="activeTab === 'business' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-        @click="activeTab = 'business'"
-      >反馈仪表盘</button>
-      <button
-        class="px-4 py-2 text-sm font-bold border-b-2 transition-colors"
-        :class="activeTab === 'quality' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-        @click="activeTab = 'quality'"
-      >问题仪表盘</button>
-    </div>
-
-    <!-- Business Tab -->
-    <BusinessBoard
-      v-if="activeTab === 'business'"
-      :filters="filters"
-      :comparison="comparison"
-      :change-key="changeKey"
-      :format-num="formatNum"
-      :format-change="formatChange"
-      @update:filters="handleUpdateFilters"
-      @update:comparison="handleUpdateComparison"
-    />
-
-    <!-- Quality Tab -->
-    <QualityBoard
-      v-else
-      :filters="filters"
-      :comparison="comparison"
-      :change-key="changeKey"
-      :format-num="formatNum"
-      :format-change="formatChange"
-    />
-  </div>
+    <a-tabs v-model:active-key="activeTab">
+      <a-tab-pane key="business" tab="反馈仪表盘">
+        <BusinessBoard
+          v-model:filters="filters"
+          v-model:comparison="comparison"
+          :change-key="changeKey"
+          :format-num="formatNum"
+          :format-change="formatChange"
+        />
+      </a-tab-pane>
+      <a-tab-pane key="quality" tab="问题仪表盘">
+        <QualityBoard
+          v-model:filters="filters"
+          :comparison="comparison"
+          :change-key="changeKey"
+          :format-num="formatNum"
+          :format-change="formatChange"
+        />
+      </a-tab-pane>
+    </a-tabs>
+  </section>
 </template>

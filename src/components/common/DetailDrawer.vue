@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
     import { computed } from 'vue';
 
     const props = defineProps<{
@@ -24,12 +24,12 @@
                     class="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between z-10"
                 >
                     <h2 class="text-base font-extrabold text-gray-900">{{ title }}</h2>
-                    <button
+                    <a-button
                         class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 transition-colors"
                         @click="emit('close')"
                     >
                         <span class="text-gray-400 text-xl leading-none">&times;</span>
-                    </button>
+                    </a-button>
                 </div>
                 <div class="p-5">
                     <slot />

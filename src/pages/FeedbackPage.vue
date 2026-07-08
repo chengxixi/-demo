@@ -1,166 +1,291 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Plus, ChevronDown, X } from 'lucide-vue-next'
-import { useFeedbackStore } from '@/stores'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 import type { FeedbackItem } from '@/types'
-import FeedbackFilter from './feedback/FeedbackFilter.vue'
-import FeedbackTable from './feedback/FeedbackTable.vue'
-import FeedbackDetailDrawer from './feedback/FeedbackDetailDrawer.vue'
-import FeedbackMergeModal from './feedback/FeedbackMergeModal.vue'
+import { feedbackData } from '@/api/mock'
 import FeedbackAddModal from './feedback/FeedbackAddModal.vue'
-import FeedbackTemplateModal from './feedback/FeedbackTemplateModal.vue'
+import FeedbackBatchCloseModal from './feedback/FeedbackBatchCloseModal.vue'
+import FeedbackFilter from './feedback/FeedbackFilter.vue'
+import FeedbackImportModal from './feedback/FeedbackImportModal.vue'
 import FeedbackReviewModal from './feedback/FeedbackReviewModal.vue'
+import FeedbackTable from './feedback/FeedbackTable.vue'
+import FeedbackTemplateModal from './feedback/FeedbackTemplateModal.vue'
 
-const store = useFeedbackStore()
-const detailItem = ref<FeedbackItem | null>(null)
+const router = useRouter()
+const items = ref<FeedbackItem[]>([...feedbackData])
 const selectedIds = ref<Set<string>>(new Set())
-const showAddModal = ref(false)
-const showTemplateModal = ref(false)
-const showMergeModal = ref(false)
-const mergeGroupId = ref<string | null>(null)
-const showImportModal = ref(false)
-const showReviewModal = ref(false)
-const reviewItem = ref<FeedbackItem | null>(null)
-const reviewData = ref<Partial<FeedbackItem>>({})
-const importForm = ref({ file: '', mode: '按模板字段导入', dedup: '按内容+型号' })
+const activeTab = ref('all')
+const addOpen = ref(false)
+const reviewOpen = ref(false)
+const templateOpen = ref(false)
+const importOpen = ref(false)
+const batchCloseOpen = ref(false)
+const currentItem = ref<FeedbackItem | null>(null)
 
-// Toast
-const toast = ref<{ msg: string; type: 'info' | 'success' | 'warning' } | null>(null)
-function showToast(msg: string, type: 'info' | 'success' | 'warning' = 'info') {
-  toast.value = { msg, type }
-  setTimeout(() => { toast.value = null }, 2500)
+const filters = ref({
+  keyword: '',
+  source: '',
+  processState: '',
+  exception: '',
+  brand: '',
+  site: '',
+  productType: '',
+  model: '',
+  feedbackUser: '',
+  processRoute: '',
+})
+
+const tabOptions = [
+  { key: 'all', label: '全部' },
+  { key: 'pending', label: '待处理' },
+  { key: 'review', label: '待人工复核' },
+  { key: 'done', label: '已处理' },
+  { key: 'mine', label: '我的反馈' },
+]
+
+const filteredItems = computed(() => {
+  return items.value.filter((item) => {
+    const keyword = filters.value.keyword.trim().toLowerCase()
+    const text = [
+      item.id,
+      item.brand,
+      item.site,
+      item.model,
+      item.internal,
+      item.asin,
+      item.orderNo,
+      item.raw,
+      item.ai,
+      item.feedbackUser,
+      item.handler,
+    ]
+      .join(' ')
+      .toLowerCase()
+
+    const matchesKeyword = !keyword || text.includes(keyword)
+    const matchesSource = !filters.value.source || item.source === filters.value.source
+    const matchesState =
+      !filters.value.processState ||
+      item.processState === filters.value.processState ||
+      (filters.value.processState === '待人工复核' && item.processState === '待复核')
+    const matchesException = !filters.value.exception || item.exception === filters.value.exception
+    const matchesBrand = !filters.value.brand || item.brand === filters.value.brand
+    const matchesSite = !filters.value.site || item.site === filters.value.site
+    const matchesProductType = !filters.value.productType || item.productType === filters.value.productType
+    const matchesModel = !filters.value.model || item.model === filters.value.model
+    const matchesFeedbackUser = !filters.value.feedbackUser || item.feedbackUser.includes(filters.value.feedbackUser)
+    const matchesProcessRoute = !filters.value.processRoute || item.processRoute === filters.value.processRoute
+    const matchesTab =
+      activeTab.value === 'all' ||
+      (activeTab.value === 'pending' && item.processState === '待处理') ||
+      (activeTab.value === 'review' && ['待复核', '待人工复核'].includes(item.processState)) ||
+      (activeTab.value === 'done' && item.processState === '已处理') ||
+      (activeTab.value === 'mine' && item.handler === '李工')
+
+    return (
+      matchesKeyword &&
+      matchesSource &&
+      matchesState &&
+      matchesException &&
+      matchesBrand &&
+      matchesSite &&
+      matchesProductType &&
+      matchesModel &&
+      matchesFeedbackUser &&
+      matchesProcessRoute &&
+      matchesTab
+    )
+  })
+})
+
+const feedbackStats = computed(() => {
+  const mergeGroups = new Set(
+    items.value
+      .map((item) => item.mergeGroup)
+      .filter(Boolean),
+  )
+
+  return [
+    {
+      title: '反馈总数',
+      value: items.value.length,
+      note: '覆盖商品评论、退货反馈、APP反馈、客服沟通',
+    },
+    {
+      title: '合并组',
+      value: mergeGroups.size,
+      note: '同类问题可展开合并处理',
+    },
+    {
+      title: '待处理',
+      value: items.value.filter((item) => item.processState === '待处理').length,
+      note: '需要分派、转异常或转需求',
+    },
+    {
+      title: '待复核',
+      value: items.value.filter((item) => ['待复核', '待人工复核'].includes(item.processState)).length,
+      note: '等待人工确认分类和处理去向',
+    },
+  ]
+})
+
+const selectedItems = computed(() => {
+  return items.value.filter((item) => selectedIds.value.has(item.id))
+})
+
+function openDetail(item: FeedbackItem) {
+  router.push(`/feedback/detail/${encodeURIComponent(item.id)}`)
 }
 
-// Select
-function handleToggleSelect(id: string) {
-  if (selectedIds.value.has(id)) { selectedIds.value.delete(id) } else { selectedIds.value.add(id) }
-}
-function handleToggleSelectAll() {
-  const items = store.filteredItems
-  const allSel = items.length > 0 && items.every(i => selectedIds.value.has(i.id))
-  items.forEach(i => allSel ? selectedIds.value.delete(i.id) : selectedIds.value.add(i.id))
+function openMergeDetail(groupId: string) {
+  router.push(`/feedback/merge/${encodeURIComponent(groupId)}`)
 }
 
-// Detail drawer
-function handleOpenDetail(item: FeedbackItem) { detailItem.value = item }
-function handleCloseDetail() { detailItem.value = null }
-function handleSaveDetail(id: string, data: Partial<FeedbackItem>) { store.updateItem(id, data); handleCloseDetail() }
-function handleApplyRoute(item: FeedbackItem, route: string) {
-  store.updateItem(item.id, { processRoute: route, processState: route === '待处理' ? '待处理' : '已处理', handler: route === '已转工单' ? '系统' : '陈晨' })
-  if (detailItem.value?.id === item.id) handleCloseDetail()
+function openReview(item: FeedbackItem) {
+  currentItem.value = item
+  reviewOpen.value = true
 }
 
-// Table actions
-function handleUnmergeItem(item: FeedbackItem) { store.updateItem(item.id, { mergeGroup: '' }) }
-function handleManualReview(item: FeedbackItem) { reviewItem.value = item; reviewData.value = { ...item }; showReviewModal.value = true }
-function handleToggleGroupExpand(group: any) { group.expanded = !group.expanded }
-function batchAction(action: string) {
-  if (selectedIds.value.size === 0) { showToast('请先选择反馈记录', 'warning'); return }
-  showToast(`批量操作：已选中 ${selectedIds.value.size} 项执行「${action}」`, 'success')
+function addFeedback(item: FeedbackItem) {
+  items.value = [item, ...items.value]
+  message.success('反馈已新增')
 }
 
-// Add modal
-function addFeedback() { showAddModal.value = true }
-function handleAddToast(msg: string, type: string) { showToast(msg, type as any) }
-function handleAddSubmit(item: FeedbackItem) { store.addItem(item); showAddModal.value = false; showToast(`反馈 ${item.id} 已创建成功`, 'success') }
-
-// Template modal
-function openTemplateSettings() { showTemplateModal.value = true }
-function handleTemplateToast(msg: string, type: string) { showToast(msg, type as any) }
-
-// Review modal
-function handleReviewSave(id: string, data: Partial<FeedbackItem>) {
-  store.updateItem(id, data); showReviewModal.value = false; showToast(`反馈 ${id} 已完成人工复核`, 'success'); reviewItem.value = null
+function updateFeedback(item: FeedbackItem) {
+  items.value = items.value.map((row) => (row.id === item.id ? item : row))
+  message.success('反馈已更新')
 }
-function handleReviewClose() { showReviewModal.value = false; reviewItem.value = null }
 
-// Import modal
-function batchImport() { showImportModal.value = true }
-function closeImportModal() { showImportModal.value = false }
-function startImport() { showImportModal.value = false; showToast('批量导入完成，已创建反馈记录', 'success') }
+function toggleSelect(id: string) {
+  const next = new Set(selectedIds.value)
+
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+
+  selectedIds.value = next
+}
+
+function toggleSelectMany(ids: string[]) {
+  const next = new Set(selectedIds.value)
+  const allSelected = ids.every((id) => next.has(id))
+
+  ids.forEach((id) => {
+    if (allSelected) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
+  })
+  selectedIds.value = next
+}
+
+function toggleSelectAll() {
+  if (selectedIds.value.size === filteredItems.value.length) {
+    selectedIds.value = new Set()
+    return
+  }
+
+  selectedIds.value = new Set(filteredItems.value.map((item) => item.id))
+}
+
+function batchClose() {
+  if (selectedIds.value.size === 0) {
+    message.info('请先选择反馈')
+    return
+  }
+
+  batchCloseOpen.value = true
+}
+
+function confirmBatchClose(payload: { route: string; closeReason: string; qa: boolean }) {
+  items.value = items.value.map((item) => {
+    if (!selectedIds.value.has(item.id)) {
+      return item
+    }
+
+    return {
+      ...item,
+      processRoute: payload.route,
+      processState: '已处理',
+      solution: payload.closeReason || item.solution || '批量关闭确认',
+      note: payload.qa ? '已同步沉淀Q&A' : item.note,
+    }
+  })
+  selectedIds.value = new Set()
+  message.success('已批量关闭')
+}
+
+function submitImport() {
+  message.success('导入任务已创建，需复核的数据会进入待人工复核')
+}
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
-    <!-- Header -->
-    <div class="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-      <div>
-        <h2 class="text-lg font-extrabold text-gray-900">反馈清单</h2>
-        <p class="text-xs text-gray-400 mt-0.5">原始反馈数据池与AI分类结果总览，独立于工单处理流程</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button class="btn-primary" @click="addFeedback"><Plus class="w-3.5 h-3.5 mr-1" /> 新增反馈</button>
-        <button class="btn-secondary text-xs" @click="openTemplateSettings">我的模板设置</button>
-        <button class="btn-secondary text-xs" @click="batchImport">批量导入</button>
-        <div class="relative group">
-          <button class="btn-secondary text-xs flex items-center gap-1">批量操作 <ChevronDown class="w-3 h-3" /></button>
-          <div class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 hidden group-hover:block min-w-[120px]">
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转工单')">转工单</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转异常')">转异常</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转需求')">转需求</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="batchAction('转Q&A')">转Q&A</button>
-            <button class="block w-full text-left px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50" @click="batchAction('直接关闭')">直接关闭</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <section class="space-y-4 p-4">
+    <a-row :gutter="[12, 12]" align="middle" justify="space-between">
+      <a-col>
+        <a-space direction="vertical" size="small">
+          <a-typography-title :level="4" class="m-0">反馈清单</a-typography-title>
+          <a-typography-text type="secondary">
+            按来源汇聚反馈，支持同类问题合并展开、复核、转异常、转需求和批量关闭。
+          </a-typography-text>
+        </a-space>
+      </a-col>
+      <a-col>
+        <a-space>
+          <a-button @click="templateOpen = true">我的模板设置</a-button>
+          <a-button @click="importOpen = true">批量导入</a-button>
+          <a-button @click="batchClose">批量关闭</a-button>
+          <a-button type="primary" @click="addOpen = true">新增反馈</a-button>
+        </a-space>
+      </a-col>
+    </a-row>
 
-    <div class="flex-1 overflow-auto" :class="{ 'hidden': detailItem }">
-      <FeedbackFilter
-        :search-query="store.searchQuery"
-        :active-tab="store.activeTab"
-        :filter-visible="store.filterVisible"
-        :filters="store.filters"
-        :tab-counts="store.tabCounts"
-        @update:search-query="store.searchQuery = $event"
-        @update:active-tab="store.activeTab = $event"
-        @update:filter-visible="store.filterVisible = $event"
-        @update:filters="Object.assign(store.filters, $event)"
-        @reset-filters="store.resetFilters()"
-      />
-      <FeedbackTable
-        :filtered-groups="store.filteredGroups"
-        :selected-ids="selectedIds"
-        @toggle-select="handleToggleSelect"
-        @toggle-select-all="handleToggleSelectAll"
-        @open-detail="handleOpenDetail"
-        @unmerge-item="handleUnmergeItem"
-        @manual-review="handleManualReview"
-        @toggle-group-expand="handleToggleGroupExpand"
-      />
-    </div>
+    <a-row :gutter="[12, 12]">
+      <a-col v-for="stat in feedbackStats" :key="stat.title" :xs="12" :lg="6">
+        <a-card size="small" :bordered="false" class="feedback-stat-card">
+          <a-statistic :title="stat.title" :value="stat.value" />
+          <a-typography-text type="secondary">{{ stat.note }}</a-typography-text>
+        </a-card>
+      </a-col>
+    </a-row>
 
-    <FeedbackDetailDrawer :item="detailItem" @close="handleCloseDetail" @save="handleSaveDetail" @apply-route="handleApplyRoute" />
-    <FeedbackMergeModal :group-id="mergeGroupId" :visible="showMergeModal" @close="showMergeModal=false;mergeGroupId=null" />
-    <FeedbackAddModal :visible="showAddModal" @close="showAddModal=false" @submit="handleAddSubmit" @toast="handleAddToast" />
-    <FeedbackTemplateModal :visible="showTemplateModal" @close="showTemplateModal=false" @toast="handleTemplateToast" />
-    <FeedbackReviewModal :visible="showReviewModal" :item="reviewItem" :data="reviewData" @close="handleReviewClose" @save="handleReviewSave" />
+    <a-tabs v-model:active-key="activeTab">
+      <a-tab-pane v-for="tab in tabOptions" :key="tab.key" :tab="tab.label" />
+    </a-tabs>
 
-    <!-- ==================== Batch Import Modal ==================== -->
-    <div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl">
-        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
-          <div><span class="text-xs text-gray-400">批量导入</span><h3 class="text-base font-extrabold text-gray-900">批量导入</h3><p class="text-[11px] text-gray-400">上传 Excel 表格后批量创建反馈单。</p></div>
-          <button class="text-gray-400 hover:text-gray-600" @click="closeImportModal"><X class="w-5 h-5" /></button>
-        </div>
-        <div class="p-5 space-y-3">
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">上传Excel表格</span><input type="file" accept=".xlsx,.xls" class="h-9 text-xs border border-gray-300 rounded-md px-2 py-1.5" /></label>
-          <div class="grid grid-cols-2 gap-3">
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">导入模式</span><select v-model="importForm.mode" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>按模板字段导入</option><option>自动匹配表头</option></select></label>
-            <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">去重方式</span><select v-model="importForm.dedup" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>按内容+型号</option><option>按反馈ID</option></select></label>
-          </div>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">说明</span><textarea rows="3" placeholder="请上传 .xlsx 或 .xls 文件。系统会读取表格字段并批量创建反馈，需人工确认的记录会进入复核队列。" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-        </div>
-        <div class="flex justify-end gap-2 px-5 py-3.5 bg-gray-50 rounded-b-xl border-t border-gray-200">
-          <button class="btn-secondary text-xs h-8 px-4" @click="closeImportModal">取消</button>
-          <button class="btn-primary text-xs h-8 px-5" @click="startImport">开始导入</button>
-        </div>
-      </div>
-    </div>
+    <FeedbackFilter v-model:filters="filters" />
 
-    <!-- Toast -->
-    <div v-if="toast" class="fixed top-4 right-4 z-[60] px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-white" :class="toast.type==='success'?'bg-green-600':toast.type==='warning'?'bg-orange-500':'bg-blue-600'">
-      {{ toast.msg }}
-    </div>
-  </div>
+    <FeedbackTable
+      :items="filteredItems"
+      :selected-ids="selectedIds"
+      @toggle-select="toggleSelect"
+      @toggle-select-many="toggleSelectMany"
+      @toggle-select-all="toggleSelectAll"
+      @open-detail="openDetail"
+      @open-merge="openMergeDetail"
+      @manual-review="openReview"
+    />
+
+    <FeedbackAddModal v-model:open="addOpen" @add="addFeedback" />
+    <FeedbackImportModal v-model:open="importOpen" @submit="submitImport" />
+    <FeedbackBatchCloseModal
+      v-model:open="batchCloseOpen"
+      :items="selectedItems"
+      @confirm="confirmBatchClose"
+    />
+    <FeedbackReviewModal v-model:open="reviewOpen" :item="currentItem" @save="updateFeedback" />
+    <FeedbackTemplateModal v-model:open="templateOpen" />
+  </section>
 </template>
+
+<style scoped>
+.feedback-stat-card {
+  border-radius: 8px;
+  min-height: 122px;
+}
+</style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Plus, X } from 'lucide-vue-next'
+import { computed, reactive, shallowRef } from 'vue'
+import { message } from 'ant-design-vue'
 import type { CandidateLead } from '@/types'
 
 const props = defineProps<{
@@ -8,14 +8,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  openPromote: [candidate: CandidateLead]
-  convertToWorkOrder: [candidate: CandidateLead]
-  createCandidate: [candidate: CandidateLead]
+  (event: 'openPromote', candidate: CandidateLead): void
+  (event: 'convertToWorkOrder', candidate: CandidateLead): void
+  (event: 'createCandidate', candidate: CandidateLead): void
 }>()
 
-// ==================== New Candidate Modal ====================
-const showNewCandidateModal = ref(false)
-const newCandidate = ref({
+const showNewCandidateModal = shallowRef(false)
+const newCandidate = reactive<CandidateLead>({
   id: '',
   sourceFeedback: '',
   category: '',
@@ -26,10 +25,20 @@ const newCandidate = ref({
   nextAction: '',
 })
 
-function handleOpenNewCandidate() {
-  const n = props.candidates.length + 1
-  newCandidate.value = {
-    id: `REQ-CAND-${String(n).padStart(3, '0')}`,
+const statusRows = computed(() => {
+  const groups = ['待补充', '待评分', '已转需求']
+
+  return groups.map((status) => ({
+    status,
+    count: props.candidates.filter((item) => item.status === status).length,
+  }))
+})
+
+function resetCandidate() {
+  const nextNumber = props.candidates.length + 1
+
+  Object.assign(newCandidate, {
+    id: `REQ-CAND-${String(nextNumber).padStart(3, '0')}`,
     sourceFeedback: '',
     category: '',
     title: '',
@@ -37,109 +46,88 @@ function handleOpenNewCandidate() {
     product: '',
     status: '待补充',
     nextAction: '',
-  }
+  })
+}
+
+function openNewCandidate() {
+  resetCandidate()
   showNewCandidateModal.value = true
 }
 
-function handleCreateCandidate() {
-  emit('createCandidate', { ...newCandidate.value })
+function createCandidate() {
+  emit('createCandidate', { ...newCandidate })
   showNewCandidateModal.value = false
 }
 
-function handleOpenPromote(c: CandidateLead) {
-  emit('openPromote', c)
+function mergeCandidate(candidate: CandidateLead) {
+  message.info(`已标记 ${candidate.id} 进入合并确认`)
 }
 
-function handleConvertToWorkOrder(c: CandidateLead) {
-  emit('convertToWorkOrder', c)
+function supplementEvidence(candidate: CandidateLead) {
+  message.info(`请补充 ${candidate.id} 的样本、退货率和差评证据`)
 }
 </script>
 
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-3">
-        <span class="text-sm font-extrabold text-gray-800">候选需求线索（反馈承接区）</span>
-      </div>
-      <button class="btn-primary text-xs h-8 px-3 flex items-center gap-1" @click="handleOpenNewCandidate"><Plus class="w-3.5 h-3.5" />新增线索</button>
-    </div>
+  <div class="space-y-4">
+    <a-row :gutter="[12, 12]">
+      <a-col :xs="24" :md="8">
+        <a-card size="small"><a-statistic title="候选线索" :value="props.candidates.length" /></a-card>
+      </a-col>
+      <a-col v-for="row in statusRows" :key="row.status" :xs="24" :md="8">
+        <a-card size="small"><a-statistic :title="row.status" :value="row.count" /></a-card>
+      </a-col>
+    </a-row>
 
-    <div class="overflow-x-auto">
-      <table class="data-table w-full text-xs border-collapse">
-        <thead>
-          <tr class="border-b border-gray-200 text-left">
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">线索ID</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">来源反馈</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">分类</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">线索标题</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">证据摘要</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">适用产品</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">状态</th>
-            <th class="px-3 py-2.5 font-extrabold text-gray-500 text-[11px] whitespace-nowrap">下一步动作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="c in candidates" :key="c.id" class="border-b border-gray-100 hover:bg-gray-50">
-            <td class="px-3 py-2.5"><button class="link-button text-xs font-extrabold text-blue-600 hover:underline">{{ c.id }}</button></td>
-            <td class="px-3 py-2.5 text-xs">{{ c.sourceFeedback }}</td>
-            <td class="px-3 py-2.5 text-xs">{{ c.category }}</td>
-            <td class="px-3 py-2.5 text-xs font-extrabold max-w-[260px] truncate">{{ c.title }}</td>
-            <td class="px-3 py-2.5"><em class="text-xs text-gray-500">{{ c.evidence }}</em></td>
-            <td class="px-3 py-2.5 text-xs">{{ c.product }}</td>
-            <td class="px-3 py-2.5"><span class="status-tag text-[10px] px-2 py-0.5 rounded font-extrabold" :class="c.status === '待评分' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'">{{ c.status }}</span></td>
-            <td class="px-3 py-2.5">
-              <div class="flex items-center gap-1 flex-wrap">
-                <button class="mini-action text-[10px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">合并</button>
-                <button class="mini-action text-[10px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">补证据</button>
-                <button class="mini-action primary text-[10px] px-2 py-0.5 rounded bg-blue-500 text-white hover:bg-blue-600 font-bold" @click="handleOpenPromote(c)">转产品需求</button>
-                <button class="mini-action warning text-[10px] px-2 py-0.5 rounded border border-orange-400 text-orange-600 hover:bg-orange-50 font-bold" @click="handleConvertToWorkOrder(c)">转为工单</button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="candidates.length === 0">
-            <td colspan="8" class="text-center py-10 text-gray-400 text-sm font-bold">暂无候选线索</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <a-row justify="space-between" align="middle">
+      <a-col><a-typography-title :level="5" class="m-0">候选需求线索</a-typography-title></a-col>
+      <a-col><a-button type="primary" @click="openNewCandidate">新增线索</a-button></a-col>
+    </a-row>
 
-    <!-- ==================== New Candidate Modal ==================== -->
-    <div v-if="showNewCandidateModal" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mt-10">
-        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
-          <div>
-            <h3 class="text-base font-extrabold text-gray-900">新增候选线索</h3>
-          </div>
-          <button class="text-gray-400 hover:text-gray-600" @click="showNewCandidateModal = false"><X class="w-5 h-5" /></button>
-        </div>
-        <div class="p-5 space-y-3">
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">线索ID</span><input v-model="newCandidate.id" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">来源反馈</span><input v-model="newCandidate.sourceFeedback" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">分类</span><input v-model="newCandidate.category" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">线索标题</span><input v-model="newCandidate.title" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">证据摘要</span><textarea v-model="newCandidate.evidence" rows="2" class="w-full text-xs border border-gray-300 rounded-md p-2 resize-y font-bold"></textarea></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">适用产品</span><input v-model="newCandidate.product" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">状态</span>
-            <select v-model="newCandidate.status" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold"><option>待补充</option><option>待评分</option></select>
-          </label>
-          <label class="flex flex-col gap-1"><span class="text-[11px] font-bold text-gray-600">下一步动作</span><input v-model="newCandidate.nextAction" class="h-8 text-xs border border-gray-300 rounded-md px-2 font-bold" /></label>
-        </div>
-        <div class="flex justify-end gap-2 px-5 py-3 bg-gray-50 rounded-b-xl border-t border-gray-200">
-          <button class="btn-primary text-xs h-8 px-4" @click="handleCreateCandidate">创建线索</button>
-          <button class="btn-secondary text-xs h-8 px-4" @click="showNewCandidateModal = false">取消</button>
-        </div>
-      </div>
-    </div>
+    <vxe-table :data="props.candidates" border stripe show-overflow height="520" :export-config="{}">
+      <vxe-column field="id" title="线索ID" width="150" fixed="left" />
+      <vxe-column field="sourceFeedback" title="来源反馈" min-width="210" />
+      <vxe-column field="category" title="分类" min-width="170" />
+      <vxe-column field="title" title="线索标题" min-width="240" />
+      <vxe-column field="evidence" title="证据摘要" min-width="300" />
+      <vxe-column field="product" title="适用产品" min-width="160" />
+      <vxe-column field="status" title="状态" width="110">
+        <template #default="{ row }">
+          <a-tag :color="row.status === '待评分' ? 'blue' : row.status === '已转需求' ? 'green' : 'orange'">
+            {{ row.status }}
+          </a-tag>
+        </template>
+      </vxe-column>
+      <vxe-column field="nextAction" title="下一步动作" min-width="260" />
+      <vxe-column title="操作" width="310" fixed="right" align="center">
+        <template #default="{ row }">
+          <a-space size="small" wrap>
+            <a-button size="small" @click="mergeCandidate(row)">合并</a-button>
+            <a-button size="small" @click="supplementEvidence(row)">补证据</a-button>
+            <a-button size="small" type="primary" @click="emit('openPromote', row)">转产品需求</a-button>
+            <a-button size="small" @click="emit('convertToWorkOrder', row)">转为工单</a-button>
+          </a-space>
+        </template>
+      </vxe-column>
+    </vxe-table>
+
+    <a-modal v-model:open="showNewCandidateModal" title="新增候选线索" width="680px" @ok="createCandidate">
+      <a-form layout="vertical">
+        <a-row :gutter="12">
+          <a-col :span="12"><a-form-item label="线索ID"><a-input v-model:value="newCandidate.id" /></a-form-item></a-col>
+          <a-col :span="12">
+            <a-form-item label="状态">
+              <a-select v-model:value="newCandidate.status" :options="['待补充', '待评分', '已转需求'].map((item) => ({ label: item, value: item }))" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12"><a-form-item label="来源反馈"><a-input v-model:value="newCandidate.sourceFeedback" /></a-form-item></a-col>
+          <a-col :span="12"><a-form-item label="分类"><a-input v-model:value="newCandidate.category" /></a-form-item></a-col>
+          <a-col :span="24"><a-form-item label="线索标题"><a-input v-model:value="newCandidate.title" /></a-form-item></a-col>
+          <a-col :span="24"><a-form-item label="证据摘要"><a-textarea v-model:value="newCandidate.evidence" :rows="3" /></a-form-item></a-col>
+          <a-col :span="12"><a-form-item label="适用产品"><a-input v-model:value="newCandidate.product" /></a-form-item></a-col>
+          <a-col :span="12"><a-form-item label="下一步动作"><a-input v-model:value="newCandidate.nextAction" /></a-form-item></a-col>
+        </a-row>
+      </a-form>
+    </a-modal>
   </div>
 </template>
-
-<style scoped>
-.data-table { background: white; border-radius: 8px; overflow: hidden; }
-.data-table th { background: #f8f9fa; }
-.link-button { background: none; border: none; cursor: pointer; padding: 0; font: inherit; }
-.link-button:hover { text-decoration: underline; }
-.mini-action { white-space: nowrap; cursor: pointer; transition: all 0.15s; }
-.mini-action.primary:hover { background: #1d4ed8 !important; }
-.mini-action.warning:hover { background: #fff7ed !important; }
-.status-tag { white-space: nowrap; }
-</style>

@@ -1,113 +1,164 @@
 <script setup lang="ts">
-import { Download, X } from 'lucide-vue-next'
+import { computed } from 'vue'
+import type { Report } from '@/types'
 
-defineProps<{
-  visible: boolean
-  reportType: 'feedback' | 'competitor'
+const props = defineProps<{
+  open: boolean
+  report: Report | null
 }>()
 
 const emit = defineEmits<{
-  close: []
-  download: []
+  (event: 'update:open', value: boolean): void
 }>()
 
-function handleClose() {
-  emit('close')
-}
+const isCompetitorReport = computed(() => props.report?.type.includes('竞品') ?? false)
 
-function handleDownload() {
-  emit('download')
+const competitorSummaryCards = [
+  { title: '本月新增竞品', value: 12, desc: '品牌竞品 8 / ODM竞品 4' },
+  { title: '触发提醒', value: 6, desc: '价格、排名、功能变化和舆情波动' },
+  { title: '转需求机会', value: 4, desc: '已进入需求池评估' },
+  { title: '实物分析', value: 2, desc: '拆机分析和产品体验待完成' },
+]
+
+const productLineRows = [
+  { line: '八电极秤', added: 5, alert: 3, change: 'Withings 新增心率/血管年龄卖点', action: '启动实物分析' },
+  { line: '体脂秤', added: 4, alert: 2, change: 'RENPHO 低价促销延续', action: '关注价格带下探' },
+  { line: '筋膜枪', added: 3, alert: 1, change: '热敷与低噪音卖点升温', action: '专项对标低噪音结构' },
+]
+
+const competitorChangeRows = [
+  { type: '价格变化', product: 'Withings Body Scan', evidence: 'Amazon到手价下降约12%，BSR进入TOP20', impact: '高端八电极价格锚点下移' },
+  { type: '排名变化', product: '华为智能体脂秤 3 Pro', evidence: '京东大促排名升至类目第3', impact: '国内高端秤卖点需复盘' },
+  { type: '功能变化', product: '筋膜枪 Mini Pro', evidence: '新增热敷功能与低噪音短视频素材', impact: '可能影响新品功能优先级' },
+]
+
+const negativeThemeRows = [
+  { theme: '连接失败', product: 'RENPHO Elis 1', source: 'Amazon差评', action: '沉淀蓝牙连接避坑需求' },
+  { theme: '测量波动', product: 'Withings Body Scan', source: 'Amazon / Reddit', action: '对比算法说明和测量引导' },
+  { theme: '噪声偏尖', product: '筋膜枪 Mini Pro', source: '抖音评论', action: '转专项对标低噪音结构' },
+]
+
+const reportOutputRows = [
+  {
+    name: '竞品收集月报',
+    content: '按产品线汇总新增竞品、触发提醒、价格/排名/功能变化、差评TOP、品牌影响评估。',
+    trigger: '系统月初创建 / 每日刷新',
+    type: '月报',
+  },
+  {
+    name: '拆机分析报告',
+    content: '记录结构、材质、包装、配件、专利/法规风险和可借鉴点，必须上传拆机附件。',
+    trigger: '进入实物分析后生成',
+    type: '拆机报告',
+  },
+  {
+    name: '竞品机会报告',
+    content: '将监控变化、舆情痛点和参数差异沉淀为可转需求机会。',
+    trigger: 'L3/L4提醒后生成',
+    type: '机会报告',
+  },
+  {
+    name: '专项对标报告',
+    content: '围绕价格、功能、卖点、包装或渠道策略形成可执行结论。',
+    trigger: 'PM判断后生成',
+    type: '专项报告',
+  },
+]
+
+const feedbackRows = [
+  { name: '反馈量', value: '3,637', action: '按来源、站点、型号拆分' },
+  { name: 'TOP问题', value: '无法开机 / 测脂不准 / 噪声偏大', action: '转异常、转工单或转需求' },
+  { name: '闭环情况', value: '已处理 82%', action: '复盘逾期和待复核反馈' },
+]
+
+function closeModal() {
+  emit('update:open', false)
 }
 </script>
 
 <template>
-  <div v-if="visible" class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 overflow-auto">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mt-6">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
-        <div>
-          <span class="text-xs text-gray-400">{{ reportType === 'feedback' ? '用户反馈月报' : '竞品分析月报' }}</span>
-          <h3 class="text-base font-extrabold text-gray-900">{{ reportType === 'feedback' ? '用户反馈月报' : '竞品分析月报' }} · 2026-06</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button class="btn-primary text-xs h-7 px-3 flex items-center gap-1" @click="handleDownload()">
-            <Download class="w-3 h-3" /> 下载月报 (.docx)
-          </button>
-          <button class="text-gray-400 hover:text-gray-600" @click="handleClose()"><X class="w-5 h-5" /></button>
-        </div>
-      </div>
+  <a-modal
+    :open="props.open"
+    :title="props.report?.title || '报告预览'"
+    width="900px"
+    @cancel="closeModal"
+  >
+    <template v-if="props.report">
+      <a-descriptions bordered size="small" :column="2" class="mb-4">
+        <a-descriptions-item label="报告编号">{{ props.report.id }}</a-descriptions-item>
+        <a-descriptions-item label="报告周期">{{ props.report.period }}</a-descriptions-item>
+        <a-descriptions-item label="类型">{{ props.report.type }}</a-descriptions-item>
+        <a-descriptions-item label="生成日期">{{ props.report.date }}</a-descriptions-item>
+        <a-descriptions-item label="摘要" :span="2">{{ props.report.summary }}</a-descriptions-item>
+      </a-descriptions>
 
-      <div class="p-5 max-h-[70vh] overflow-y-auto">
-        <!-- Info -->
-        <div class="grid grid-cols-3 gap-3 mb-5">
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">报告周期</span>
-            <strong class="block mt-0.5 text-sm">2026-06</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">报告类型</span>
-            <strong class="block mt-0.5 text-sm">{{ reportType === 'feedback' ? '用户反馈月报' : '竞品分析月报' }}</strong>
-          </div>
-          <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-            <span class="block text-[11px] font-bold text-gray-500">状态</span>
-            <strong class="block mt-0.5 text-sm text-blue-600">每日刷新，月末冻结</strong>
-          </div>
-        </div>
+      <template v-if="isCompetitorReport">
+        <a-row :gutter="[12, 12]" class="mb-4">
+          <a-col v-for="card in competitorSummaryCards" :key="card.title" :xs="12" :md="6">
+            <a-card size="small" :bordered="false" class="preview-stat-card">
+              <a-statistic :title="card.title" :value="card.value" />
+              <a-typography-text type="secondary">{{ card.desc }}</a-typography-text>
+            </a-card>
+          </a-col>
+        </a-row>
 
-        <!-- Content Sections -->
-        <div class="space-y-4">
-          <template v-if="reportType === 'feedback'">
-            <section>
-              <h4 class="text-sm font-extrabold text-gray-900 mb-2">一、本月重点结论</h4>
-              <div class="bg-gray-50 rounded-lg p-4 text-xs text-gray-700 leading-relaxed font-bold">
-                2026年6月用户反馈总量较上月下降 8.7%，退货率由 4.72% 降至 4.38%。测脂不准和无法开机仍为TOP问题，筋膜枪噪音类反馈上升 15%。已转需求 4 条，转异常 2 条。
-              </div>
-            </section>
-            <section>
-              <h4 class="text-sm font-extrabold text-gray-900 mb-2">二、关键指标趋势</h4>
-              <div class="grid grid-cols-3 gap-3">
-                <div class="border border-gray-200 rounded-lg p-3 text-center" v-for="m in [{label:'总反馈量',v:'3,637',trend:'-8.7%'},{label:'退货率',v:'4.38%',trend:'-0.34pp'},{label:'闭环率',v:'87.45%',trend:'+3.21pp'}]" :key="m.label">
-                  <div class="text-lg font-extrabold text-gray-900">{{ m.v }}</div>
-                  <div class="text-[10px] text-gray-500">{{ m.label }}</div>
-                  <div class="text-[10px] font-extrabold mt-0.5" :class="m.trend.startsWith('-') ? 'text-green-600' : 'text-red-500'">{{ m.trend }}</div>
-                </div>
-              </div>
-            </section>
-            <section>
-              <h4 class="text-sm font-extrabold text-gray-900 mb-2">三、问题分类与处理去向</h4>
-              <p class="text-xs text-gray-600 leading-relaxed">产品质量类占比 36%（+4pp），产品体验类 28%（-3pp），物流运营类 14%。处理去向：已直接回复关闭 45%、已转工单 28%、已转需求 6%、已转异常 3%。</p>
-            </section>
-          </template>
-          <template v-else>
-            <section>
-              <h4 class="text-sm font-extrabold text-gray-900 mb-2">一、本月重点结论</h4>
-              <div class="bg-gray-50 rounded-lg p-4 text-xs text-gray-700 leading-relaxed font-bold">
-                <p class="mb-2"><strong>1. 本月市场动态：</strong>新增竞品 12 款，触发提醒 6 次（L4级1次、L3级2次）。Withings 新增心率/血管年龄卖点值得重点关注。</p>
-                <p class="mb-2"><strong>2. 核心发现：</strong>RENPHO 降价 18% 冲击中低端市场；华为八电极秤大促冲量，排名从#3升至#1。</p>
-                <p><strong>3. 需决策事项：</strong>是否跟进心率功能升级？是否调整中低端产品定价策略？</p>
-              </div>
-            </section>
-            <section>
-              <h4 class="text-sm font-extrabold text-gray-900 mb-2">二、本月竞品动态</h4>
-              <div class="overflow-x-auto">
-                <table class="w-full text-[11px] border border-gray-200 rounded-lg">
-                  <thead>
-                    <tr class="bg-gray-50"><th class="text-left px-2 py-1.5 font-extrabold">品牌</th><th class="text-left px-2 py-1.5 font-extrabold">型号</th><th class="text-left px-2 py-1.5 font-extrabold">变化</th><th class="text-left px-2 py-1.5 font-extrabold">影响</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr class="border-t border-gray-100"><td class="px-2 py-1.5 font-bold">Withings</td><td class="px-2 py-1.5">Body Scan</td><td class="px-2 py-1.5">新增血管年龄功能</td><td class="px-2 py-1.5 text-red-600 font-bold">高</td></tr>
-                    <tr class="border-t border-gray-100"><td class="px-2 py-1.5 font-bold">RENPHO</td><td class="px-2 py-1.5">Elis 1</td><td class="px-2 py-1.5">降价 18% → $32.99</td><td class="px-2 py-1.5 text-orange-600 font-bold">中</td></tr>
-                    <tr class="border-t border-gray-100"><td class="px-2 py-1.5 font-bold">华为</td><td class="px-2 py-1.5">体脂秤3 Pro</td><td class="px-2 py-1.5">大促排名 #3→#1</td><td class="px-2 py-1.5 text-orange-600 font-bold">中</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </template>
-        </div>
-      </div>
+        <a-card title="一、产品线汇总" :bordered="false" class="mb-4">
+          <vxe-table :data="productLineRows" border size="mini" stripe>
+            <vxe-column field="line" title="产品线" width="110" />
+            <vxe-column field="added" title="新增竞品" width="90" align="right" />
+            <vxe-column field="alert" title="触发提醒" width="90" align="right" />
+            <vxe-column field="change" title="主要变化" min-width="240" />
+            <vxe-column field="action" title="建议动作" min-width="180" />
+          </vxe-table>
+        </a-card>
 
-      <div class="flex justify-end gap-2 px-5 py-3.5 bg-gray-50 rounded-b-xl border-t border-gray-200">
-        <button class="btn-secondary text-xs h-8 px-4" @click="handleClose()">关闭</button>
-      </div>
-    </div>
-  </div>
+        <a-card title="二、价格 / 排名 / 功能变化" :bordered="false" class="mb-4">
+          <vxe-table :data="competitorChangeRows" border size="mini" stripe>
+            <vxe-column field="type" title="变化类型" width="110" />
+            <vxe-column field="product" title="竞品" min-width="180" />
+            <vxe-column field="evidence" title="证据" min-width="260" />
+            <vxe-column field="impact" title="影响判断" min-width="220" />
+          </vxe-table>
+        </a-card>
+
+        <a-card title="三、差评主题与品牌影响" :bordered="false" class="mb-4">
+          <vxe-table :data="negativeThemeRows" border size="mini" stripe>
+            <vxe-column field="theme" title="差评主题" width="120" />
+            <vxe-column field="product" title="关联竞品" min-width="180" />
+            <vxe-column field="source" title="来源" width="160" />
+            <vxe-column field="action" title="沉淀动作" min-width="220" />
+          </vxe-table>
+        </a-card>
+
+        <a-card title="四、报告产物与生成规则" :bordered="false">
+          <vxe-table :data="reportOutputRows" border size="mini" stripe>
+            <vxe-column field="name" title="报告名称" width="150" />
+            <vxe-column field="content" title="内容要求" min-width="360" />
+            <vxe-column field="trigger" title="生成时机" min-width="180" />
+            <vxe-column field="type" title="报告类型" width="110" />
+          </vxe-table>
+        </a-card>
+      </template>
+
+      <template v-else>
+        <a-card title="月报核心内容" :bordered="false">
+          <vxe-table :data="feedbackRows" border size="mini" stripe>
+            <vxe-column field="name" title="模块" width="120" />
+            <vxe-column field="value" title="内容" min-width="260" />
+            <vxe-column field="action" title="处理要求" min-width="240" />
+          </vxe-table>
+        </a-card>
+      </template>
+    </template>
+    <template #footer>
+      <a-button type="primary" @click="closeModal">关闭</a-button>
+    </template>
+  </a-modal>
 </template>
+
+<style scoped>
+.preview-stat-card {
+  border-radius: 8px;
+  min-height: 118px;
+}
+</style>
