@@ -209,6 +209,19 @@ Important fields:
 - `summaries`: project-management weekly summary text.
 - `milestones[]`
 
+Get project progress weekly meeting annotations:
+
+```text
+Use the project progress module endpoint or detail response that contains the project's weekly meeting annotations. The exact endpoint and field names can vary by frontend route; discover them from the project progress module request or response before drafting.
+```
+
+Important interpretation:
+
+- The source is the project progress module's weekly meeting annotation / weekly meeting comment, not a generic meeting note.
+- Use annotations approved in the previous project weekly meeting as a required source for the next weekly report's carry-over section.
+- If an approved annotation is still unresolved or requests follow-up in the target week, summarize it as a legacy item and state the current completion status.
+- Only say there are no legacy items when both the prior weekly report summaries and the project progress weekly meeting annotations contain no carry-over items.
+
 Update only the weekly report summary:
 
 ```text
@@ -286,6 +299,7 @@ Use this table when deciding which API field supports each user-facing answer.
 | Weekly report row id | `/v1/weekly_reports?year=<yyyy>&month=<m>&week=<w>&project_id=<project_id>` | `data.rows[].id` |
 | Weekly report detail | `/v1/weekly_reports/<weekly_report_id>` | `current_week_nodes`, `next_week_nodes`, `task_details_show`, `ecr_details_show`, `monthly_completion_rate`, `monthly_forecast_rate`, `summaries` |
 | Weekly report summary | `/v1/weekly_reports/<weekly_report_id>` | `summaries` |
+| Prior-week legacy items | Project progress module weekly meeting annotation endpoint/detail response | approved weekly meeting annotation/comment fields, project id, annotation date/week, approval status |
 | Weekly report version remarks | `/v1/project_initiation_plans/review_list?project_id=<project_id>` | `processing_remark`, `complete_version`, `ecr_code`, `application_date` |
 
 No confirmed single endpoint has been found for detailed change-day task attribution. When the user asks which tasks make up `change_days`, derive the list from the accounting version's critical-path task rows, change/delay flags, predecessor and successor relationships, and lag/lead days, then reconcile the derived total with `forecast_list_new.change_days`.

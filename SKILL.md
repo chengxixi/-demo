@@ -1,6 +1,6 @@
 ---
 name: pm-gantt-critical-path
-description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
+description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports, project-progress weekly meeting annotations, and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
 ---
 
 # PM Gantt Critical Path
@@ -14,7 +14,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 - completion-rate impact when a task changes or a change task is inserted
 - forecast completion-rate explanation, including baseline version, current accounting task, change days, and the fixed summary sentence
 - daily forecast completion-rate monitoring with Enterprise WeChat robot alerts
-- weekly-report drafting in the PM weekly report module using prior weekly reports, current weekly report details, and current-week version review remarks
+- weekly-report drafting in the PM weekly report module using prior weekly reports, project-progress weekly meeting annotations, current weekly report details, and current-week version review remarks
 
 ## Gantt Detail Model
 
@@ -62,26 +62,28 @@ Use this workflow when the user asks to write, update, or draft a PM weekly repo
 5. Fetch target weekly report detail:
    - `GET /v1/weekly_reports/<weekly_report_id>?id=<weekly_report_id>&project_id=<project_id>&year=<yyyy>&month=<m>&week=<w>`
 6. Fetch prior weekly reports for the same project, usually the previous one to three weeks, and use their `summaries` style as the writing reference.
-7. Fetch version review records:
+7. Fetch the project's prior-week weekly meeting annotations from the project progress module. Treat approved weekly meeting annotations for the same project as a required source for the weekly report carry-over section; write unresolved annotations, follow-up decisions, and items that need current-week closure there before saying there are no legacy items.
+8. Fetch version review records:
    - `GET /v1/project_initiation_plans/review_list?project_id=<project_id>`
    - prefer review records whose `application_date` falls in or just before the target week
    - use `processing_remark`, `complete_version`, `ecr_code`, milestone changes, and completion-rate remarks as source material
-8. Draft the weekly report from:
+9. Draft the weekly report from:
    - target report `current_week_nodes`, `next_week_nodes`, `task_details_show`, `ecr_details_show`
    - monthly rates: `monthly_completion_rate`, `monthly_forecast_rate`, `monthly_cost_control_rate`
    - prior report `summaries`
+   - project progress module weekly meeting annotations, especially approved annotations from the previous project weekly meeting
    - version review `processing_remark`
-9. Preserve the company's weekly-summary structure when prior reports show one:
+10. Preserve the company's weekly-summary structure when prior reports show one:
    - `本周项目情况：`
    - `1、上周遗留事项的完成情况：`
    - `2、描述本周项目任务完成情况：`
    - `3、诉求：`
    - `4、项目整体情况描述：`
-10. Write only the weekly report summary field unless the user explicitly asks to update nodes, tasks, ECR rows, or publish:
+11. Write only the weekly report summary field unless the user explicitly asks to update nodes, tasks, ECR rows, or publish:
     - `PUT /v1/weekly_reports/<weekly_report_id>`
     - payload: `{ id, project_id, year, month, week, summaries }`
-11. Never publish the weekly report unless the user explicitly asks to publish. The publish action is separate from saving.
-12. After saving, re-fetch the weekly report detail and verify `data.summaries` exactly equals the intended text before telling the user it is done.
+12. Never publish the weekly report unless the user explicitly asks to publish. The publish action is separate from saving.
+13. After saving, re-fetch the weekly report detail and verify `data.summaries` exactly equals the intended text before telling the user it is done.
 
 Encoding rule: when writing Chinese text from PowerShell or another shell, avoid inline command arguments that can corrupt UTF-8. Pass the text as UTF-8 bytes, a file, or base64-decoded UTF-8, and verify by comparing returned Unicode code points or exact string equality.
 
