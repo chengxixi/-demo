@@ -173,6 +173,75 @@ Important fields:
 - `change_delay_days`
 - `cal_flag`
 
+Get weekly report list for a project and week:
+
+```text
+GET /v1/weekly_reports?year=<yyyy>&month=<m>&week=<w>&project_id=<project_id>
+```
+
+Important fields:
+
+- `data.rows[]`: weekly report list rows.
+- `id`: weekly report id used by `/v1/weekly_reports/<id>`.
+- `project_id`
+- `project_name`
+- `year`, `month`, `week`
+- `status`: published/submitted state in the weekly report list.
+
+Get weekly report detail:
+
+```text
+GET /v1/weekly_reports/<weekly_report_id>?id=<weekly_report_id>&project_id=<project_id>&year=<yyyy>&month=<m>&week=<w>
+```
+
+Important fields:
+
+- `basic_detail.project_name`
+- `basic_detail.stars_cnt`
+- `current_week_nodes[]`: current-week activities.
+- `next_week_nodes[]`: next-week activities.
+- `task_details_show[]`: delay and abnormal warning details.
+- `ecr_details_show[]`: ECR change details.
+- `monthly_completion_rate[]`
+- `monthly_forecast_rate[]`
+- `monthly_cost_control_rate[]`
+- `task_summary[]`
+- `summaries`: project-management weekly summary text.
+- `milestones[]`
+
+Update only the weekly report summary:
+
+```text
+PUT /v1/weekly_reports/<weekly_report_id>
+```
+
+Payload shape:
+
+```json
+{
+  "id": 2428,
+  "project_id": 1810,
+  "year": 2026,
+  "month": 7,
+  "week": 1,
+  "summaries": "本周项目情况：..."
+}
+```
+
+Publishing is separate from saving. Do not publish unless the user explicitly asks.
+
+Other weekly report endpoints used by the frontend:
+
+```text
+POST /v1/weekly_reports
+POST /v1/weekly_reports/task_create
+PUT /v1/weekly_reports/task_update
+PUT /v1/weekly_reports/task_destroy
+PUT /v1/weekly_reports/ecr_update
+POST /v1/weekly_reports/node_create
+PUT /v1/weekly_reports/node_update
+DELETE /v1/weekly_reports/node_destroy?id=<detail_id>
+```
 Get milestone comparison rows:
 
 ```text
@@ -214,6 +283,10 @@ Use this table when deciding which API field supports each user-facing answer.
 | Version completion-rate audit text | `/v1/project_initiation_plans/review_list?project_id=<project_id>` | `processing_remark` |
 | Actual/current completion-rate report | `/v1/statistics/terminal_team_pc_list?year=<yyyy>&month=<m>` | `rate`, `account_node_name`, `actual_cycle`, `actual_end_date` |
 | Milestone comparison | `/v1/project_initiation_plans/<plan_id>/milestones_list` | `name`, `init`, `before`, `last`, `whether_critical` |
+| Weekly report row id | `/v1/weekly_reports?year=<yyyy>&month=<m>&week=<w>&project_id=<project_id>` | `data.rows[].id` |
+| Weekly report detail | `/v1/weekly_reports/<weekly_report_id>` | `current_week_nodes`, `next_week_nodes`, `task_details_show`, `ecr_details_show`, `monthly_completion_rate`, `monthly_forecast_rate`, `summaries` |
+| Weekly report summary | `/v1/weekly_reports/<weekly_report_id>` | `summaries` |
+| Weekly report version remarks | `/v1/project_initiation_plans/review_list?project_id=<project_id>` | `processing_remark`, `complete_version`, `ecr_code`, `application_date` |
 
 No confirmed single endpoint has been found for detailed change-day task attribution. When the user asks which tasks make up `change_days`, derive the list from the accounting version's critical-path task rows, change/delay flags, predecessor and successor relationships, and lag/lead days, then reconcile the derived total with `forecast_list_new.change_days`.
 ## Critical-Path Rules
