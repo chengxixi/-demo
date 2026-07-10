@@ -60,6 +60,25 @@ When explaining a project:
 4. Locate the matching baseline task in the baseline plan. If the current accounting task does not exist in the baseline version, walk backward through predecessor tasks until a task exists in the baseline; use that task as the baseline task.
 5. Report both serial number and date when useful.
 
+
+## Accounting Date Rule
+
+Use this business rule when explaining forecast completion rate, simulating a draft version such as `V4.1`, or recalculating delay days for a saved but unpublished plan:
+
+1. If the accounting task has `actual_end_date`, use that actual date as `as_of_date`.
+2. If the accounting task has no `actual_end_date`, use today's actual date as `as_of_date`.
+3. Do not use `forecast_list_new.end_date` as the current accounting date. In the forecast API it can be the baseline/accounting-window date, not the current actual date.
+4. For an unpublished draft version, locate the accounting task in that draft plan id, then apply the same rule above. If the task is unfinished, calculate delay days from the baseline task's planned end date to today's date using PM working-day calendar rules.
+5. When explaining the official backend forecast row, report the backend `delay_days` as the official value, but make clear that any draft-version or custom-date calculation is a simulation/recalculation.
+
+Delay-day recalculation rule:
+
+```text
+delay_days = working days after baseline_end_date through as_of_date
+```
+
+Example: if the baseline task ends on `2026-06-11` and the accounting task is unfinished on `2026-07-10`, count PM working days from `2026-06-12` through `2026-07-10`.
+
 ## Change Days Detail
 
 If the user asks which tasks make up `change_days`, list them only when there are change days.
@@ -119,8 +138,5 @@ Rules for the template:
 - `latest_version_label`: use the latest approved plan version, such as `V2`.
 - `latest_plan_end_date`: always use the current accounting task's latest version planned finish date, not the actual date.
 - `actual_date_clause`: if the current accounting task has `actual_end_date`, write `，实际日期是 {actual_end_date}`; otherwise write nothing.
-- `as_of_date`: always include this phrase. This is the date value the system uses for completion-rate calculation, not automatically today's date. Choose it in this order:
-  1. If the current accounting task has `actual_end_date`, use that actual date.
-  2. If there is no actual date, use the accounting/statistics date returned by the API, such as `forecast_list_new.end_date` when it represents the current accounting task's system value.
-  3. If neither an actual date nor a usable API accounting date exists, use the current accounting task's latest planned finish date.
+- `as_of_date`: always include this phrase. Choose it using the business rule in `Accounting Date Rule`: if the current accounting task has `actual_end_date`, use that actual date; if it has no actual date, use today's actual date. Do not use `forecast_list_new.end_date` as the current accounting date unless the user explicitly asks to quote the backend row unchanged.
 - `denominator` = `plan_cycle + delay_days - change_days`.

@@ -39,7 +39,12 @@ Use `version` to resolve the PM version label:
 - `version = 4` -> `V4`
 - any integer `n` -> `Vn`
 
-When the UI or user says a sub-version like `V4.1`, first try the exact visible plan/link context. If the API only returns integer `version` values, map it to the matching integer backend plan version, such as `version = 4`, and mention that the backend plan id is the authoritative reference.
+When the UI or user says a sub-version like `V4.1`, do not stop at the top-level integer `version` field. The plan list can return top-level versions in `data.rows[]` and saved minor/draft versions in each row's `children[]` array. Resolve versions recursively:
+
+- Match top-level plans by `version`, such as `version = 4` -> `V4`.
+- Match minor versions by `complete_version`, such as `complete_version = "4.1"` -> `V4.1`.
+- Use the matched row's `id` as the plan detail id, even when `status = 0` and the version is saved but not published.
+- Only say a minor version does not exist after checking `children[]` recursively.
 
 Important fields:
 
