@@ -212,15 +212,29 @@ Important fields:
 Get project progress weekly meeting annotations:
 
 ```text
-Use the project progress module endpoint or detail response that contains the project's weekly meeting annotations. The exact endpoint and field names can vary by frontend route; discover them from the project progress module request or response before drafting.
+GET /v1/statistics/milestone_report?year=<yyyy>&month=<m>&department_id=<department_id>&page=1&size=300
 ```
 
 Important interpretation:
 
 - The source is the project progress module's weekly meeting annotation / weekly meeting comment, not a generic meeting note.
+- The project progress module may return no rows unless a valid `department_id` filter is supplied. First fetch the user's accessible department tree, then use the matching department id from the project progress page filter.
+- In the current PM project progress report response, rows are returned in the paged list and each project row can include:
+  - `project_id`
+  - `project_name`
+  - `completion_rate`
+  - `milestones[]`
+  - `weekly_reports[]`
+- The report header includes the displayed weeks, for example prior week and current week. Use these week objects to pick the prior-week record for carry-over items and the target-week record for current progress context.
+- Each `weekly_reports[]` item can contain both the weekly progress text and the weekly meeting annotation in one `content` string. Split the string on the literal marker `weeklyMeetingNotes`:
+  - text before `weeklyMeetingNotes` = project progress weekly content
+  - text after `weeklyMeetingNotes` = weekly meeting annotation / comment
+- If the marker is missing, treat the whole string as progress content and the annotation as empty.
 - Use annotations approved in the previous project weekly meeting as a required source for the next weekly report's carry-over section.
 - If an approved annotation is still unresolved or requests follow-up in the target week, summarize it as a legacy item and state the current completion status.
-- Only say there are no legacy items when both the prior weekly report summaries and the project progress weekly meeting annotations contain no carry-over items.
+- If the prior week has no annotation but the target week has an annotation, use the target-week annotation as current-week context and follow-up requests.
+- Only say there are no legacy items when both the prior weekly report summaries and the project progress weekly content / meeting annotations contain no carry-over items.
+- If a specific project is missing from the progress report after using the accessible department filter, state that the progress row was not available with the current token/department filter and fall back to weekly report detail plus version review records.
 
 Update only the weekly report summary:
 
