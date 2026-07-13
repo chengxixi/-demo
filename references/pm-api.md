@@ -260,6 +260,35 @@ POST /v1/weekly_reports/node_create
 PUT /v1/weekly_reports/node_update
 DELETE /v1/weekly_reports/node_destroy?id=<detail_id>
 ```
+## Copy Gantt Between Projects
+
+Use these API rules when copying one project's initiation-plan Gantt chart into another project.
+
+Read-only discovery endpoints:
+
+```text
+GET /v1/project_initiation_plans?project_id=<source_project_id>
+GET /v1/project_initiation_plans/<source_plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3
+GET /v1/project_initiation_plans?project_id=<target_project_id>
+GET /v1/project_initiation_plans/<target_plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3
+GET /v1/holidays?begin_date=<yyyy-mm-dd>&end_date=<yyyy-mm-dd>
+```
+
+Copy behavior:
+
+- Copy the three-level Gantt structure: stages (`detail_type = 1`), nodes (`detail_type = 2`), and tasks (`detail_type = 3`).
+- Copy planned fields and configuration fields needed by the Gantt: serial number, name, planned begin/end dates, task type, critical-path marker, milestone/review/collaboration flags, predecessor text, and dependency/link structure.
+- Do not reuse source database ids. Rebuild target rows and dependency/link ids according to the target save API payload.
+- Do not copy source `actual_end_date`, approval records, weekly reports, acceptance records, or historical change records unless the user explicitly asks.
+- Team members default to unchanged/source-consistent assignments. If target project members differ and the user provides a mapping, apply the explicit source-member to target-member mapping. If no mapping is provided, keep member assignments as-is.
+
+Write behavior:
+
+- The exact Gantt save endpoint and payload must be confirmed from the current frontend request or captured network call before writing. Do not invent it.
+- Likely write actions may include saving a draft plan, creating a version, replacing detail rows, or saving dependency links, but the actual endpoint names and payloads must be verified in the frontend before use.
+- Saving/copying and submitting for approval are separate actions. Never submit for approval unless the user explicitly asks.
+- Before write, show the source project/version, target project/version or target draft, copy counts, team-member mapping rule, and whether actual dates will be excluded.
+- After write, re-fetch target plan detail and verify counts, hierarchy, serial numbers, dependencies, dates, critical markers, and member assignments.
 Get milestone comparison rows:
 
 ```text

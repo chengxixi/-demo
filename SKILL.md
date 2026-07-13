@@ -1,6 +1,6 @@
 ---
 name: pm-gantt-critical-path
-description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, derive critical-path change-day details with plan days, lag days, included days and close status, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports, project-progress weekly meeting annotations, and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
+description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, derive critical-path change-day details with plan days, lag days, included days and close status, copy one project initiation-plan Gantt chart into another project with optional team-member remapping, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports, project-progress weekly meeting annotations, and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
 ---
 
 # PM Gantt Critical Path
@@ -14,6 +14,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 - completion-rate impact when a task changes or a change task is inserted
 - forecast completion-rate explanation, including baseline version, current accounting task, change days, and the fixed summary sentence
 - critical-path change-day details with plan workdays, lag days, included days, and close status
+- copying one project's initiation-plan Gantt chart into another project, including task hierarchy, dependencies, dates, critical-path flags, and optional team-member remapping
 - daily forecast completion-rate monitoring with Enterprise WeChat robot alerts
 - weekly-report drafting in the PM weekly report module using prior weekly reports, project-progress weekly meeting annotations, current weekly report details, and current-week version review remarks
 
@@ -74,6 +75,37 @@ Use this workflow when the user asks for change-day details, change-day task att
 Task | Plan days | Lag days | Included days | Close status
 ```
 
+## Copy Gantt To Another Project
+
+Use this workflow when the user asks to copy one project's initiation-plan Gantt chart into another project.
+
+1. Read [references/pm-api.md](references/pm-api.md) before calling PM APIs.
+2. Parse the source project and target project from URLs or ids.
+3. Resolve the source plan version:
+   - if the user specifies a version such as `V0`, `V2`, or `V4.1`, use that version
+   - if the user does not specify a version, use the latest approved version
+4. Resolve the target write location before changing anything:
+   - ask whether to overwrite the current draft, create/copy into a new version, or replace a specified version
+   - never overwrite an approved version unless the system explicitly supports it and the user explicitly confirms it
+5. Fetch source plan versions, source plan detail rows, target plan versions, and target plan detail rows.
+6. Copy the Gantt structure, not database ids:
+   - copy stages, nodes, and tasks (`detail_type = 1/2/3`)
+   - copy task names, serial numbers, planned begin/end dates, durations, task type, critical-path marker, milestone/review/collaboration flags, and predecessor text
+   - rebuild dependency/link records for the target project instead of reusing source row ids or source link ids
+   - do not copy source actual dates, approval records, weekly reports, acceptance records, or change records unless the user explicitly asks
+7. Team-member rule:
+   - copied team-member assignments default to the same source members
+   - if the imported target project's team members need to differ, ask the user for a source-member to target-member mapping and apply only that mapping
+   - if the user does not provide a mapping, keep the original member assignments unchanged
+8. Before writing, show a concise change summary and get confirmation unless the user explicitly says to apply directly.
+9. Use only a confirmed frontend/API save endpoint and payload. If the save endpoint has not been confirmed from the current frontend or captured network request, stop after preparing the copy payload and say the save endpoint still needs confirmation.
+10. After saving, re-fetch the target plan detail and verify:
+    - stage, node, and task counts match the intended copied structure
+    - serial numbers and hierarchy are correct
+    - predecessor relationships are correct
+    - team-member assignments follow the chosen rule
+    - source actual dates were not copied unless explicitly requested
+    - no publish/submit-for-approval action occurred unless explicitly requested
 ## Weekly Report Management
 
 Use this workflow when the user asks to write, update, or draft a PM weekly report in the weekly report module.
