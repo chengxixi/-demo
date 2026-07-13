@@ -217,29 +217,15 @@ Important fields:
 Get project progress weekly meeting annotations:
 
 ```text
-GET /v1/statistics/milestone_report?year=<yyyy>&month=<m>&department_id=<department_id>&page=1&size=300
+Use the project progress module endpoint or detail response that contains the project's weekly meeting annotations. The exact endpoint and field names can vary by frontend route; discover them from the project progress module request or response before drafting.
 ```
 
 Important interpretation:
 
 - The source is the project progress module's weekly meeting annotation / weekly meeting comment, not a generic meeting note.
-- The project progress module may return no rows unless a valid `department_id` filter is supplied. First fetch the user's accessible department tree, then use the matching department id from the project progress page filter.
-- In the current PM project progress report response, rows are returned in the paged list and each project row can include:
-  - `project_id`
-  - `project_name`
-  - `completion_rate`
-  - `milestones[]`
-  - `weekly_reports[]`
-- The report header includes the displayed weeks, for example prior week and current week. Use these week objects to pick the prior-week record for carry-over items and the target-week record for current progress context.
-- Each `weekly_reports[]` item can contain both the weekly progress text and the weekly meeting annotation in one `content` string. Split the string on the literal marker `weeklyMeetingNotes`:
-  - text before `weeklyMeetingNotes` = project progress weekly content
-  - text after `weeklyMeetingNotes` = weekly meeting annotation / comment
-- If the marker is missing, treat the whole string as progress content and the annotation as empty.
 - Use annotations approved in the previous project weekly meeting as a required source for the next weekly report's carry-over section.
 - If an approved annotation is still unresolved or requests follow-up in the target week, summarize it as a legacy item and state the current completion status.
-- If the prior week has no annotation but the target week has an annotation, use the target-week annotation as current-week context and follow-up requests.
-- Only say there are no legacy items when both the prior weekly report summaries and the project progress weekly content / meeting annotations contain no carry-over items.
-- If a specific project is missing from the progress report after using the accessible department filter, state that the progress row was not available with the current token/department filter and fall back to weekly report detail plus version review records.
+- Only say there are no legacy items when both the prior weekly report summaries and the project progress weekly meeting annotations contain no carry-over items.
 
 Update only the weekly report summary:
 
@@ -304,6 +290,8 @@ Use this table when deciding which API field supports each user-facing answer.
 | Task planned dates | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | `begin_date`, `end_date`, `change_end_date` |
 | Task actual date | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | `actual_end_date` |
 | Task predecessor text | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | `pre_task` |
+| Task close status | `/v1/project_initiation_plans/<plan_id>?detail_type[]=1&detail_type[]=2&detail_type[]=3` | prefer `actual_end_date` present as closed unless a stronger status field exists |
+| Critical-path change-day detail rows | derived from plan detail rows plus `pre_task` / dependency lag settings | task rows where `detail_type = 3`, `task_type = 7`, `whether_critical_task = 1`; plan workdays from `begin_date` to `end_date`; lag days from critical-path neighbor relationships |
 | Workday calendar | `/v1/holidays?begin_date=<yyyy-mm-dd>&end_date=<yyyy-mm-dd>` | `date`, `daytype` |
 | Baseline version | `/v1/statistics/forecast_list_new?year=<yyyy>` | `basic_version` |
 | Forecast completion rate | `/v1/statistics/forecast_list_new?year=<yyyy>` | `rate` |
@@ -321,7 +309,9 @@ Use this table when deciding which API field supports each user-facing answer.
 | Prior-week legacy items | Project progress module weekly meeting annotation endpoint/detail response | approved weekly meeting annotation/comment fields, project id, annotation date/week, approval status |
 | Weekly report version remarks | `/v1/project_initiation_plans/review_list?project_id=<project_id>` | `processing_remark`, `complete_version`, `ecr_code`, `application_date` |
 
-No confirmed single endpoint has been found for detailed change-day task attribution. When the user asks which tasks make up `change_days`, derive the list from the accounting version's critical-path task rows, change/delay flags, predecessor and successor relationships, and lag/lead days, then reconcile the derived total with `forecast_list_new.change_days`.
+No confirmed single endpoint has been found for detailed change-day task attribution. When the user asks which tasks make up `change_days`, derive the list from the selected version plan detail rows. Do not compute or reconcile the detail list from `processing_remark`; review remarks are background only. For each critical-path change task, use `plan days + lag days = included days`, where plan days use PM working days between planned `begin_date` and planned `end_date`, and lag days come only from predecessor/successor lag settings with critical-path neighbor tasks. Positive lag increases, negative lag reduces, and lag between two connected change tasks is counted once.
+
+Scope meaning: currently closed change days are used for forecast completion-rate calculation and include only change rows closed before or at the current accounting task. Whole-project critical-path change days are used for final forecast / actual completion-rate logic and include all critical-path change rows, whether closed or open.
 ## Critical-Path Rules
 
 Use only task rows:
@@ -349,3 +339,4 @@ For each task, choose end date in this order:
 Start date uses `begin_date` unless the user later defines a different rule.
 
 Duration equals the count of working dates from start to chosen end, inclusive.
+

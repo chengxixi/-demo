@@ -1,6 +1,6 @@
 ---
 name: pm-gantt-critical-path
-description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports, project-progress weekly meeting annotations, and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
+description: Read Yolanda PM Gantt plans and weekly reports from a user-provided token, project URL or project id, requested plan version such as V1 or V2, and week/month context. Extract task-level critical paths, calculate working-day durations with actual-end-date preference, derive critical-path change-day details with plan days, lag days, included days and close status, export horizontal flow outputs, write project weekly-report summaries from prior weekly reports, project-progress weekly meeting annotations, and version review remarks, simulate completion-rate changes, and monitor daily forecast completion-rate drops with Enterprise WeChat robot reminders.
 ---
 
 # PM Gantt Critical Path
@@ -13,6 +13,7 @@ Use this skill when the user gives a `pm.yolanda.hk/editGantt` link, project id,
 - horizontal flow output in Mermaid, SVG, or PNG
 - completion-rate impact when a task changes or a change task is inserted
 - forecast completion-rate explanation, including baseline version, current accounting task, change days, and the fixed summary sentence
+- critical-path change-day details with plan workdays, lag days, included days, and close status
 - daily forecast completion-rate monitoring with Enterprise WeChat robot alerts
 - weekly-report drafting in the PM weekly report module using prior weekly reports, project-progress weekly meeting annotations, current weekly report details, and current-week version review remarks
 
@@ -47,6 +48,31 @@ Stages and nodes provide hierarchy and reporting context, but critical-path extr
    - count only PM-system working days from the holiday API
 8. Output all critical paths in the requested format. If the user asks for a flowchart, horizontal chart, Mermaid, SVG, PNG, or visual export, read [references/flowchart-output.md](references/flowchart-output.md) and follow its format exactly.
 9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the numbered output format exactly as written there.
+
+## Change-Day Details
+
+Use this workflow when the user asks for change-day details, change-day task attribution, or 变更天数明细.
+
+1. If the user does not specify a version, use the latest approved version by default and state the PM version label and internal plan id in the answer.
+2. If the user asks only for "change-day details" without a scope, ask whether they want:
+   - currently closed change days only: used for forecast completion-rate calculation; count only change tasks already closed before or at the current accounting task
+   - the whole project's critical-path change days: used for final forecast / actual completion-rate logic; count the whole critical-path change scope whether closed or open
+3. Do not use `processing_remark` totals to compute or reconcile the answer. Version review remarks are only background text.
+4. Fetch plan detail rows and keep task rows only: `detail_type = 3`.
+5. Keep only critical-path change tasks: `whether_critical_task = 1` and `task_type = 7`.
+6. Calculate plan days from planned `begin_date` to planned `end_date` with the PM workday calendar. Do not use actual dates for this table.
+7. Parse predecessor/successor lag settings from `pre_task` and dependency links. Calculate lag days from critical-path neighbors only:
+   - positive lag increases included days
+   - negative lag reduces included days
+   - if two change tasks are connected, count the lag between them only once
+   - do not infer reductions from date overlap unless the lag setting itself says so
+8. Calculate each row as `included days = plan days + lag days`.
+9. Add close status to every row. Treat `actual_end_date` present as closed and missing as open unless the API exposes a stronger close/status field. For the currently closed scope, exclude open rows from the total; for the whole-project scope, include both closed and open rows.
+10. Output this table shape:
+
+```text
+Task | Plan days | Lag days | Included days | Close status
+```
 
 ## Weekly Report Management
 
@@ -213,3 +239,5 @@ Before finishing work with this skill:
 4. If completion-rate logic is used, confirm the exact algorithm source.
 5. If daily monitoring is used, confirm a previous local snapshot exists before interpreting rate drops.
 6. If weekly-report logic is used, confirm the target weekly report id, save-only vs publish behavior, and exact `summaries` readback.
+
+

@@ -2,6 +2,52 @@
 
 Use this reference whenever the user asks for project completion rate, forecast completion rate, current accounting task, baseline version, change-day details, or why a forecast rate was calculated.
 
+Every completion-rate explanation must use the required shape below and end with a one-sentence summary. This applies to current forecast completion rate, actual completion rate, forecast completion rate - old, final forecast completion rate, and completion-rate simulations. Do not stop after formulas or field lists. If the user does not specify a version, default to the latest approved version and name that PM version in the explanation.
+
+## Completion Rate API Scope
+
+Actual completion rate, forecast completion rate - old, and final forecast completion rate are the same business metric. Fetch the official value from:
+
+```text
+GET /v1/statistics/forecast_list?year=YYYY
+```
+
+Find the row by `project_id` and use backend field `rate` as the official actual/final completion rate. Explain it with `basic_cycle`, `actual_cycle`, and `change_days`: actual completion rate = `basic_cycle / (actual_cycle - change_days)`.
+
+Current forecast completion rate is a different metric for the current accounting task. Fetch it from:
+
+```text
+GET /v1/statistics/forecast_list_new?year=YYYY
+```
+
+Use `forecast_list_new` for current accounting task forecast explanations, not as the official actual/final completion-rate source unless the user explicitly asks for current forecast.
+
+## Required Explanation Shapes
+
+For current forecast completion-rate explanations, keep the previously approved numbered shape and do not replace it with a short table or loose paragraph:
+
+1. State the forecast completion rate.
+2. Show the calculation fields: plan cycle, delay days, change days.
+3. Show the formula: forecast completion rate = plan cycle / (plan cycle + delay days - change days).
+4. State the current accounting task.
+5. End with one Chinese sentence starting with "最终说是：". The sentence must summarize the accounting task, baseline version, baseline planned finish date, latest approved version planned finish date, accounting/as-of date, delay days, change days, and the same formula.
+
+For actual completion-rate explanations, use the user's required one-sentence shape. It must start with "该项目实际完成率为 {rate}%" and include all of these fields in one sentence:
+
+- baseline cycle version, for example V0
+- basic_cycle
+- actual version label used for the query, for example V6
+- actual_cycle
+- the last task on the whole-project critical path, including its planned finish date in the baseline version and in the actual version used for the query
+- whole-project critical-path delay days, calculated as actual_cycle - basic_cycle
+- whole-project critical-path change days from the old forecast row
+- formula: actual completion rate = basic_cycle / (actual_cycle - change_days) = rate
+
+Chinese meaning required for actual completion-rate summary:
+
+```text
+该项目实际完成率为 {rate}%，基准版本 {basic_version} 的基准周期为 {basic_cycle} 个工作日，{actual_version} 版本实际周期为 {actual_cycle} 个工作日，关键路径上最后一个任务是 {last_critical_task}（基准版本 {basic_version} 里计划结束为 {baseline_last_task_end_date}，{actual_version} 版本计划结束日期为 {actual_last_task_end_date}）。整个项目关键路径延期 {critical_path_delay_days} 天，其中变更有 {change_days} 天，因此实际完成率 = {basic_cycle} / ({actual_cycle} - {change_days}) = {rate}%。
+```
 ## PM Forecast Fields
 
 Prefer the PM backend result from:
@@ -140,3 +186,9 @@ Rules for the template:
 - `actual_date_clause`: if the current accounting task has `actual_end_date`, write `，实际日期是 {actual_end_date}`; otherwise write nothing.
 - `as_of_date`: always include this phrase. Choose it using the business rule in `Accounting Date Rule`: if the current accounting task has `actual_end_date`, use that actual date; if it has no actual date, use today's actual date. Do not use `forecast_list_new.end_date` as the current accounting date unless the user explicitly asks to quote the backend row unchanged.
 - `denominator` = `plan_cycle + delay_days - change_days`.
+Actual/final one-sentence summary template:
+
+```text
+Use the actual completion-rate shape in Required Explanation Shapes. It must include baseline version, basic_cycle, actual version label, actual_cycle, last whole-project critical-path task, baseline_last_task_end_date, actual_last_task_end_date, critical_path_delay_days = actual_cycle - basic_cycle, change_days, and the formula basic_cycle / (actual_cycle - change_days) = rate. If the user did not specify an actual version, use and name the latest approved version.
+```
+
