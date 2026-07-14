@@ -1,0 +1,6 @@
+interface:
+  display_name: "来料检验记录生成"
+  short_description: "按K3数据、BOM、图纸和模板生成来料检验记录。"
+  default_prompt: "Use $incoming-inspection-records to generate incoming inspection records from the 1-7 folder structure."
+policy:
+  allow_implicit_invocation: true
