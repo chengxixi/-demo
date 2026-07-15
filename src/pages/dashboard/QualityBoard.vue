@@ -27,6 +27,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'update:filters', value: Record<string, string>): void
+  (event: 'update:comparison', value: '环比' | '同比'): void
 }>()
 
 const level1ChartRef = useTemplateRef<HTMLDivElement>('level1Chart')
@@ -39,7 +40,7 @@ let level3Chart: echarts.ECharts | null = null
 const filterOptions = [
   { label: '时间周期', key: 'period', options: filterPeriodOptions },
   { label: '品牌', key: 'brand', options: filterBrandOptions },
-  { label: '站点', key: 'site', options: filterSiteOptions },
+  { label: '平台', key: 'site', options: filterSiteOptions },
   { label: '产品类型', key: 'productType', options: filterProductTypeOptions },
   { label: '产品型号', key: 'model', options: filterModelOptions },
   { label: '反馈来源', key: 'source', options: filterSourceOptions },
@@ -70,6 +71,10 @@ function updateFilter(key: string, value: unknown) {
     ...props.filters,
     [key]: String(value),
   })
+}
+
+function updateComparison(value: unknown) {
+  emit('update:comparison', String(value) as '环比' | '同比')
 }
 
 function pieOption(title: string, rows: typeof level1Categories) {
@@ -149,19 +154,27 @@ watch(
 
 <template>
   <div class="space-y-5">
+
     <a-card :bordered="false" class="dashboard-filter-card">
       <a-row :gutter="[12, 12]">
         <a-col v-for="item in filterOptions" :key="item.key" :xs="12" :md="8" :lg="4">
-          <a-select
-            :value="props.filters[item.key]"
-            class="w-full"
-            :placeholder="item.label"
-            :options="item.options.map((option) => ({ label: option, value: option }))"
-            @change="updateFilter(item.key, $event)"
-          />
+          <label class="filter-field">
+            <span>{{ item.label }}</span>
+            <a-select
+              :value="props.filters[item.key]"
+              class="w-full"
+              :placeholder="item.label"
+              :options="item.options.map((option) => ({ label: option, value: option }))"
+              @change="updateFilter(item.key, $event)"
+            />
+          </label>
         </a-col>
       </a-row>
     </a-card>
+
+    <div class="comparison-row">
+      <a-segmented :value="props.comparison" :options="['环比', '同比']" @change="updateComparison" />
+    </div>
 
     <a-row :gutter="[16, 16]">
       <a-col :xs="24" :lg="8">
@@ -269,9 +282,28 @@ watch(
   border-radius: 8px;
 }
 
+.comparison-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+
 .donut-chart {
   height: 280px;
   min-height: 280px;
   width: 100%;
+}
+
+.filter-field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter-field span {
+  line-height: 1.2;
 }
 </style>

@@ -18,10 +18,7 @@ const showDetail = ref(false)
 const detailReq = ref<RequirementPoolItem | null>(null)
 
 const filteredPool = computed(() => {
-  if (!filterLevel.value) {
-    return requirementPool.value
-  }
-
+  if (!filterLevel.value) return requirementPool.value
   return requirementPool.value.filter((item) => item.level === filterLevel.value)
 })
 
@@ -53,6 +50,10 @@ function createCandidate(candidate: CandidateLead) {
   message.success(`已创建线索 ${candidate.id}`)
 }
 
+function updateCandidate(candidate: CandidateLead) {
+  candidateLeads.value = candidateLeads.value.map((item) => (item.id === candidate.id ? candidate : item))
+}
+
 function convertToWorkOrder(candidate: CandidateLead) {
   message.success(`已为线索 ${candidate.id} 生成工单`)
 }
@@ -67,31 +68,6 @@ function convertToWorkOrder(candidate: CandidateLead) {
       </a-typography-text>
     </a-space>
 
-    <a-card :bordered="false">
-      <a-steps size="small" :current="1">
-        <a-step title="来源汇聚" description="反馈、异常、工单、竞品线索" />
-        <a-step title="候选线索" description="合并证据并补充材料" />
-        <a-step title="五维评分" description="用户价值、业务影响、可行性等" />
-        <a-step title="产品需求池" description="按 L1-L4 进入评审" />
-        <a-step title="排期跟进" description="进入版本规划或观察池" />
-      </a-steps>
-    </a-card>
-
-    <a-row :gutter="[12, 12]">
-      <a-col :xs="12" :md="6">
-        <a-card size="small"><a-statistic title="候选线索" :value="candidateLeads.length" /></a-card>
-      </a-col>
-      <a-col :xs="12" :md="6">
-        <a-card size="small"><a-statistic title="需求池" :value="requirementPool.length" /></a-card>
-      </a-col>
-      <a-col :xs="12" :md="6">
-        <a-card size="small"><a-statistic title="L1/L2" :value="levelCounts.L1 + levelCounts.L2" /></a-card>
-      </a-col>
-      <a-col :xs="12" :md="6">
-        <a-card size="small"><a-statistic title="L3/L4" :value="levelCounts.L3 + levelCounts.L4" /></a-card>
-      </a-col>
-    </a-row>
-
     <a-tabs v-model:active-key="activeTab">
       <a-tab-pane key="candidates" :tab="`候选线索（${candidateLeads.length}）`">
         <CandidateLeadsTab
@@ -99,6 +75,7 @@ function convertToWorkOrder(candidate: CandidateLead) {
           @open-promote="openPromoteModal"
           @convert-to-work-order="convertToWorkOrder"
           @create-candidate="createCandidate"
+          @update-candidate="updateCandidate"
         />
       </a-tab-pane>
       <a-tab-pane key="pool" :tab="`产品需求池（${requirementPool.length}）`">

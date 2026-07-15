@@ -17,36 +17,20 @@ function formatNum(value: number): string {
 }
 
 function formatChange(value: number): string {
-  if (value > 0) {
-    return `+${value}%`
-  }
-
-  if (value < 0) {
-    return `${value}%`
-  }
-
+  if (value > 0) return `+${value}%`
+  if (value < 0) return `${value}%`
   return '0%'
 }
 </script>
 
 <template>
   <section class="space-y-4 p-4">
-    <a-row :gutter="[12, 12]" align="middle" justify="space-between">
-      <a-col>
-        <a-space direction="vertical" size="small">
-          <a-typography-title :level="4" class="m-0">反馈运营看板</a-typography-title>
-          <a-typography-text type="secondary">
-            反馈仪表盘查看业务趋势，问题仪表盘查看分类占比、异常动态和质量改善动作。
-          </a-typography-text>
-        </a-space>
-      </a-col>
-      <a-col>
-        <a-segmented
-          v-model:value="comparison"
-          :options="['环比', '同比']"
-        />
-      </a-col>
-    </a-row>
+    <a-space direction="vertical" size="small">
+      <a-typography-title :level="4" class="m-0">仪表盘</a-typography-title>
+      <a-typography-text type="secondary">
+        反馈仪表盘查看业务趋势，问题仪表盘查看分类占比、异常动态和质量改善动作。
+      </a-typography-text>
+    </a-space>
 
     <a-tabs v-model:active-key="activeTab">
       <a-tab-pane key="business" tab="反馈仪表盘">
@@ -61,7 +45,7 @@ function formatChange(value: number): string {
       <a-tab-pane key="quality" tab="问题仪表盘">
         <QualityBoard
           v-model:filters="filters"
-          :comparison="comparison"
+          v-model:comparison="comparison"
           :change-key="changeKey"
           :format-num="formatNum"
           :format-change="formatChange"

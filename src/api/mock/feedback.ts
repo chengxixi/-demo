@@ -94,7 +94,7 @@ export const feedbackData: FeedbackItem[] = [
     level3: '测脂不准',
     sentiment: '负向',
     returned: '否',
-    exception: '待确认',
+    exception: '无异常',
     processRoute: '待处理',
     processState: '待复核',
     feedbackUser: '王雪',

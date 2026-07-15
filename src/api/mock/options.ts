@@ -1,6 +1,6 @@
 import type { TabOption, TemplateConfig, UserRole } from '@/types'
 
-export const siteOptions = ['Amazon.com (US)', '天猫', '京东', '抖音']
+export const siteOptions = ['亚马逊', '天猫', '抖音', '京东']
 
 export const feedbackTabOptions: TabOption[] = [
   { key: 'all', label: '全部' },
@@ -20,13 +20,13 @@ export const processRouteOptions = [
 ]
 
 export const processStateOptions = ['待人工复核', '待处理', '已处理']
-export const returnOptions = ['否', '退货', '换货', '退货+换货', '待确认']
-export const exceptionLevels = ['P0', 'P1', 'P2', 'P3', '待确认', '否']
-export const sourceOptions = ['退货反馈', '商品评论', '站内信', '客服沟通', 'APP反馈']
+export const returnOptions = ['退货', '换货', '无需退换货']
+export const exceptionLevels = ['P0', 'P1', 'P2', 'P3', '无异常']
+export const sourceOptions = ['商品评论', '退货反馈', '客服沟通', '站内信', 'APP反馈']
 export const timeOptions = ['最近7天', '最近30天', '本月', '本季度', '本年']
-export const brandOptions = ['云康宝', 'AF', 'LF']
-export const productTypeOptions = ['体脂秤', '筋膜枪', '血压计']
-export const modelOptions = ['CS20A', 'AF-30B', 'BP-02', 'MG20']
+export const brandOptions = ['云康宝', 'AF', 'GE', 'LOT']
+export const productTypeOptions = ['体脂秤', '八电极', '筋膜枪']
+export const modelOptions = ['CS10A', 'CS10B', 'CS10F', 'CS20F', 'CS20M']
 export const emergencyStepLabels = ['临时方案处理', '根因分析', '整改措施', '验证结果', '关闭归档']
 export const workOrderSteps = ['转工单', '分派责任人', '处理中', '待确认', '已闭环']
 

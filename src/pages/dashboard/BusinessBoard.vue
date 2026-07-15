@@ -36,7 +36,7 @@ let returnChart: echarts.ECharts | null = null
 const filterOptions = [
   { label: '时间周期', key: 'period', options: filterPeriodOptions },
   { label: '品牌', key: 'brand', options: filterBrandOptions },
-  { label: '站点', key: 'site', options: filterSiteOptions },
+  { label: '平台', key: 'site', options: filterSiteOptions },
   { label: '产品类型', key: 'productType', options: filterProductTypeOptions },
   { label: '产品型号', key: 'model', options: filterModelOptions },
   { label: '反馈来源', key: 'source', options: filterSourceOptions },
@@ -60,6 +60,10 @@ function updateFilter(key: string, value: unknown) {
     ...props.filters,
     [key]: String(value),
   })
+}
+
+function updateComparison(value: unknown) {
+  emit('update:comparison', String(value) as '环比' | '同比')
 }
 
 function renderCharts() {
@@ -139,19 +143,27 @@ watch(
 
 <template>
   <div class="space-y-5">
+
     <a-card :bordered="false" class="dashboard-filter-card">
       <a-row :gutter="[12, 12]">
         <a-col v-for="item in filterOptions" :key="item.key" :xs="12" :md="8" :lg="4">
-          <a-select
-            :value="props.filters[item.key]"
-            class="w-full"
-            :placeholder="item.label"
-            :options="item.options.map((option) => ({ label: option, value: option }))"
-            @change="updateFilter(item.key, $event)"
-          />
+          <label class="filter-field">
+            <span>{{ item.label }}</span>
+            <a-select
+              :value="props.filters[item.key]"
+              class="w-full"
+              :placeholder="item.label"
+              :options="item.options.map((option) => ({ label: option, value: option }))"
+              @change="updateFilter(item.key, $event)"
+            />
+          </label>
         </a-col>
       </a-row>
     </a-card>
+
+    <div class="comparison-row">
+      <a-segmented :value="props.comparison" :options="['环比', '同比']" @change="updateComparison" />
+    </div>
 
     <a-row :gutter="[12, 12]">
       <a-col v-for="card in dashboardMetricCards" :key="card.label" :xs="12" :md="8" :lg="4">
@@ -188,10 +200,10 @@ watch(
           <template #default="{ row }">{{ props.formatNum(row.sales) }}</template>
         </vxe-column>
         <vxe-column field="feedback" title="反馈量" width="100" align="right" />
-        <vxe-column field="returnRate" title="退货率" width="100" />
-        <vxe-column field="feedbackRate" title="反馈率" width="100" />
         <vxe-column field="badReviewRate" title="差评率" width="100" />
         <vxe-column field="score" title="评分" width="80" />
+        <vxe-column field="returnRate" title="退货率" width="100" />
+        <vxe-column field="feedbackRate" title="反馈率" width="100" />
       </vxe-table>
     </a-card>
   </div>
@@ -203,9 +215,28 @@ watch(
   border-radius: 8px;
 }
 
+.comparison-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+
 .chart-panel {
   height: 320px;
   min-height: 320px;
   width: 100%;
+}
+
+.filter-field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter-field span {
+  line-height: 1.2;
 }
 </style>

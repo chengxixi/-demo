@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import { message } from 'ant-design-vue'
 import type { WorkOrder } from '@/types'
 import { workOrderData } from '@/api/mock'
@@ -9,44 +9,57 @@ import WorkOrderTable from './WorkOrderTable.vue'
 
 type RouteType = 'requirement' | 'exception' | 'qa' | 'close'
 
+const GENERATED_WORKORDERS_KEY = 'feedback-generated-workorders'
+
 const orders = ref<WorkOrder[]>([...workOrderData])
 const detailOpen = shallowRef(false)
-const aiOpen = shallowRef(false)
-const routeOpen = shallowRef(false)
 const detailOrder = ref<WorkOrder | null>(null)
-const routeTarget = ref<WorkOrder | null>(null)
 
 const filters = ref({
   keyword: '',
+  productLine: '',
   status: '',
   owner: '',
 })
 
-const stats = computed(() => ({
-  total: orders.value.length,
-  processing: orders.value.filter((order) => order.status === '处理中').length,
-  closed: orders.value.filter((order) => order.status === '已闭环').length,
-  toRequirement: orders.value.filter((order) => order.requirement === '是' || order.requirement === '预留').length,
-}))
 
-const routeCards = [
-  { key: 'requirement', title: '转产品需求', desc: '有产品价值的问题进入需求池，补充证据和评分。' },
-  { key: 'exception', title: '转紧急异常', desc: '安全、法规、合规、集中投诉或重大风险进入 P0/P1 流程。' },
-  { key: 'qa', title: '沉淀 Q&A', desc: '咨询类或已解决问题沉淀为标准回复和案例库。' },
-  { key: 'close', title: '直接关闭', desc: '确认已回复用户并记录关闭原因。' },
-] as const
+const productLineOptions = computed(() => uniqueValues(orders.value.map((order) => order.productLine)))
+const statusOptions = computed(() => uniqueValues(orders.value.map((order) => order.status)))
+const ownerOptions = computed(() => uniqueValues(orders.value.map((order) => order.owner)))
 
 const filteredOrders = computed(() => {
   return orders.value.filter((order) => {
     const keyword = filters.value.keyword.trim().toLowerCase()
     const text = `${order.id} ${order.summary} ${order.productLine} ${order.relatedFeedback}`.toLowerCase()
     const matchesKeyword = !keyword || text.includes(keyword)
+    const matchesProductLine = !filters.value.productLine || order.productLine === filters.value.productLine
     const matchesStatus = !filters.value.status || order.status === filters.value.status
-    const matchesOwner = !filters.value.owner || order.owner.includes(filters.value.owner)
+    const matchesOwner = !filters.value.owner || order.owner === filters.value.owner
 
-    return matchesKeyword && matchesStatus && matchesOwner
+    return matchesKeyword && matchesProductLine && matchesStatus && matchesOwner
   })
 })
+
+const stats = computed(() => ({
+  total: filteredOrders.value.length,
+  processing: filteredOrders.value.filter((order) => ['转工单', '处理中', '待确认'].includes(order.status) || order.status.includes('处理')).length,
+  closed: filteredOrders.value.filter((order) => ['已闭环', '已关闭'].includes(order.status)).length,
+  toRequirement: filteredOrders.value.filter((order) => order.requirement === '是' || order.requirement === '预留' || order.status.includes('需求')).length,
+}))
+
+onMounted(() => {
+  loadGeneratedWorkOrders()
+})
+
+function uniqueValues(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)))
+}
+
+function loadGeneratedWorkOrders() {
+  const generated = JSON.parse(localStorage.getItem(GENERATED_WORKORDERS_KEY) || '[]') as WorkOrder[]
+  const existing = new Set(orders.value.map((order) => order.id))
+  orders.value = [...generated.filter((order) => !existing.has(order.id)), ...orders.value]
+}
 
 function openDetail(order: WorkOrder) {
   detailOrder.value = order
@@ -55,7 +68,13 @@ function openDetail(order: WorkOrder) {
 
 function saveOrder(order: WorkOrder) {
   orders.value = orders.value.map((item) => (item.id === order.id ? order : item))
+  persistGeneratedWorkOrders()
   message.success('工单已更新')
+}
+
+function persistGeneratedWorkOrders() {
+  const generated = orders.value.filter((order) => order.id.startsWith('TK-') && !workOrderData.some((item) => item.id === order.id))
+  localStorage.setItem(GENERATED_WORKORDERS_KEY, JSON.stringify(generated))
 }
 
 function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
@@ -77,19 +96,6 @@ function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
   })
 }
 
-function openRouteWorkbench(order?: WorkOrder) {
-  routeTarget.value = order || filteredOrders.value[0] || null
-  routeOpen.value = true
-}
-
-function applyRoute(route: RouteType) {
-  if (!routeTarget.value) {
-    return
-  }
-
-  routeOrder({ order: routeTarget.value, route })
-  routeOpen.value = false
-}
 </script>
 
 <template>
@@ -99,14 +105,8 @@ function applyRoute(route: RouteType) {
         <a-space direction="vertical" size="small">
           <a-typography-title :level="4" class="m-0">工单池</a-typography-title>
           <a-typography-text type="secondary">
-            集中承接反馈清单转入的问题，按 AI 辅助建议推进转需求、转异常、沉淀 Q&A 或直接关闭。
+            集中承接反馈清单转入的问题，推进转需求、转异常、沉淀 Q&A 或直接关闭。
           </a-typography-text>
-        </a-space>
-      </a-col>
-      <a-col>
-        <a-space>
-          <a-button @click="aiOpen = true">AI辅助处理</a-button>
-          <a-button type="primary" @click="openRouteWorkbench()">处理去向</a-button>
         </a-space>
       </a-col>
     </a-row>
@@ -115,48 +115,16 @@ function applyRoute(route: RouteType) {
       <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="工单总数" :value="stats.total" /></a-card></a-col>
       <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="处理中" :value="stats.processing" /></a-card></a-col>
       <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="已闭环" :value="stats.closed" /></a-card></a-col>
-      <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="转需求/预留" :value="stats.toRequirement" /></a-card></a-col>
+      <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="已转需求" :value="stats.toRequirement" /></a-card></a-col>
     </a-row>
 
-    <a-card :bordered="false">
-      <a-steps size="small" :current="1">
-        <a-step title="AI摘要" description="识别问题、等级和建议去向" />
-        <a-step title="工单处理" description="质量/研发跟进排查" />
-        <a-step title="处理去向" description="需求、异常、Q&A或关闭" />
-        <a-step title="复盘沉淀" description="更新案例库和月报" />
-      </a-steps>
-    </a-card>
-
-    <a-alert
-      type="info"
-      show-icon
-      message="处理建议"
-      description="咨询类可直接回复关闭并沉淀 Q&A；集中质量问题转工单持续跟进；安全、法规、合规或高风险问题转紧急异常；有产品价值的问题转需求池。"
+    <WorkOrderFilter
+      v-model:filters="filters"
+      :product-lines="productLineOptions"
+      :statuses="statusOptions"
+      :owners="ownerOptions"
     />
-
-    <WorkOrderFilter v-model:filters="filters" />
     <WorkOrderTable :items="filteredOrders" @open-detail="openDetail" />
     <WorkOrderDetailDrawer v-model:open="detailOpen" :item="detailOrder" @save="saveOrder" @route="routeOrder" />
-
-    <a-modal v-model:open="aiOpen" title="AI辅助处理建议" width="720px" :footer="null">
-      <a-row :gutter="[12, 12]">
-        <a-col v-for="item in routeCards" :key="item.key" :xs="24" :md="12">
-          <a-card size="small" :title="item.title">
-            <a-typography-paragraph>{{ item.desc }}</a-typography-paragraph>
-          </a-card>
-        </a-col>
-      </a-row>
-    </a-modal>
-
-    <a-modal v-model:open="routeOpen" :title="routeTarget ? `${routeTarget.id} 处理去向` : '处理去向'" width="760px" :footer="null">
-      <a-row :gutter="[12, 12]">
-        <a-col v-for="item in routeCards" :key="item.key" :xs="24" :md="12">
-          <a-card size="small" :title="item.title">
-            <a-typography-paragraph>{{ item.desc }}</a-typography-paragraph>
-            <a-button block @click="applyRoute(item.key)">选择</a-button>
-          </a-card>
-        </a-col>
-      </a-row>
-    </a-modal>
   </section>
 </template>

@@ -96,16 +96,16 @@ const groupedRows = computed<FeedbackTableRow[]>(() => {
   return rows
 })
 
+function displayException(level: string) {
+  return ['P0', 'P1', 'P2', 'P3'].includes(level) ? level : '无异常'
+}
+
 function exceptionColor(level: string) {
-  if (level === 'P0' || level === 'P1') {
-    return 'red'
-  }
-
-  if (level === 'P2') {
-    return 'orange'
-  }
-
-  return 'blue'
+  const displayLevel = displayException(level)
+  if (displayLevel === 'P0' || displayLevel === 'P1') return 'red'
+  if (displayLevel === 'P2') return 'orange'
+  if (displayLevel === 'P3') return 'blue'
+  return 'default'
 }
 
 function isGroupExpanded(group: string) {
@@ -136,9 +136,6 @@ function groupIds(members: FeedbackItem[]) {
   return members.map((item) => item.id)
 }
 
-function groupRawSummary(members: FeedbackItem[]) {
-  return members.map((item) => item.raw).join(' / ')
-}
 
 function groupAiSummary(members: FeedbackItem[]) {
   return members.map((item) => item.ai).join(' / ')
@@ -160,27 +157,6 @@ function rowOrderNo(item: FeedbackItem) {
   return item.orderNo || item.asin || '-'
 }
 
-function rowExpressNo(item: FeedbackItem) {
-  if (item.expressNo) {
-    return item.expressNo
-  }
-
-  return item.returned === '退货' || item.returned === '换货' || item.returned === '退货+换货'
-    ? '待补充'
-    : '-'
-}
-
-function rowImage(item: FeedbackItem) {
-  return item.image || '-'
-}
-
-function rowVideo(item: FeedbackItem) {
-  return item.video || '-'
-}
-
-function rowSolution(item: FeedbackItem) {
-  return item.solution || item.processRoute || '待产品经理确认处理方案。'
-}
 
 function rowClassName({ row }: { row: FeedbackTableRow }) {
   if (row.rowType === 'group') {
@@ -229,7 +205,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
       </template>
     </vxe-column>
 
-    <vxe-column title="编号/合并组" width="230" fixed="left">
+    <vxe-column title="编号/合并组" width="230">
       <template #default="{ row }">
         <a-space v-if="row.rowType === 'group'" direction="vertical" size="small">
           <a-space>
@@ -274,30 +250,13 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
     <vxe-column title="订单号/ASIN" width="150">
       <template #default="{ row }">{{ rowOrderNo(rowItem(row)) }}</template>
     </vxe-column>
-    <vxe-column title="快递单号" width="130">
-      <template #default="{ row }">{{ rowExpressNo(rowItem(row)) }}</template>
-    </vxe-column>
-    <vxe-column title="用户反馈" min-width="240">
-      <template #default="{ row }">
-        {{ row.rowType === 'group' ? groupRawSummary(row.members) : row.item.raw }}
-      </template>
-    </vxe-column>
-    <vxe-column title="AI翻译/摘要" min-width="240">
+    <vxe-column title="AI翻译/摘要" min-width="320">
       <template #default="{ row }">
         {{ row.rowType === 'group' ? groupAiSummary(row.members) : row.item.ai }}
       </template>
     </vxe-column>
-    <vxe-column title="图片补充" width="110">
-      <template #default="{ row }">{{ rowImage(rowItem(row)) }}</template>
-    </vxe-column>
-    <vxe-column title="视频补充" width="110">
-      <template #default="{ row }">{{ rowVideo(rowItem(row)) }}</template>
-    </vxe-column>
     <vxe-column title="问题反馈时间" width="130">
       <template #default="{ row }">{{ rowItem(row).date }}</template>
-    </vxe-column>
-    <vxe-column title="问题回答/处理方案" min-width="220">
-      <template #default="{ row }">{{ rowSolution(rowItem(row)) }}</template>
     </vxe-column>
     <vxe-column title="一级职能划分" width="130">
       <template #default="{ row }">{{ rowItem(row).level1 }}</template>
@@ -311,7 +270,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
     <vxe-column title="异常级别" width="100">
       <template #default="{ row }">
         <a-tag :color="exceptionColor(rowItem(row).exception)">
-          {{ rowItem(row).exception }}
+          {{ displayException(rowItem(row).exception) }}
         </a-tag>
       </template>
     </vxe-column>

@@ -289,7 +289,7 @@ function unmerge(id: string) {
                 </a-col>
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
                   <a-form-item label="异常级别">
-                    <a-select v-model:value="form.exception" :options="['否', '待确认', 'P0', 'P1', 'P2', 'P3'].map((item) => ({ label: item, value: item }))" />
+                    <a-select v-model:value="form.exception" :options="['P0', 'P1', 'P2', 'P3', '无异常'].map((item) => ({ label: item, value: item }))" />
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">

@@ -40,6 +40,12 @@ const router = createRouter({
       meta: { title: '紧急异常处理', keepAlive: true },
     },
     {
+      path: '/emergency/detail/:id',
+      name: 'emergencyDetail',
+      component: () => import('@/pages/emergency/EmergencyDetailPage.vue'),
+      meta: { title: '紧急异常详情' },
+    },
+    {
       path: '/requirements',
       name: 'requirements',
       component: () => import('@/pages/requirements/RequirementsPage.vue'),

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import type { UploadProps } from 'ant-design-vue'
 import type { FeedbackItem } from '@/types'
-import { exceptionLevels, processRouteOptions, processStateOptions, sourceOptions } from '@/api/mock'
+import { brandOptions, exceptionLevels, modelOptions, productTypeOptions, sourceOptions } from '@/api/mock'
+import { currentUser } from '@/stores'
 
 const props = defineProps<{
   open: boolean
@@ -16,32 +18,105 @@ const form = reactive({
   region: '海外',
   source: '商品评论',
   brand: '云康宝',
-  site: 'Amazon.com (US)',
+  site: '亚马逊',
   productType: '体脂秤',
-  model: 'CS20A',
-  internal: '',
+  model: 'CS20F',
+  internal: 'YKB27011A1-CS(US)_01.01.01.222',
   asin: '',
   orderNo: '',
-  returned: '无需',
+  returned: '无需退换货',
   expressNo: '',
   image: '',
   video: '',
   raw: '',
   ai: '',
-  solution: '待产品经理确认处理方案。',
+  solution: '',
   level1: '产品质量',
   level2: '硬件问题',
   level3: '待确认',
-  exception: '待确认',
+  exception: '无异常',
   createMode: '人工录入',
   processRoute: '待处理',
   processState: '待处理',
-  feedbackUser: '',
+  feedbackUser: currentUser.value.name,
   handler: '李工',
 })
 
+const internalOptions = [
+  'YKB27011A1-CS(US)_01.01.01.222',
+  'YKB27012A1-CS(EU)_01.01.01.223',
+  'YKB28021B1-CS(CN)_01.01.02.108',
+  'AF31001A1-CS(US)_01.01.03.015',
+  'GE22008A2-CS(CN)_01.01.04.066',
+  'LOT33018B1-CM(CN)_02.03.01.019',
+]
+
+const returnOptions = ['退货', '换货', '无需退换货']
+const overseasPlatformOptions = ['亚马逊']
+const domesticPlatformOptions = ['天猫', '抖音', '京东']
+const platformOptions = computed(() => (form.region === '海外' ? overseasPlatformOptions : domesticPlatformOptions))
+const isAmazonPlatform = computed(() => form.site === '亚马逊')
+const needsExpressNo = computed(() => form.returned !== '无需退换货')
+const imageFileList = ref<UploadProps['fileList']>([])
+const videoFileList = ref<UploadProps['fileList']>([])
+
+type FileField = 'image' | 'video'
+
+watch(
+  () => form.region,
+  () => {
+    const nextOptions = platformOptions.value
+    if (!nextOptions.includes(form.site)) form.site = nextOptions[0] || ''
+  },
+  { immediate: true },
+)
+
+watch(
+  () => form.site,
+  (site) => {
+    if (site !== '亚马逊') form.asin = ''
+  },
+)
+
+watch(
+  () => form.returned,
+  (returned) => {
+    if (returned === '无需退换货') form.expressNo = ''
+  },
+)
+
 function closeModal() {
   emit('update:open', false)
+}
+
+function beforeUpload() {
+  return false
+}
+
+function syncFileField(field: FileField, fileList: UploadProps['fileList']) {
+  form[field] = (fileList || []).map((file) => file.name).join('、')
+}
+
+function handlePaste(field: FileField, event: ClipboardEvent) {
+  const files = Array.from(event.clipboardData?.files || [])
+  if (!files.length) return
+
+  event.preventDefault()
+  const pastedFiles = files.map((file) => ({
+    uid: `paste-${Date.now()}-${file.name}`,
+    name: file.name,
+    status: 'done',
+    originFileObj: file,
+  })) as NonNullable<UploadProps['fileList']>
+
+  if (field === 'image') {
+    imageFileList.value = [...(imageFileList.value || []), ...pastedFiles]
+    syncFileField('image', imageFileList.value)
+    return
+  }
+
+  videoFileList.value = [...(videoFileList.value || []), ...pastedFiles]
+  syncFileField('video', videoFileList.value)
 }
 
 function submitForm() {
@@ -112,52 +187,85 @@ function submitForm() {
             />
           </a-form-item>
         </a-col>
+
         <a-col :span="8">
           <a-form-item label="品牌">
-            <a-input v-model:value="form.brand" />
+            <a-select
+              v-model:value="form.brand"
+              :options="brandOptions.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
-          <a-form-item label="站点">
-            <a-input v-model:value="form.site" />
+          <a-form-item label="平台">
+            <a-select
+              v-model:value="form.site"
+              :options="platformOptions.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
           <a-form-item label="设备类型">
-            <a-input v-model:value="form.productType" />
+            <a-select
+              v-model:value="form.productType"
+              :options="productTypeOptions.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
           <a-form-item label="销售型号">
-            <a-input v-model:value="form.model" />
+            <a-select
+              v-model:value="form.model"
+              :options="modelOptions.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
           <a-form-item label="内部型号/料号">
-            <a-input v-model:value="form.internal" />
+            <a-select
+              v-model:value="form.internal"
+              show-search
+              :options="internalOptions.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
-          <a-form-item label="订单号">
+          <a-form-item label="销售订单号">
             <a-input v-model:value="form.orderNo" />
           </a-form-item>
         </a-col>
         <a-col :span="8">
-          <a-form-item label="ASIN">
-            <a-input v-model:value="form.asin" />
+          <a-form-item label="ASIN" :required="isAmazonPlatform">
+            <a-input
+              v-model:value="form.asin"
+              :disabled="!isAmazonPlatform"
+              :placeholder="isAmazonPlatform ? '亚马逊平台必填' : '非亚马逊平台无需填写'"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="8">
           <a-form-item label="是否退换货">
             <a-select
               v-model:value="form.returned"
-              :options="['退货', '换货', '退货+换货', '无需'].map((item) => ({ label: item, value: item }))"
+              :options="returnOptions.map((item) => ({ label: item, value: item }))"
             />
           </a-form-item>
         </a-col>
         <a-col :span="8">
-          <a-form-item label="快递单号（退换货）">
-            <a-input v-model:value="form.expressNo" placeholder="退换货时填写" />
+          <a-form-item label="快递单号（退换货）" :required="needsExpressNo">
+            <a-input
+              v-model:value="form.expressNo"
+              :disabled="!needsExpressNo"
+              :placeholder="needsExpressNo ? '退换货时填写' : '无需退换货时无需填写'"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="异常级别">
+            <a-select
+              v-model:value="form.exception"
+              :options="exceptionLevels.map((item) => ({ label: item, value: item }))"
+            />
           </a-form-item>
         </a-col>
         <a-col :span="12">
@@ -172,17 +280,30 @@ function submitForm() {
         </a-col>
         <a-col :span="12">
           <a-form-item label="图片补充">
-            <a-input v-model:value="form.image" placeholder="图片链接或附件说明" />
+            <a-upload-dragger
+              v-model:file-list="imageFileList"
+              accept="image/*"
+              :before-upload="beforeUpload"
+              :multiple="true"
+              @change="syncFileField('image', imageFileList)"
+              @paste="handlePaste('image', $event)"
+            >
+              <p class="upload-copy">上传或粘贴图片文件</p>
+            </a-upload-dragger>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item label="视频补充">
-            <a-input v-model:value="form.video" placeholder="视频链接或附件说明" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="24">
-          <a-form-item label="问题回答/处理方案">
-            <a-textarea v-model:value="form.solution" :rows="3" />
+            <a-upload-dragger
+              v-model:file-list="videoFileList"
+              accept="video/*"
+              :before-upload="beforeUpload"
+              :multiple="true"
+              @change="syncFileField('video', videoFileList)"
+              @paste="handlePaste('video', $event)"
+            >
+              <p class="upload-copy">上传或粘贴视频文件</p>
+            </a-upload-dragger>
           </a-form-item>
         </a-col>
         <a-col :span="8">
@@ -200,41 +321,10 @@ function submitForm() {
             <a-input v-model:value="form.level3" />
           </a-form-item>
         </a-col>
-        <a-col :span="8">
-          <a-form-item label="异常级别">
-            <a-select
-              v-model:value="form.exception"
-              :options="exceptionLevels.map((item) => ({ label: item, value: item }))"
-            />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="处理去向">
-            <a-select
-              v-model:value="form.processRoute"
-              :options="processRouteOptions.map((item) => ({ label: item, value: item }))"
-            />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="创建方式">
-            <a-select
-              v-model:value="form.createMode"
-              :options="['人工录入', 'AI自动创建'].map((item) => ({ label: item, value: item }))"
-            />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="状态">
-            <a-select
-              v-model:value="form.processState"
-              :options="processStateOptions.map((item) => ({ label: item, value: item }))"
-            />
-          </a-form-item>
-        </a-col>
+
         <a-col :span="8">
           <a-form-item label="反馈人">
-            <a-input v-model:value="form.feedbackUser" />
+            <a-input v-model:value="form.feedbackUser" disabled />
           </a-form-item>
         </a-col>
       </a-row>
@@ -247,3 +337,11 @@ function submitForm() {
     </template>
   </a-modal>
 </template>
+
+<style scoped>
+.upload-copy {
+  margin: 8px 0;
+  color: #4b5563;
+  font-size: 13px;
+}
+</style>
