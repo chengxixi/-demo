@@ -30,15 +30,22 @@ If the exact requested version is a saved/review minor version that is not publi
 
 1. Do not use the project row from `forecast_list`, `forecast_list_new`, or `terminal_team_pc_list` as that version's actual/final result. Those reports only reflect published/approved versions and may still be showing the previous version, such as `V4.0`.
 2. Fetch `/v1/project_initiation_plans/review_list?project_id=<project_id>` and match the exact `id` or `complete_version`.
-3. If `processing_remark` contains `项目完成率（当前）：从X变为Y`, use `Y` as the draft version's current/actual completion-rate audit value. State that it is a draft/review calculation, not the published statistics report value.
-4. To verify or explain the draft current rate, use the current accounting task from the official current row (`forecast_list_new.account_task_name`) and match that task in both the baseline plan and the draft plan. Calculate cumulative working-day cycles from the project start to the matched task finish dates.
-5. For draft current-rate recalculation, use the current/accounting change-day scope, not the whole-project final critical-path change-day scope. Do not reuse `forecast_list.change_days` blindly when the draft is unpublished.
-6. Keep the three rate families separate when parsing review remarks:
-   - `项目完成率（当前）` = current/actual accounting rate for the draft.
+3. Keep the three rate families separate when parsing review remarks:
+   - `项目完成率（当前）` = current/accounting-node rate, not actual completion rate.
    - `项目完成率（预测最终-新）` = current forecast method, not actual completion rate.
-   - `项目完成率（预测最终-旧）` = final/old forecast method, not current actual completion rate.
+   - `项目完成率（预测最终-旧）` = actual/final completion-rate method.
+4. When the user asks for `实际完成率`, use `项目完成率（预测最终-旧）` if the review remark provides it. If recalculating, use: `actual completion rate = basic_cycle / (actual_cycle - change_days)`.
+5. For unpublished-version actual completion rate, derive `actual_cycle` from the requested version's whole-project critical path: find the final critical-path task and count PM workdays from the project start through that task's planned finish date.
+6. For actual completion-rate `change_days`, include every critical-path change task in the requested version:
+   - `detail_type = 3`
+   - `whether_critical_task = 1`
+   - `task_type = 7`
+   - include both closed and open change tasks; do not filter by `actual_end_date`
+   - exclude abnormal tasks such as `task_type = 6`
+7. For each included change task, calculate `included days = plan workdays + critical-path positive lag days`. Plan workdays use PM calendar from `begin_date` through `end_date`. Lag days come from `pre_task` / dependency links with critical-path neighbors. Do not infer lag from date overlap.
+8. If the review remark's `预测最终-旧` percentage disagrees with a recalculation from current task rows, report both and state the exact task-derived `change_days`, because unpublished review remarks can lag behind the current draft plan detail.
 
-Example: if `V4.1` is unpublished and its review remark says `项目完成率（当前）：从100%变为87.5%`, answer `87.5%` for the V4.1 current/actual completion-rate query. Do not answer with a published report row that still says `100%` for `V4.0`.
+Example: if `V4.1` is unpublished and task details show all critical-path `task_type = 7` change rows total 18 included days, use 18 as `change_days` for actual completion-rate recalculation, even if only 17 days are already closed. Do not use critical-path abnormal rows to make 16 days.
 
 ## Required Explanation Shapes
 

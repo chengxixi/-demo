@@ -54,7 +54,8 @@ Stages and nodes provide hierarchy and reporting context, but critical-path extr
     - Published top-level versions can be compared against statistics report rows.
     - Unpublished saved/review minor versions such as `V4.1` do not appear in actual/final statistics report rows. Do not answer with the published `forecast_list`, `forecast_list_new`, or `terminal_team_pc_list` rate for these versions.
     - For an unpublished version, fetch `/v1/project_initiation_plans/review_list?project_id=<project_id>` and the draft plan detail, then follow the draft-version rules in `references/completion-rate.md`.
-    - When the review remark contains `项目完成率（当前）`, treat that as the draft version's current/actual completion-rate audit value and use plan-detail recalculation only to verify or explain it.
+    - When the user asks for actual completion rate, treat it as `项目完成率（预测最终-旧）` / final-old completion rate, not `项目完成率（当前）` and not `项目完成率（预测最终-新）`.
+    - For actual completion-rate `change_days`, include all critical-path change tasks (`detail_type = 3`, `whether_critical_task = 1`, `task_type = 7`) in the requested version, regardless of close status; exclude abnormal tasks (`task_type = 6`).
 
 ## Change-Day Details
 
