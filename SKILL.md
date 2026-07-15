@@ -40,6 +40,7 @@ Stages and nodes provide hierarchy and reporting context, but critical-path extr
    - use API field `id` as the plan detail id
    - identify latest version by the highest numeric `version` in all rows
    - never claim only a subset of versions exists unless raw `data.rows` contains only that subset
+   - for minor versions such as `V4.1`, resolve by `complete_version` in `children[]` recursively and record the matched `status`
 5. Fetch plan detail rows for stages, nodes, and tasks, then keep only `detail_type = 3` task rows for task-level analysis.
 6. Build the critical-task graph using `whether_critical_task = 1` and plan links.
 7. Calculate duration for each task:
@@ -49,6 +50,11 @@ Stages and nodes provide hierarchy and reporting context, but critical-path extr
    - count only PM-system working days from the holiday API
 8. Output all critical paths in the requested format. If the user asks for a flowchart, horizontal chart, Mermaid, SVG, PNG, or visual export, read [references/flowchart-output.md](references/flowchart-output.md) and follow its format exactly.
 9. If the user asks for completion-rate, forecast completion-rate, current accounting task, baseline version, change days, or completion-rate change, read [references/completion-rate.md](references/completion-rate.md) and apply the numbered output format exactly as written there.
+10. Before using any statistics report row for a requested version, check whether that exact version is published/approved:
+    - Published top-level versions can be compared against statistics report rows.
+    - Unpublished saved/review minor versions such as `V4.1` do not appear in actual/final statistics report rows. Do not answer with the published `forecast_list`, `forecast_list_new`, or `terminal_team_pc_list` rate for these versions.
+    - For an unpublished version, fetch `/v1/project_initiation_plans/review_list?project_id=<project_id>` and the draft plan detail, then follow the draft-version rules in `references/completion-rate.md`.
+    - When the review remark contains `项目完成率（当前）`, treat that as the draft version's current/actual completion-rate audit value and use plan-detail recalculation only to verify or explain it.
 
 ## Change-Day Details
 

@@ -6,13 +6,13 @@ Every completion-rate explanation must use the required shape below and end with
 
 ## Completion Rate API Scope
 
-Actual completion rate, forecast completion rate - old, and final forecast completion rate are the same business metric. Fetch the official value from:
+Actual completion rate, forecast completion rate - old, and final forecast completion rate are the same business metric for published/approved versions. Fetch the official value from:
 
 ```text
 GET /v1/statistics/forecast_list?year=YYYY
 ```
 
-Find the row by `project_id` and use backend field `rate` as the official actual/final completion rate. Explain it with `basic_cycle`, `actual_cycle`, and `change_days`: actual completion rate = `basic_cycle / (actual_cycle - change_days)`.
+Find the row by `project_id` and use backend field `rate` as the official actual/final completion rate only when the requested version is already published/approved. Explain it with `basic_cycle`, `actual_cycle`, and `change_days`: actual completion rate = `basic_cycle / (actual_cycle - change_days)`.
 
 Current forecast completion rate is a different metric for the current accounting task. Fetch it from:
 
@@ -21,6 +21,24 @@ GET /v1/statistics/forecast_list_new?year=YYYY
 ```
 
 Use `forecast_list_new` for current accounting task forecast explanations, not as the official actual/final completion-rate source unless the user explicitly asks for current forecast.
+
+## Unpublished Draft And Minor Versions
+
+Before answering a requested version such as `V4.1`, resolve the exact plan row from `/v1/project_initiation_plans?project_id=<project_id>` recursively through `children[]` and check its `status`.
+
+If the exact requested version is a saved/review minor version that is not published/approved:
+
+1. Do not use the project row from `forecast_list`, `forecast_list_new`, or `terminal_team_pc_list` as that version's actual/final result. Those reports only reflect published/approved versions and may still be showing the previous version, such as `V4.0`.
+2. Fetch `/v1/project_initiation_plans/review_list?project_id=<project_id>` and match the exact `id` or `complete_version`.
+3. If `processing_remark` contains `项目完成率（当前）：从X变为Y`, use `Y` as the draft version's current/actual completion-rate audit value. State that it is a draft/review calculation, not the published statistics report value.
+4. To verify or explain the draft current rate, use the current accounting task from the official current row (`forecast_list_new.account_task_name`) and match that task in both the baseline plan and the draft plan. Calculate cumulative working-day cycles from the project start to the matched task finish dates.
+5. For draft current-rate recalculation, use the current/accounting change-day scope, not the whole-project final critical-path change-day scope. Do not reuse `forecast_list.change_days` blindly when the draft is unpublished.
+6. Keep the three rate families separate when parsing review remarks:
+   - `项目完成率（当前）` = current/actual accounting rate for the draft.
+   - `项目完成率（预测最终-新）` = current forecast method, not actual completion rate.
+   - `项目完成率（预测最终-旧）` = final/old forecast method, not current actual completion rate.
+
+Example: if `V4.1` is unpublished and its review remark says `项目完成率（当前）：从100%变为87.5%`, answer `87.5%` for the V4.1 current/actual completion-rate query. Do not answer with a published report row that still says `100%` for `V4.0`.
 
 ## Required Explanation Shapes
 
