@@ -42,10 +42,16 @@ If the exact requested version is a saved/review minor version that is not publi
    - `task_type = 7`
    - include both closed and open change tasks; do not filter by `actual_end_date`
    - exclude abnormal tasks such as `task_type = 6`
-7. For each included change task, calculate `included days = plan workdays + critical-path positive lag days`. Plan workdays use PM calendar from `begin_date` through `end_date`. Lag days come from `pre_task` / dependency links with critical-path neighbors. Do not infer lag from date overlap.
+7. For each included change task, calculate `included days = plan workdays + signed critical-path lag days`. Plan workdays use PM calendar from `begin_date` through `end_date`. Lag days come only from explicit `FS +/-N` settings in `pre_task` / dependency links with adjacent critical-path neighbors, checked in both directions:
+   - predecessor positive lag increases included days, for example a change task with `pre_task = 20-1 FS +7` adds 7 days.
+   - predecessor negative lag reduces included days.
+   - successor positive lag increases included days when the following critical-path task references the change task.
+   - successor negative lag reduces included days when the following critical-path task references the change task, for example successor `pre_task = 18-4 FS -1` subtracts 1 day from change task `18-4`.
+   - count each lag relationship only once, especially when two change tasks are connected.
+   - do not infer lag from date overlap; use explicit FS lag settings only.
 8. If the review remark's `预测最终-旧` percentage disagrees with a recalculation from current task rows, report both and state the exact task-derived `change_days`, because unpublished review remarks can lag behind the current draft plan detail.
 
-Example: if `V4.1` is unpublished and task details show all critical-path `task_type = 7` change rows total 18 included days, use 18 as `change_days` for actual completion-rate recalculation, even if only 17 days are already closed. Do not use critical-path abnormal rows to make 16 days.
+Example: if `V4.1` is unpublished, include all critical-path `task_type = 7` change rows, then apply explicit adjacent lag. If the raw change rows total 18 days but the following critical-path task references `变更任务-确认供应商报价` as `18-4 FS -1`, subtract 1 day and use 17 as `change_days`. Do not use critical-path abnormal rows to make 16 days.
 
 ## Required Explanation Shapes
 
