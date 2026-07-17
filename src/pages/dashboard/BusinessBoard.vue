@@ -176,13 +176,13 @@ watch(
         <a-card size="small" class="metric-card">
           <a-statistic :title="card.label" :value="card.value" />
           <div class="metric-note-row">
-            <a-tag :color="trendColor(card.trend)">
-              {{ props.comparison }} {{ card.trend }}
-            </a-tag>
             <a-typography-text type="secondary" class="metric-note">
               <span>{{ card.note1 }}</span>
               <strong>{{ card.note2 }}</strong>
             </a-typography-text>
+            <a-tag :color="trendColor(card.trend)">
+              {{ props.comparison }} {{ card.trend }}
+            </a-tag>
           </div>
         </a-card>
       </a-col>

@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 function routeLabel(row: WorkOrder) {
   if (row.status === '已直接关闭' || row.closeNote) return '直接关闭'
-  if (row.exception === '是') return '已转异常'
+  if (row.exception === '是') return '已流转紧急异常处理'
   if (row.requirement === '是') return '已转需求'
   if (row.qa === '是') return '已转Q&A'
   return row.status || '-'

@@ -6,6 +6,7 @@ interface Filters {
   summary: string
   feedbackId: string
   productLine: string
+  status: string
   inflowTime: string
   owner: string
   dept: string
@@ -15,6 +16,7 @@ interface Filters {
 const props = defineProps<{
   filters: Filters
   productLines: string[]
+  statuses: string[]
   owners: string[]
   departments: string[]
   routes: string[]
@@ -61,6 +63,12 @@ function updateField<K extends keyof Filters>(key: K, value: Filters[K]) {
       <label class="filter-field">
         <span>产品线</span>
         <a-select :value="localFilters.productLine" class="w-full" allow-clear placeholder="产品线" :options="props.productLines.map((item) => ({ label: item, value: item }))" @change="updateField('productLine', String($event || ''))" />
+      </label>
+    </a-col>
+    <a-col :xs="24" :md="6">
+      <label class="filter-field">
+        <span>状态</span>
+        <a-select :value="localFilters.status" class="w-full" allow-clear placeholder="状态" :options="props.statuses.map((item) => ({ label: item, value: item }))" @change="updateField('status', String($event || ''))" />
       </label>
     </a-col>
     <a-col :xs="24" :md="6">

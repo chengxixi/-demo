@@ -14,12 +14,14 @@ const GENERATED_WORKORDERS_KEY = 'feedback-generated-workorders'
 const orders = ref<WorkOrder[]>([...workOrderData])
 const detailOpen = shallowRef(false)
 const detailOrder = ref<WorkOrder | null>(null)
+const activeTab = shallowRef('all')
 
 const filters = ref({
   id: '',
   summary: '',
   feedbackId: '',
   productLine: '',
+  status: '',
   inflowTime: '',
   owner: '',
   dept: '',
@@ -27,14 +29,22 @@ const filters = ref({
 })
 
 
+const tabOptions = [
+  { key: 'all', label: '全部' },
+  { key: 'pending', label: '待处理' },
+  { key: 'mine', label: '与我有关' },
+  { key: 'done', label: '已处理' },
+]
+
 const productLineOptions = ['八电极', '体脂秤', '筋膜枪']
-const routeOptions = ['直接关闭', '已转异常', '已转需求', '已转Q&A', '待处理', '处理中']
+const statusOptions = ['待处理', '处理中', '已直接关闭', '已转需求', '已转Q&A', '转异常']
+const routeOptions = ['直接关闭', '已流转紧急异常处理', '已转需求', '已转Q&A', '待处理', '处理中']
 const ownerOptions = computed(() => uniqueValues(orders.value.map((order) => order.owner)))
 const departmentOptions = computed(() => uniqueValues(orders.value.map((order) => order.dept)))
 
 function routeLabel(order: WorkOrder) {
   if (order.status === '已直接关闭' || order.closeNote) return '直接关闭'
-  if (order.exception === '是') return '已转异常'
+  if (order.exception === '是') return '已流转紧急异常处理'
   if (order.requirement === '是' || order.requirement === '预留') return '已转需求'
   if (order.qa === '是') return '已转Q&A'
   return order.status || '-'
@@ -44,18 +54,31 @@ function includesText(value: string, query: string) {
   return !query.trim() || value.toLowerCase().includes(query.trim().toLowerCase())
 }
 
+function isDoneOrder(order: WorkOrder) {
+  return order.status === '已直接关闭' || order.status === '已转需求' || order.status === '已转Q&A' || order.status === '已流转紧急异常处理' || Boolean(order.closeNote)
+}
+
+function matchesTab(order: WorkOrder) {
+  if (activeTab.value === 'pending') return !isDoneOrder(order)
+  if (activeTab.value === 'mine') return order.owner === '李工'
+  if (activeTab.value === 'done') return isDoneOrder(order)
+  return true
+}
+
 const filteredOrders = computed(() => {
   return orders.value.filter((order) => {
     const matchesId = includesText(order.id, filters.value.id)
     const matchesSummary = includesText(order.summary, filters.value.summary)
     const matchesFeedbackId = includesText(order.relatedFeedback, filters.value.feedbackId)
     const matchesProductLine = !filters.value.productLine || order.productLine === filters.value.productLine
+    const matchesStatus = !filters.value.status || order.status === filters.value.status
     const matchesInflowTime = includesText(order.inflowTime || '', filters.value.inflowTime)
     const matchesOwner = !filters.value.owner || order.owner === filters.value.owner
     const matchesDept = !filters.value.dept || order.dept === filters.value.dept
     const matchesRoute = !filters.value.route || routeLabel(order) === filters.value.route
+    const matchesActiveTab = matchesTab(order)
 
-    return matchesId && matchesSummary && matchesFeedbackId && matchesProductLine && matchesInflowTime && matchesOwner && matchesDept && matchesRoute
+    return matchesActiveTab && matchesId && matchesSummary && matchesFeedbackId && matchesProductLine && matchesStatus && matchesInflowTime && matchesOwner && matchesDept && matchesRoute
   })
 })
 
@@ -96,10 +119,10 @@ function persistGeneratedWorkOrders() {
   localStorage.setItem(GENERATED_WORKORDERS_KEY, JSON.stringify(generated))
 }
 
-function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
+function routeOrder(payload: { order: WorkOrder; route: RouteType; exceptionLevel?: string; exceptionOwner?: string }) {
   const routeMap = {
     requirement: { status: '已转需求', requirement: '是', qa: payload.order.qa, exception: payload.order.exception },
-    exception: { status: '转异常', exception: '是', requirement: payload.order.requirement, qa: payload.order.qa },
+    exception: { status: '已流转紧急异常处理', exception: '是', requirement: payload.order.requirement, qa: payload.order.qa },
     qa: { status: '已转Q&A', qa: '是', requirement: payload.order.requirement, exception: payload.order.exception },
     close: { status: '已直接关闭', qa: payload.order.qa, requirement: payload.order.requirement, exception: payload.order.exception },
   }
@@ -112,6 +135,10 @@ function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
     exception: next.exception,
     qa: next.qa,
     closeReason: payload.route === 'close' ? '已回复关闭' : payload.order.closeReason,
+    result: payload.route === 'close' ? '已直接关闭' : payload.route === 'requirement' ? '已流转需求' : payload.route === 'qa' ? '已流转Q&A' : payload.route === 'exception' ? '已流转紧急异常处理' : payload.order.result,
+    exceptionLevel: payload.exceptionLevel || payload.order.exceptionLevel,
+    exceptionOwner: payload.exceptionOwner || payload.order.exceptionOwner,
+    processedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
   })
 }
 
@@ -137,9 +164,14 @@ function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
       <a-col :xs="12" :md="6"><a-card size="small"><a-statistic title="已转需求" :value="stats.toRequirement" /></a-card></a-col>
     </a-row>
 
+    <a-tabs v-model:active-key="activeTab">
+      <a-tab-pane v-for="tab in tabOptions" :key="tab.key" :tab="tab.label" />
+    </a-tabs>
+
     <WorkOrderFilter
       v-model:filters="filters"
       :product-lines="productLineOptions"
+      :statuses="statusOptions"
       :owners="ownerOptions"
       :departments="departmentOptions"
       :routes="routeOptions"

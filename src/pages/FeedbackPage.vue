@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
@@ -71,6 +71,13 @@ const tabOptions = [
   { key: 'review', label: '待人工复核' },
   { key: 'done', label: '已处理' },
   { key: 'mine', label: '我的反馈' },
+]
+
+const batchActionOptions = [
+  { key: '已转工单', label: '批量转工单' },
+  { key: '已转需求', label: '批量转需求' },
+  { key: '已转Q&A', label: '批量沉淀 Q&A' },
+  { key: '已直接回复关闭', label: '批量直接关闭' },
 ]
 
 const routeCards = [
@@ -370,13 +377,30 @@ function toggleSelectAll() {
   selectedIds.value = new Set(filteredItems.value.map((item) => item.id))
 }
 
-function batchClose() {
+function ensureBatchSelection() {
   if (selectedIds.value.size === 0) {
     message.info('请先选择反馈')
+    return false
+  }
+  return true
+}
+
+function batchClose() {
+  if (!ensureBatchSelection()) return
+  batchCloseOpen.value = true
+}
+
+function handleBatchAction(route: string) {
+  if (!ensureBatchSelection()) return
+  if (route === '已直接回复关闭') {
+    batchClose()
     return
   }
-
-  batchCloseOpen.value = true
+  confirmBatchClose({
+    route,
+    closeReason: routeTitle(route),
+    qa: route === '已转Q&A',
+  })
 }
 
 function confirmBatchClose(payload: { route: string; closeReason: string; qa: boolean }) {
@@ -413,7 +437,7 @@ function submitImport() {
         <a-space direction="vertical" size="small">
           <a-typography-title :level="4" class="m-0">反馈清单</a-typography-title>
           <a-typography-text type="secondary">
-按来源汇聚反馈，支持同类问题合并展开、复核、批量转异常、转工单、转需求和沉淀 Q&A。
+按来源汇聚反馈，支持同类问题合并展开、复核、批量转工单、转需求和沉淀 Q&A。
           </a-typography-text>
         </a-space>
       </a-col>
@@ -423,7 +447,14 @@ function submitImport() {
           <a-button @click="filterVisible = !filterVisible">{{ filterVisible ? '收起筛选' : '筛选' }}</a-button>
           <a-button @click="templateOpen = true">我的模板设置</a-button>
           <a-button @click="importOpen = true">批量导入</a-button>
-          <a-button @click="batchClose">批量处理</a-button>
+          <a-dropdown>
+            <a-button>批量操作</a-button>
+            <template #overlay>
+              <a-menu @click="handleBatchAction(String($event.key))">
+                <a-menu-item v-for="action in batchActionOptions" :key="action.key">{{ action.label }}</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
           <a-button type="primary" @click="addOpen = true">新增反馈</a-button>
         </a-space>
       </a-col>
@@ -577,3 +608,5 @@ function submitImport() {
   justify-content: flex-end;
 }
 </style>
+
+

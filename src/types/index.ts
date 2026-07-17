@@ -59,6 +59,8 @@ export interface WorkOrder {
   inflowOperator?: string
   inflowTime?: string
   processedAt?: string
+  exceptionLevel?: string
+  exceptionOwner?: string
 }
 
 export interface EmergencyException {

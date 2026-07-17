@@ -11,10 +11,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void
   (event: 'save', value: WorkOrder): void
-  (event: 'route', value: { order: WorkOrder; route: 'requirement' | 'exception' | 'qa' | 'close' }): void
+  (event: 'route', value: { order: WorkOrder; route: 'requirement' | 'exception' | 'qa' | 'close'; exceptionLevel?: string; exceptionOwner?: string }): void
 }>()
 
-const actionMode = shallowRef<'requirement' | 'qa' | 'close' | ''>('')
+const actionMode = shallowRef<'requirement' | 'exception' | 'qa' | 'close' | ''>('')
+const exceptionOpen = shallowRef(false)
 
 const form = reactive({
   status: '',
@@ -22,6 +23,8 @@ const form = reactive({
   result: '',
   closeNote: '',
   processedAt: '',
+  exceptionLevel: 'P1',
+  exceptionOwner: '刘海洲',
 })
 
 const relatedFeedbackIds = computed<string[]>(() => {
@@ -40,7 +43,7 @@ const workOrderRoute = computed(() => {
   const item = props.item
   if (!item) return '-'
   if (item.status === '已直接关闭' || item.closeNote) return '直接关闭'
-  if (item.exception === '是') return '已转异常'
+  if (item.exception === '是') return '已流转紧急异常处理'
   if (item.requirement === '是' || item.requirement === '预留') return '已转需求'
   if (item.qa === '是') return '已转Q&A'
   return item.status || '处理中'
@@ -49,9 +52,19 @@ const workOrderRoute = computed(() => {
 
 const stepCurrent = computed(() => {
   if (!props.item) return 0
-  if (props.item.status === '已直接关闭' || ['已转需求', '已转Q&A', '转异常'].includes(props.item.status)) return 2
+  if (props.item.status === '已直接关闭' || ['已转需求', '已转Q&A', '转异常', '已流转紧急异常处理'].includes(props.item.status)) return 2
   if (props.item.status.includes('处理')) return 1
   return 0
+})
+
+const resultDisplay = computed(() => {
+  const item = props.item
+  if (!item) return { label: '-', href: '' }
+  if (item.status === '已直接关闭' || item.closeNote) return { label: '已直接关闭', href: '' }
+  if (item.exception === '是' || item.status === '已流转紧急异常处理') return { label: '已流转紧急异常处理', href: '#/emergency' }
+  if (item.requirement === '是' || item.requirement === '预留' || item.status === '已转需求') return { label: '已流转需求', href: '#/requirements' }
+  if (item.qa === '是' || item.status === '已转Q&A') return { label: '已流转Q&A', href: '#/knowledge' }
+  return { label: item.result || '待处理', href: '' }
 })
 
 const detailCards = computed(() => {
@@ -75,6 +88,8 @@ watch(
     form.result = item?.result || ''
     form.closeNote = item?.closeNote || ''
     form.processedAt = item?.processedAt || ''
+    form.exceptionLevel = item?.exceptionLevel || 'P1'
+    form.exceptionOwner = item?.exceptionOwner || '刘海洲'
     actionMode.value = item?.status === '已直接关闭' ? 'close' : ''
   },
   { immediate: true },
@@ -98,7 +113,7 @@ function saveItem() {
     ...props.item,
     status: actionMode.value === 'close' ? '已直接关闭' : props.item.status,
     owner: form.owner,
-    result: form.result,
+    result: resultDisplay.value.label,
     closeNote: form.closeNote,
     processedAt: form.processedAt || (form.result.trim() || actionMode.value === 'close' ? currentMinute() : props.item.processedAt),
   })
@@ -107,12 +122,28 @@ function saveItem() {
 
 function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
   if (!props.item) return
+  if (route === 'exception') {
+    exceptionOpen.value = true
+    return
+  }
   if (route === 'close') {
     actionMode.value = 'close'
     form.status = '已直接关闭'
     return
   }
   emit('route', { order: props.item, route })
+  closeDrawer()
+}
+
+function confirmExceptionRoute() {
+  if (!props.item) return
+  emit('route', {
+    order: props.item,
+    route: 'exception',
+    exceptionLevel: form.exceptionLevel,
+    exceptionOwner: form.exceptionOwner,
+  })
+  exceptionOpen.value = false
   closeDrawer()
 }
 </script>
@@ -178,7 +209,10 @@ function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
           </a-col>
           <a-col :span="24">
             <a-form-item label="处理结果">
-              <a-textarea v-model:value="form.result" :rows="3" />
+              <a-typography-link v-if="resultDisplay.href" :href="resultDisplay.href">
+                {{ resultDisplay.label }}
+              </a-typography-link>
+              <a-typography-text v-else strong>{{ resultDisplay.label }}</a-typography-text>
             </a-form-item>
           </a-col>
           <a-col v-if="actionMode === 'close'" :span="24">
@@ -189,12 +223,24 @@ function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
         </a-row>
       </a-form>
     </template>
+    <a-modal v-model:open="exceptionOpen" title="流转紧急异常" @ok="confirmExceptionRoute">
+      <a-form layout="vertical">
+        <a-form-item label="异常等级">
+          <a-select v-model:value="form.exceptionLevel" :options="['P0', 'P1'].map((item) => ({ label: item, value: item }))" />
+        </a-form-item>
+        <a-form-item label="异常处理人">
+          <a-select v-model:value="form.exceptionOwner" :options="['刘海洲', '陈华军'].map((item) => ({ label: item, value: item }))" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
     <div class="detail-actions">
       <a-space v-if="props.item" wrap>
         <template v-if="!isClosedOrder">
           <a-button @click="routeTo('close')">直接关闭</a-button>
           <a-button @click="routeTo('requirement')">流转需求</a-button>
           <a-button @click="routeTo('qa')">流转Q&A</a-button>
+          <a-button @click="routeTo('exception')">流转紧急异常</a-button>
         </template>
         <a-button type="primary" @click="saveItem">保存</a-button>
       </a-space>

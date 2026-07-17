@@ -1,12 +1,11 @@
-<script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+﻿<script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import type { EmergencyException } from '@/types'
 import { emergencyData, emergencyStepLabels } from '@/api/mock'
 import { currentUser } from '@/stores'
 import EmergencyFilter, { type EmergencyFilters } from './EmergencyFilter.vue'
-import EmergencyTable from './EmergencyTable.vue'
 
 type StatCard = {
   label: string
@@ -16,8 +15,6 @@ type StatCard = {
 
 const router = useRouter()
 const items = ref<EmergencyException[]>([...emergencyData])
-const createOpen = ref(false)
-
 const filters = ref<EmergencyFilters>({
   keyword: '',
   level: '',
@@ -25,23 +22,6 @@ const filters = ref<EmergencyFilters>({
   status: '',
   dimension: '',
   overdue: '',
-})
-
-const newEmergency = reactive({
-  level: 'P0',
-  region: '国内',
-  site: '京东',
-  productLine: '体脂秤',
-  internal: '',
-  dimension: '客户伤害',
-  source: '退货反馈',
-  owner: '刘海州',
-  team: '售后负责人 + 质量负责人',
-  issue: '',
-  impactScope: '',
-  feedback: '',
-  reminderLimit: '2h',
-  reminderDeadline: '',
 })
 
 const filteredItems = computed(() => {
@@ -78,7 +58,6 @@ const filteredItems = computed(() => {
 
 const p0Items = computed(() => emergencyItemsByLevel('P0'))
 const p1Items = computed(() => emergencyItemsByLevel('P1'))
-const observationItems = computed(() => filteredItems.value.filter((item) => item.level === 'P2' || item.level === 'P3'))
 
 const stats = computed<StatCard[]>(() => [
   { label: 'P0 致命/封店', value: items.value.filter((item) => item.level === 'P0').length, accent: '#e11d48' },
@@ -127,54 +106,6 @@ function openDispose(item: EmergencyException) {
   router.push(`/emergency/detail/${encodeURIComponent(item.id)}?mode=dispose`)
 }
 
-function resetFilters() {
-  filters.value = {
-    keyword: '',
-    level: '',
-    region: '',
-    status: '',
-    dimension: '',
-    overdue: '',
-  }
-}
-
-function createEmergency() {
-  const dateKey = new Date().toISOString().slice(0, 10).split('-').join('')
-  const id = `${newEmergency.level}-${dateKey}-${String(items.value.length + 1).padStart(3, '0')}`
-
-  items.value = [
-    {
-      id,
-      level: newEmergency.level,
-      region: newEmergency.region,
-      site: newEmergency.site,
-      productLine: newEmergency.productLine,
-      internal: newEmergency.internal || '待补充',
-      creator: currentUser.value.name || '当前用户',
-      dimension: newEmergency.dimension,
-      source: newEmergency.source,
-      deadline: '剩余 2h',
-      reminderLimit: newEmergency.reminderLimit,
-      reminderDeadline: newEmergency.reminderDeadline || '待确认',
-      overdue: false,
-      owner: newEmergency.owner,
-      team: newEmergency.team,
-      status: '待临时方案',
-      issue: newEmergency.issue || '待补充异常问题',
-      impactScope: newEmergency.impactScope || '待补充影响范围',
-      action: '待补充处置方案',
-      feedback: newEmergency.feedback || newEmergency.source,
-      tempPlan: '',
-      rootCause: '待根因分析',
-      fixPlan: '待整改措施',
-      verifyResult: '待验证',
-      step: 0,
-    },
-    ...items.value,
-  ]
-  createOpen.value = false
-  message.success('紧急异常已新增')
-}
 </script>
 
 <template>
@@ -190,13 +121,6 @@ function createEmergency() {
                 <a-typography-paragraph class="hero-copy">
                   P0/P1 紧急异常事项跟踪与闭环处理，P2/P3 仅纳入统计观察。
                 </a-typography-paragraph>
-              </a-space>
-            </a-col>
-            <a-col :xs="24" :lg="9">
-              <a-space wrap class="hero-actions">
-                <a-button @click="filters.overdue = 'yes'">查看超时</a-button>
-                <a-button @click="resetFilters">重置筛选</a-button>
-                <a-button type="primary" @click="createOpen = true">新建异常</a-button>
               </a-space>
             </a-col>
           </a-row>
@@ -310,32 +234,7 @@ function createEmergency() {
       <a-empty v-else description="暂无 P1 高危异常" />
     </section>
 
-    <a-collapse class="mt-4" ghost>
-      <a-collapse-panel key="observe" header="P2/P3 统计观察">
-        <EmergencyTable :items="observationItems" @open-detail="openDetail" />
-      </a-collapse-panel>
-    </a-collapse>
 
-    <a-modal v-model:open="createOpen" title="新建紧急异常" width="860px" @ok="createEmergency">
-      <a-form layout="vertical">
-        <a-row :gutter="12">
-          <a-col :span="6"><a-form-item label="P级"><a-select v-model:value="newEmergency.level" :options="['P0', 'P1'].map((item) => ({ label: item, value: item }))" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="地区"><a-select v-model:value="newEmergency.region" :options="['国内', '海外'].map((item) => ({ label: item, value: item }))" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="异常维度"><a-select v-model:value="newEmergency.dimension" :options="['客户伤害', '平台合规'].map((item) => ({ label: item, value: item }))" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="来源"><a-select v-model:value="newEmergency.source" :options="['退货反馈', '投诉/舆情', '客服沟通', 'APP反馈'].map((item) => ({ label: item, value: item }))" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="站点"><a-input v-model:value="newEmergency.site" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="产品线"><a-input v-model:value="newEmergency.productLine" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="内部型号"><a-input v-model:value="newEmergency.internal" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="负责人"><a-input v-model:value="newEmergency.owner" /></a-form-item></a-col>
-          <a-col :span="12"><a-form-item label="协同团队"><a-input v-model:value="newEmergency.team" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="提醒时限"><a-input v-model:value="newEmergency.reminderLimit" /></a-form-item></a-col>
-          <a-col :span="6"><a-form-item label="提醒截止"><a-input v-model:value="newEmergency.reminderDeadline" placeholder="YYYY-MM-DD HH:mm" /></a-form-item></a-col>
-          <a-col :span="12"><a-form-item label="异常问题"><a-textarea v-model:value="newEmergency.issue" :rows="3" /></a-form-item></a-col>
-          <a-col :span="12"><a-form-item label="影响范围"><a-textarea v-model:value="newEmergency.impactScope" :rows="3" /></a-form-item></a-col>
-          <a-col :span="24"><a-form-item label="关联反馈"><a-input v-model:value="newEmergency.feedback" placeholder="反馈编号、工单编号或合并组" /></a-form-item></a-col>
-        </a-row>
-      </a-form>
-    </a-modal>
   </section>
 </template>
 
@@ -485,3 +384,5 @@ function createEmergency() {
   }
 }
 </style>
+
+
