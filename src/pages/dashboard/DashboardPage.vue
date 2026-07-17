@@ -6,7 +6,7 @@ import QualityBoard from './QualityBoard.vue'
 
 const activeTab = ref('business')
 const comparison = ref<'环比' | '同比'>('环比')
-const filters = ref<Record<string, string>>({ ...defaultFilters })
+const filters = ref<Record<string, string | string[]>>({ ...defaultFilters })
 
 const changeKey = computed<'mom' | 'yoy'>(() => {
   return comparison.value === '同比' ? 'yoy' : 'mom'
@@ -28,7 +28,7 @@ function formatChange(value: number): string {
     <a-space direction="vertical" size="small">
       <a-typography-title :level="4" class="m-0">仪表盘</a-typography-title>
       <a-typography-text type="secondary">
-        反馈仪表盘查看业务趋势，问题仪表盘查看分类占比、异常动态和质量改善动作。
+        反馈仪表盘查看业务趋势，问题仪表盘查看分类占比、异常动态和工单看板。
       </a-typography-text>
     </a-space>
 

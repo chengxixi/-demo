@@ -31,9 +31,9 @@ const form = reactive({
   raw: '',
   ai: '',
   solution: '',
-  level1: '产品质量',
-  level2: '硬件问题',
-  level3: '待确认',
+  level1: 'AI待分类',
+  level2: 'AI待分类',
+  level3: 'AI待分类',
   exception: '无异常',
   createMode: '人工录入',
   processRoute: '待处理',
@@ -251,7 +251,7 @@ function submitForm() {
             />
           </a-form-item>
         </a-col>
-        <a-col :span="8">
+        <a-col v-if="needsExpressNo" :span="8">
           <a-form-item label="快递单号（退换货）" :required="needsExpressNo">
             <a-input
               v-model:value="form.expressNo"
@@ -304,21 +304,6 @@ function submitForm() {
             >
               <p class="upload-copy">上传或粘贴视频文件</p>
             </a-upload-dragger>
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="一级职能划分">
-            <a-input v-model:value="form.level1" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="二级问题场景分类">
-            <a-input v-model:value="form.level2" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="三级问题">
-            <a-input v-model:value="form.level3" />
           </a-form-item>
         </a-col>
 

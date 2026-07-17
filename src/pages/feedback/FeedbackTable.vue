@@ -71,7 +71,7 @@ const groupedRows = computed<FeedbackTableRow[]>(() => {
       rowType: 'group',
       id: `group-${mergeGroup}`,
       mergeGroup,
-      title: `${lead.model || lead.internal} ${lead.level3}合并反馈`,
+      title: `${lead.productType}-${lead.level3 || lead.level2 || '待分类'}`, 
       members,
       lead,
     })
@@ -219,10 +219,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
           </a-typography-text>
         </a-space>
         <a-space v-else direction="vertical" size="small">
-          <a-typography-text strong>
-            {{ row.parentGroup ? `第 ${row.childIndex} 条明细` : row.item.id }}
-          </a-typography-text>
-          <a-typography-text v-if="row.parentGroup" type="secondary">{{ row.item.id }}</a-typography-text>
+          <a-typography-text strong>{{ row.item.id }}</a-typography-text>
         </a-space>
       </template>
     </vxe-column>

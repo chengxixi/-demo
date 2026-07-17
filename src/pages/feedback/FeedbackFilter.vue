@@ -4,7 +4,6 @@ import {
   brandOptions,
   exceptionLevels,
   processRouteOptions,
-  processStateOptions,
   productTypeOptions,
   returnOptions,
   siteOptions,
@@ -12,24 +11,20 @@ import {
 } from '@/api/mock'
 
 interface Filters {
-  keyword: string
-  source: string
-  mode: string
-  processState: string
-  exception: string
-  brand: string
-  site: string
-  productType: string
-  model: string
-  internal: string
-  level1: string
-  level2: string
-  level3: string
+  feedbackTime: string
+  source: string[]
+  createMode: string[]
+  region: string[]
+  site: string[]
+  productType: string[]
+  brand: string[]
   feedbackUser: string
-  dateFrom: string
-  dateTo: string
-  returned: string
-  processRoute: string
+  returned: string[]
+  level1: string[]
+  level2: string[]
+  level3: string[]
+  exception: string[]
+  processRoute: string[]
 }
 
 const props = defineProps<{
@@ -45,6 +40,14 @@ const localFilters = computed({
   set: (value: Filters) => emit('update:filters', value),
 })
 
+const feedbackTimeOptions = ['近7天', '近30天', '近90天']
+const createModeOptions = ['人工录入', 'AI自动创建']
+const regionOptions = ['国内', '海外']
+const level1Options = ['产品质量', '产品体验', '咨询服务']
+const level2Options = ['硬件问题', '数据准确性', '功能效果', 'APP问题']
+const level3Options = ['无法开机', '测脂不准', '噪声偏大', '数据不同步']
+const feedbackUserOptions = ['张伟', '李娜', '陈晨', '王雪', '周杰', '赵敏', '系统']
+
 function updateField<K extends keyof Filters>(key: K, value: Filters[K]) {
   localFilters.value = {
     ...localFilters.value,
@@ -52,126 +55,114 @@ function updateField<K extends keyof Filters>(key: K, value: Filters[K]) {
   }
 }
 
+function updateMultiField<K extends keyof Filters>(key: K, value: unknown) {
+  updateField(key, (Array.isArray(value) ? value.map(String) : []) as Filters[K])
+}
+
 function resetFilters() {
-  localFilters.value = Object.fromEntries(
-    Object.keys(localFilters.value).map((key) => [key, '']),
-  ) as unknown as Filters
+  localFilters.value = {
+    feedbackTime: '',
+    source: [],
+    createMode: [],
+    region: [],
+    site: [],
+    productType: [],
+    brand: [],
+    feedbackUser: '',
+    returned: [],
+    level1: [],
+    level2: [],
+    level3: [],
+    exception: [],
+    processRoute: [],
+  }
 }
 </script>
 
 <template>
   <a-row :gutter="[12, 12]">
-    <a-col :xs="24" :md="8">
+    <a-col :xs="24" :md="4">
       <label class="filter-field">
-        <span>关键词</span>
-        <a-input
-          :value="localFilters.keyword"
-          placeholder="编号 / 品牌 / 型号 / 内部型号 / 反馈内容"
-          allow-clear
-          @change="updateField('keyword', ($event.target as HTMLInputElement).value)"
-        />
+        <span>反馈时间</span>
+        <a-select :value="localFilters.feedbackTime" class="w-full" placeholder="反馈时间" allow-clear :options="feedbackTimeOptions.map((item) => ({ label: item, value: item }))" @change="updateField('feedbackTime', String($event || ''))" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
         <span>数据来源</span>
-        <a-select :value="localFilters.source" class="w-full" placeholder="数据来源" allow-clear :options="sourceOptions.map((item) => ({ label: item, value: item }))" @change="updateField('source', String($event || ''))" />
+        <a-select :value="localFilters.source" mode="multiple" :max-tag-count="1" class="w-full" placeholder="数据来源" allow-clear :options="sourceOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('source', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
-        <span>创建方式</span>
-        <a-select :value="localFilters.mode" class="w-full" placeholder="创建方式" allow-clear :options="['AI自动创建', '人工录入'].map((item) => ({ label: item, value: item }))" @change="updateField('mode', String($event || ''))" />
+        <span>创建类型</span>
+        <a-select :value="localFilters.createMode" mode="multiple" :max-tag-count="1" class="w-full" placeholder="创建类型" allow-clear :options="createModeOptions.map((item) => ({ label: item === '人工录入' ? '人工创建' : 'AI创建', value: item }))" @change="updateMultiField('createMode', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
-        <span>品牌</span>
-        <a-select :value="localFilters.brand" class="w-full" placeholder="品牌" allow-clear :options="brandOptions.map((item) => ({ label: item, value: item }))" @change="updateField('brand', String($event || ''))" />
+        <span>地区</span>
+        <a-select :value="localFilters.region" mode="multiple" :max-tag-count="1" class="w-full" placeholder="地区" allow-clear :options="regionOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('region', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
         <span>平台</span>
-        <a-select :value="localFilters.site" class="w-full" placeholder="平台" allow-clear :options="siteOptions.map((item) => ({ label: item, value: item }))" @change="updateField('site', String($event || ''))" />
+        <a-select :value="localFilters.site" mode="multiple" :max-tag-count="1" class="w-full" placeholder="平台" allow-clear :options="siteOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('site', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
-        <span>设备类型</span>
-        <a-select :value="localFilters.productType" class="w-full" placeholder="设备类型" allow-clear :options="productTypeOptions.map((item) => ({ label: item, value: item }))" @change="updateField('productType', String($event || ''))" />
+        <span>产品线</span>
+        <a-select :value="localFilters.productType" mode="multiple" :max-tag-count="1" class="w-full" placeholder="产品线" allow-clear :options="productTypeOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('productType', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
-        <span>销售型号</span>
-        <a-input :value="localFilters.model" placeholder="销售型号" allow-clear @change="updateField('model', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>内部型号/料号</span>
-        <a-input :value="localFilters.internal" placeholder="内部型号/料号" allow-clear @change="updateField('internal', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>一级职能</span>
-        <a-select :value="localFilters.level1" class="w-full" placeholder="一级职能" allow-clear :options="['产品质量', '产品体验', '咨询服务'].map((item) => ({ label: item, value: item }))" @change="updateField('level1', String($event || ''))" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>二级问题</span>
-        <a-input :value="localFilters.level2" placeholder="二级问题" allow-clear @change="updateField('level2', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>三级问题</span>
-        <a-input :value="localFilters.level3" placeholder="三级问题" allow-clear @change="updateField('level3', ($event.target as HTMLInputElement).value)" />
+        <span>品牌</span>
+        <a-select :value="localFilters.brand" mode="multiple" :max-tag-count="1" class="w-full" placeholder="品牌" allow-clear :options="brandOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('brand', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
         <span>反馈人</span>
-        <a-input :value="localFilters.feedbackUser" placeholder="反馈人" allow-clear @change="updateField('feedbackUser', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>反馈开始时间</span>
-        <a-input :value="localFilters.dateFrom" type="date" @change="updateField('dateFrom', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>反馈结束时间</span>
-        <a-input :value="localFilters.dateTo" type="date" @change="updateField('dateTo', ($event.target as HTMLInputElement).value)" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>处理状态</span>
-        <a-select :value="localFilters.processState" class="w-full" placeholder="处理状态" allow-clear :options="processStateOptions.map((item) => ({ label: item, value: item }))" @change="updateField('processState', String($event || ''))" />
-      </label>
-    </a-col>
-    <a-col :xs="24" :md="4">
-      <label class="filter-field">
-        <span>异常等级</span>
-        <a-select :value="localFilters.exception" class="w-full" placeholder="异常等级" allow-clear :options="exceptionLevels.map((item) => ({ label: item, value: item }))" @change="updateField('exception', String($event || ''))" />
+        <a-select :value="localFilters.feedbackUser" class="w-full" placeholder="反馈人" allow-clear :options="feedbackUserOptions.map((item) => ({ label: item, value: item }))" @change="updateField('feedbackUser', String($event || ''))" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
         <span>退换货</span>
-        <a-select :value="localFilters.returned" class="w-full" placeholder="退换货" allow-clear :options="returnOptions.map((item) => ({ label: item, value: item }))" @change="updateField('returned', String($event || ''))" />
+        <a-select :value="localFilters.returned" mode="multiple" :max-tag-count="1" class="w-full" placeholder="退换货" allow-clear :options="returnOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('returned', $event)" />
+      </label>
+    </a-col>
+    <a-col :xs="24" :md="4">
+      <label class="filter-field">
+        <span>一级分类</span>
+        <a-select :value="localFilters.level1" mode="multiple" :max-tag-count="1" class="w-full" placeholder="一级分类" allow-clear :options="level1Options.map((item) => ({ label: item, value: item }))" @change="updateMultiField('level1', $event)" />
+      </label>
+    </a-col>
+    <a-col :xs="24" :md="4">
+      <label class="filter-field">
+        <span>二级分类</span>
+        <a-select :value="localFilters.level2" mode="multiple" :max-tag-count="1" class="w-full" placeholder="二级分类" allow-clear :options="level2Options.map((item) => ({ label: item, value: item }))" @change="updateMultiField('level2', $event)" />
+      </label>
+    </a-col>
+    <a-col :xs="24" :md="4">
+      <label class="filter-field">
+        <span>三级分类</span>
+        <a-select :value="localFilters.level3" mode="multiple" :max-tag-count="1" class="w-full" placeholder="三级分类" allow-clear :options="level3Options.map((item) => ({ label: item, value: item }))" @change="updateMultiField('level3', $event)" />
+      </label>
+    </a-col>
+    <a-col :xs="24" :md="4">
+      <label class="filter-field">
+        <span>异常等级</span>
+        <a-select :value="localFilters.exception" mode="multiple" :max-tag-count="1" class="w-full" placeholder="异常等级" allow-clear :options="exceptionLevels.map((item) => ({ label: item, value: item }))" @change="updateMultiField('exception', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">
       <label class="filter-field">
         <span>处理去向</span>
-        <a-select :value="localFilters.processRoute" class="w-full" placeholder="处理去向" allow-clear :options="processRouteOptions.map((item) => ({ label: item, value: item }))" @change="updateField('processRoute', String($event || ''))" />
+        <a-select :value="localFilters.processRoute" mode="multiple" :max-tag-count="1" class="w-full" placeholder="处理去向" allow-clear :options="processRouteOptions.map((item) => ({ label: item, value: item }))" @change="updateMultiField('processRoute', $event)" />
       </label>
     </a-col>
     <a-col :xs="24" :md="4">

@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import {
   emergencyTimelineData,
   filterBrandOptions,
+  filterRegionOptions,
   filterModelOptions,
   filterPeriodOptions,
   filterProductTypeOptions,
   filterSiteOptions,
-  filterSourceOptions,
   level1Categories,
   level2Categories,
   level3Categories,
@@ -18,7 +19,7 @@ import {
 } from '@/api/mock'
 
 const props = defineProps<{
-  filters: Record<string, string>
+  filters: Record<string, string | string[]>
   comparison: '环比' | '同比'
   changeKey: 'mom' | 'yoy'
   formatNum: (value: number) => string
@@ -26,7 +27,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'update:filters', value: Record<string, string>): void
+  (event: 'update:filters', value: Record<string, string | string[]>): void
   (event: 'update:comparison', value: '环比' | '同比'): void
 }>()
 
@@ -36,14 +37,15 @@ const level3ChartRef = useTemplateRef<HTMLDivElement>('level3Chart')
 let level1Chart: echarts.ECharts | null = null
 let level2Chart: echarts.ECharts | null = null
 let level3Chart: echarts.ECharts | null = null
+const router = useRouter()
 
 const filterOptions = [
   { label: '时间周期', key: 'period', options: filterPeriodOptions },
+  { label: '地区', key: 'region', options: filterRegionOptions },
   { label: '品牌', key: 'brand', options: filterBrandOptions },
   { label: '平台', key: 'site', options: filterSiteOptions },
   { label: '产品类型', key: 'productType', options: filterProductTypeOptions },
   { label: '产品型号', key: 'model', options: filterModelOptions },
-  { label: '反馈来源', key: 'source', options: filterSourceOptions },
 ]
 
 const categoryRows = computed(() => {
@@ -59,17 +61,15 @@ const issueRows = computed(() => {
     issue: row[0],
     count: row[1],
     percent: row[2],
-    trend: row[3],
-    mainModel: row[4],
-    owner: row[5],
-    sla: row[6],
+    mainModel: row[3],
+    owner: row[4],
   }))
 })
 
 function updateFilter(key: string, value: unknown) {
   emit('update:filters', {
     ...props.filters,
-    [key]: String(value),
+    [key]: key === 'period' ? String(value || '') : Array.isArray(value) ? value.map(String) : [],
   })
 }
 
@@ -120,6 +120,12 @@ function renderCharts() {
   level3Chart ||= echarts.init(level3ChartRef.value)
 
   level1Chart.setOption(pieOption('一级分类占比', level1Categories))
+  level1Chart.off('click')
+  level1Chart.on('click', (params) => {
+    if (typeof params.name === 'string') {
+      router.push({ path: '/feedback', query: { level1: params.name } })
+    }
+  })
   level2Chart.setOption(pieOption('二级分类占比', level2Categories))
   level3Chart.setOption(pieOption('三级分类占比', level3Categories))
 }
@@ -164,7 +170,9 @@ watch(
               :value="props.filters[item.key]"
               class="w-full"
               :placeholder="item.label"
-              :options="item.options.map((option) => ({ label: option, value: option }))"
+              :mode="item.key === 'period' ? undefined : 'multiple'"
+              :max-tag-count="1"
+              :options="item.options.map((option: string) => ({ label: option, value: option }))"
               @change="updateFilter(item.key, $event)"
             />
           </label>
@@ -236,14 +244,12 @@ watch(
         <vxe-column field="issue" title="三级问题" min-width="160" />
         <vxe-column field="count" title="数量" width="80" align="right" />
         <vxe-column field="percent" title="反馈占比" width="110" />
-        <vxe-column field="trend" title="趋势" width="100" />
         <vxe-column field="mainModel" title="主要型号" min-width="150" />
         <vxe-column field="owner" title="负责人" width="100" />
-        <vxe-column field="sla" title="异常SLA" width="110" />
       </vxe-table>
     </a-card>
 
-    <a-card title="质量改善动作" :bordered="false">
+    <a-card title="工单看板" :bordered="false">
       <a-row :gutter="16" class="mb-4">
         <a-col :span="8">
           <a-statistic title="改善任务" :value="qualityBoardSummary.tasks" />
@@ -252,7 +258,7 @@ watch(
           <a-statistic title="本周关闭" :value="qualityBoardSummary.closed" />
         </a-col>
         <a-col :span="8">
-          <a-statistic title="逾期风险" :value="qualityBoardSummary.overdue" />
+          <a-statistic title="未关闭" :value="qualityBoardSummary.overdue" />
         </a-col>
       </a-row>
       <a-space direction="vertical" size="middle" class="w-full">
@@ -263,13 +269,13 @@ watch(
           align="middle"
         >
           <a-col :xs="24" :md="10">
-            <a-typography-text strong>{{ action[0] }} / {{ action[1] }}</a-typography-text>
+            <a-typography-text strong>{{ action[0] }}/{{ action[1] }}</a-typography-text>
           </a-col>
           <a-col :xs="8" :md="4">
             <a-tag>{{ action[2] }}</a-tag>
           </a-col>
           <a-col :xs="16" :md="10">
-            <a-progress :percent="Number(action[3])" />
+            <a-typography-text type="secondary">负责人已确认，按工单节点跟进</a-typography-text>
           </a-col>
         </a-row>
       </a-space>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import type { FeedbackItem } from '@/types'
-import { feedbackData, processRouteOptions, processStateOptions } from '@/api/mock'
+import { feedbackData } from '@/api/mock'
 
 const route = useRoute()
 const router = useRouter()
@@ -62,7 +62,7 @@ const mergeDisplayId = computed(() => {
 
 const form = reactive({
   region: '',
-  deviceType: '',
+  productLine: '',
   exception: '',
   processRoute: '',
   processState: '',
@@ -75,6 +75,9 @@ const form = reactive({
   reply: '',
 })
 
+const directCloseVisible = shallowRef(false)
+const productLineOptions = ['八电极', '体脂秤', '筋膜枪']
+
 const detailRows = computed(() => {
   const item = leadItem.value
 
@@ -86,7 +89,7 @@ const detailRows = computed(() => {
     ['反馈编号', item.id],
     ['地区', region(item)],
     ['数据来源', dataSource(item)],
-    ['设备类型', deviceType(item)],
+    ['产品线', productLine(item)],
     ['品牌', item.brand],
     ['内部型号/料号', item.internal],
     ['销售型号', item.model],
@@ -104,7 +107,7 @@ watch(
   leadItem,
   (item) => {
     form.region = item ? region(item) : ''
-    form.deviceType = item ? deviceType(item) : ''
+    form.productLine = item ? productLine(item) : ''
     form.exception = item?.exception || ''
     form.processRoute = item?.processRoute || ''
     form.processState = item?.processState || ''
@@ -115,6 +118,7 @@ watch(
     form.level2 = item?.level2 || ''
     form.level3 = item?.level3 || ''
     form.reply = ''
+    directCloseVisible.value = false
   },
   { immediate: true },
 )
@@ -139,12 +143,14 @@ function dataSource(item: FeedbackItem) {
   return item.source
 }
 
-function deviceType(item: FeedbackItem) {
-  return item.productType === '体脂秤' ? '八电极' : item.productType
+function productLine(item: FeedbackItem) {
+  if (item.productType === '八电极' || item.productType === '八电极秤') return '八电极'
+  if (item.productType === '筋膜枪') return '筋膜枪'
+  return '体脂秤'
 }
 
 function productLineCode(item: FeedbackItem) {
-  return deviceType(item) === '筋膜枪' ? 'CM' : 'CS'
+  return productLine(item) === '筋膜枪' ? 'CM' : 'CS'
 }
 
 function expressNo(item: FeedbackItem) {
@@ -187,14 +193,18 @@ function solution(item: FeedbackItem) {
   return '已直接回复并关闭'
 }
 
+function returnStatus(item: FeedbackItem) {
+  if (item.returned === '否') return '无'
+  return item.returned || '无'
+}
+
+function shouldShowReturnProgress(item: FeedbackItem) {
+  return region(item) === '国内' && ['退货', '换货', '退货+换货'].includes(item.returned)
+}
+
 function returnProgress(item: FeedbackItem) {
-  if (!['退货', '换货', '退货+换货'].includes(item.returned)) {
-    return [
-      ['售后状态', '未触发退换货'],
-      ['PMS单号', '无'],
-      ['当前节点', '无需售后处理'],
-      ['更新时间', item.date],
-    ]
+  if (!shouldShowReturnProgress(item)) {
+    return []
   }
 
   return [
@@ -209,6 +219,26 @@ function goBack() {
   router.push('/feedback')
 }
 
+function sourceSummary(item: FeedbackItem) {
+  return `${region(item)}-${item.source}-${item.brand}-${productLine(item)}-${item.model}`
+}
+
+function visibleFeedbackLines(item: FeedbackItem) {
+  const lines = [{ label: '用户反馈', value: item.raw || item.ai || '-' }]
+  if (region(item) === '海外') {
+    lines.push({ label: 'AI翻译', value: item.ai || '-' })
+  }
+  return lines
+}
+
+function creator(item: FeedbackItem) {
+  return item.createMode.includes('AI') ? 'AI创建' : '人工创建'
+}
+
+function feedbackUser(item: FeedbackItem) {
+  return item.createMode.includes('AI') ? '系统' : item.feedbackUser
+}
+
 function saveDetail() {
   message.success('详情修改已保存')
 }
@@ -219,7 +249,12 @@ function applyRoute(nextRoute: string) {
   message.success(`${nextRoute} 已更新`)
 }
 
+function showDirectClose() {
+  directCloseVisible.value = true
+}
+
 function directClose() {
+  directCloseVisible.value = true
   if (!form.reply.trim()) {
     message.info('请先填写直接回复内容')
     return
@@ -278,33 +313,28 @@ function unmerge(id: string) {
             <a-form layout="vertical">
               <a-row :gutter="[12, 0]">
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
-                  <a-form-item label="地区">
-                    <a-select v-model:value="form.region" :options="['海外', '国内'].map((item) => ({ label: item, value: item }))" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
-                  <a-form-item label="设备类型">
-                    <a-select v-model:value="form.deviceType" :options="['八电极', '筋膜枪', '血压计'].map((item) => ({ label: item, value: item }))" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
-                  <a-form-item label="异常级别">
-                    <a-select v-model:value="form.exception" :options="['P0', 'P1', 'P2', 'P3', '无异常'].map((item) => ({ label: item, value: item }))" />
+                  <a-form-item label="产品线">
+                    <a-select v-model:value="form.productLine" :options="productLineOptions.map((item) => ({ label: item, value: item }))" />
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
                   <a-form-item label="处理去向">
-                    <a-select v-model:value="form.processRoute" :options="processRouteOptions.map((item) => ({ label: item, value: item }))" />
+                    <a-typography-text strong>{{ form.processRoute || '-' }}</a-typography-text>
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
-                  <a-form-item label="状态">
-                    <a-select v-model:value="form.processState" :options="processStateOptions.map((item) => ({ label: item, value: item }))" />
+                  <a-form-item label="处理状态">
+                    <a-typography-text strong>{{ form.processState || '-' }}</a-typography-text>
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
-                  <a-form-item label="处理人">
+                  <a-form-item label="当前处理人">
                     <a-input v-model:value="form.handler" />
+                  </a-form-item>
+                </a-col>
+                <a-col :xs="24" :md="8" :xl="mode === 'merge' ? 4 : 24">
+                  <a-form-item label="三级分类">
+                    <a-input v-model:value="form.level3" />
                   </a-form-item>
                 </a-col>
               </a-row>
@@ -313,7 +343,7 @@ function unmerge(id: string) {
         </a-col>
       </a-row>
 
-      <a-card title="反馈内容" :bordered="false">
+      <a-card v-if="mode === 'single'" title="反馈内容" :bordered="false">
         <a-row :gutter="[16, 16]">
           <a-col :xs="24" :lg="12">
             <a-form-item label="用户反馈（客户对话/退货反馈）">
@@ -359,24 +389,36 @@ function unmerge(id: string) {
               </a-typography-title>
               <a-typography-paragraph class="merge-member-line">
                 <a-typography-text strong>来源：</a-typography-text>
-                {{ dataSource(member) }} / {{ member.brand }} / {{ member.model }}
+                {{ sourceSummary(member) }}
               </a-typography-paragraph>
-              <a-typography-paragraph class="merge-member-line">
-                <a-typography-text strong>用户反馈：</a-typography-text>
-                {{ member.raw || '-' }}
-              </a-typography-paragraph>
-              <a-typography-paragraph class="merge-member-line">
-                <a-typography-text strong>AI翻译：</a-typography-text>
-                {{ member.ai || '-' }}
+              <a-typography-paragraph
+                v-for="line in visibleFeedbackLines(member)"
+                :key="`${member.id}-${line.label}`"
+                class="merge-member-line"
+              >
+                <a-typography-text strong>{{ line.label }}：</a-typography-text>
+                {{ line.value }}
               </a-typography-paragraph>
               <a-typography-paragraph class="merge-member-line">
                 <a-typography-text strong>分类：</a-typography-text>
                 {{ member.level1 }} / {{ member.level2 }} / {{ member.level3 }}
               </a-typography-paragraph>
               <a-typography-paragraph class="merge-member-line">
+                <a-typography-text strong>是否退换货：</a-typography-text>
+                {{ returnStatus(member) }}
+              </a-typography-paragraph>
+              <a-typography-paragraph class="merge-member-line">
+                <a-typography-text strong>创建方式：</a-typography-text>
+                {{ creator(member) }}
+              </a-typography-paragraph>
+              <a-typography-paragraph class="merge-member-line">
+                <a-typography-text strong>反馈人：</a-typography-text>
+                {{ feedbackUser(member) }}
+              </a-typography-paragraph>
+              <a-typography-paragraph v-if="shouldShowReturnProgress(member)" class="merge-member-line">
                 <a-typography-text strong>退换货进度（PMS售后模块）：</a-typography-text>
               </a-typography-paragraph>
-              <a-row :gutter="[12, 12]">
+              <a-row v-if="shouldShowReturnProgress(member)" :gutter="[12, 12]">
                 <a-col
                   v-for="row in returnProgress(member)"
                   :key="`${member.id}-${row[0]}`"
@@ -399,7 +441,7 @@ function unmerge(id: string) {
         </a-space>
       </a-card>
 
-      <a-card v-else title="退换货进度（PMS售后模块）" :bordered="false">
+      <a-card v-else-if="shouldShowReturnProgress(leadItem)" title="退换货进度（PMS售后模块）" :bordered="false">
         <a-row :gutter="[12, 12]">
           <a-col
             v-for="row in returnProgress(leadItem)"
@@ -414,7 +456,7 @@ function unmerge(id: string) {
         </a-row>
       </a-card>
 
-      <a-card title="问题回答/处理方案" :bordered="false">
+      <a-card v-if="directCloseVisible" title="直接关闭" :bordered="false">
         <a-typography-paragraph>{{ solution(leadItem) }}</a-typography-paragraph>
         <a-form-item label="直接回复内容">
           <a-textarea
@@ -433,7 +475,8 @@ function unmerge(id: string) {
             <a-button @click="applyRoute('已转工单')">转工单</a-button>
             <a-button danger @click="applyRoute('已转异常')">转异常</a-button>
             <a-button @click="applyRoute('已转需求')">转需求</a-button>
-            <a-button type="primary" @click="directClose">确认回复并关闭</a-button>
+            <a-button @click="showDirectClose">直接关闭</a-button>
+            <a-button v-if="directCloseVisible" type="primary" @click="directClose">确认回复并关闭</a-button>
           </a-space>
         </a-col>
       </a-row>

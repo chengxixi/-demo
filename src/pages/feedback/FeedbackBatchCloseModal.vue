@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const form = reactive({
-  route: '已直接回复关闭',
+  route: '已转工单',
   closeReason: '',
   qa: true,
 })
@@ -57,7 +57,7 @@ function confirmClose() {
 <template>
   <a-modal
     :open="props.open"
-    title="批量关闭"
+    title="批量处理"
     width="860px"
     @cancel="closeModal"
   >
@@ -71,7 +71,7 @@ function confirmClose() {
     <a-form layout="vertical">
       <a-row :gutter="12">
         <a-col :xs="24" :md="12">
-          <a-form-item label="统一处理去向">
+          <a-form-item label="批量处理方式">
             <a-select
               v-model:value="form.route"
               :options="['已直接回复关闭', '已转工单', '已转需求', '已转异常', '已转Q&A'].map((item) => ({ label: item, value: item }))"
@@ -84,11 +84,11 @@ function confirmClose() {
           </a-form-item>
         </a-col>
         <a-col :span="24">
-          <a-form-item label="关闭说明">
+          <a-form-item label="处理说明">
             <a-textarea
               v-model:value="form.closeReason"
               :rows="3"
-              placeholder="说明直接关闭原因、已确认信息和无需继续处理的依据。"
+              placeholder="填写批量处理原因、证据或交接说明。"
             />
           </a-form-item>
         </a-col>
@@ -99,14 +99,14 @@ function confirmClose() {
       <vxe-column field="id" title="反馈编号" width="160" />
       <vxe-column field="model" title="销售型号" width="120" />
       <vxe-column field="issue" title="三级问题" min-width="160" />
-      <vxe-column field="route" title="当前去向" width="140" />
+      <vxe-column field="route" title="当前处理去向" width="140" />
       <vxe-column field="suggestion" title="AI建议去向" width="150" />
     </vxe-table>
 
     <template #footer>
       <a-space>
         <a-button @click="closeModal">取消</a-button>
-        <a-button type="primary" @click="confirmClose">确认关闭</a-button>
+        <a-button type="primary" @click="confirmClose">确认处理</a-button>
       </a-space>
     </template>
   </a-modal>

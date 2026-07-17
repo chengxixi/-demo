@@ -28,7 +28,7 @@ export const brandOptions = ['云康宝', 'AF', 'GE', 'LOT']
 export const productTypeOptions = ['体脂秤', '八电极', '筋膜枪']
 export const modelOptions = ['CS10A', 'CS10B', 'CS10F', 'CS20F', 'CS20M']
 export const emergencyStepLabels = ['临时方案处理', '根因分析', '整改措施', '验证结果', '关闭归档']
-export const workOrderSteps = ['转工单', '分派责任人', '处理中', '待确认', '已闭环']
+export const workOrderSteps = ['转工单', '处理中', '待确认', '已直接关闭']
 
 export const roleOptions: UserRole[] = [
   { key: 'admin', name: '管理员', label: '系统管理员', scope: 'all', avatar: 'AD' },

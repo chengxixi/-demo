@@ -4,11 +4,11 @@ import * as echarts from 'echarts'
 import {
   dashboardMetricCards,
   filterBrandOptions,
+  filterRegionOptions,
   filterModelOptions,
   filterPeriodOptions,
   filterProductTypeOptions,
   filterSiteOptions,
-  filterSourceOptions,
   modelTop5Data,
   returnVsFeedbackData,
   trendLineData,
@@ -16,7 +16,7 @@ import {
 } from '@/api/mock'
 
 const props = defineProps<{
-  filters: Record<string, string>
+  filters: Record<string, string | string[]>
   comparison: '环比' | '同比'
   changeKey: 'mom' | 'yoy'
   formatNum: (value: number) => string
@@ -24,7 +24,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'update:filters', value: Record<string, string>): void
+  (event: 'update:filters', value: Record<string, string | string[]>): void
   (event: 'update:comparison', value: '环比' | '同比'): void
 }>()
 
@@ -35,11 +35,11 @@ let returnChart: echarts.ECharts | null = null
 
 const filterOptions = [
   { label: '时间周期', key: 'period', options: filterPeriodOptions },
+  { label: '地区', key: 'region', options: filterRegionOptions },
   { label: '品牌', key: 'brand', options: filterBrandOptions },
   { label: '平台', key: 'site', options: filterSiteOptions },
   { label: '产品类型', key: 'productType', options: filterProductTypeOptions },
   { label: '产品型号', key: 'model', options: filterModelOptions },
-  { label: '反馈来源', key: 'source', options: filterSourceOptions },
 ]
 
 const modelRows = computed(() => {
@@ -58,8 +58,12 @@ const modelRows = computed(() => {
 function updateFilter(key: string, value: unknown) {
   emit('update:filters', {
     ...props.filters,
-    [key]: String(value),
+    [key]: key === 'period' ? String(value || '') : Array.isArray(value) ? value.map(String) : [],
   })
+}
+
+function trendColor(trend: string) {
+  return trend.trim().startsWith('-') ? 'red' : 'green'
 }
 
 function updateComparison(value: unknown) {
@@ -153,7 +157,9 @@ watch(
               :value="props.filters[item.key]"
               class="w-full"
               :placeholder="item.label"
-              :options="item.options.map((option) => ({ label: option, value: option }))"
+              :mode="item.key === 'period' ? undefined : 'multiple'"
+              :max-tag-count="1"
+              :options="item.options.map((option: string) => ({ label: option, value: option }))"
               @change="updateFilter(item.key, $event)"
             />
           </label>
@@ -169,12 +175,15 @@ watch(
       <a-col v-for="card in dashboardMetricCards" :key="card.label" :xs="12" :md="8" :lg="4">
         <a-card size="small" class="metric-card">
           <a-statistic :title="card.label" :value="card.value" />
-          <a-space size="small" class="mt-2">
-            <a-tag :color="card.trendType.includes('bad') ? 'red' : 'green'">
+          <div class="metric-note-row">
+            <a-tag :color="trendColor(card.trend)">
               {{ props.comparison }} {{ card.trend }}
             </a-tag>
-            <a-typography-text type="secondary">{{ card.note1 }} {{ card.note2 }}</a-typography-text>
-          </a-space>
+            <a-typography-text type="secondary" class="metric-note">
+              <span>{{ card.note1 }}</span>
+              <strong>{{ card.note2 }}</strong>
+            </a-typography-text>
+          </div>
         </a-card>
       </a-col>
     </a-row>
@@ -213,6 +222,31 @@ watch(
 .dashboard-filter-card,
 .metric-card {
   border-radius: 8px;
+}
+
+.metric-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.metric-note {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  white-space: normal;
+}
+
+.metric-note span,
+.metric-note strong {
+  overflow-wrap: anywhere;
+}
+
+.metric-note strong {
+  color: #8c8c8c;
+  font-weight: 500;
 }
 
 .comparison-row {

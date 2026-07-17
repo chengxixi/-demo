@@ -6,6 +6,7 @@ import Components from 'unplugin-vue-components/vite';
 import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers';
 
 export default defineConfig({
+    base: process.env.GITHUB_PAGES === 'true' ? '/-demo/' : '/',
     plugins: [
         vue(),
         AutoImport({

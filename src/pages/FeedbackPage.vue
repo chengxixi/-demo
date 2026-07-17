@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import type { FeedbackItem, WorkOrder } from '@/types'
 import { feedbackData } from '@/api/mock'
@@ -24,6 +24,7 @@ interface AiRecommendation {
 
 const GENERATED_WORKORDERS_KEY = 'feedback-generated-workorders'
 
+const route = useRoute()
 const router = useRouter()
 const items = ref<FeedbackItem[]>([...feedbackData])
 const selectedIds = ref<Set<string>>(new Set())
@@ -48,24 +49,20 @@ const aiRouteSummary = computed(() => {
 })
 
 const filters = ref({
-  keyword: '',
-  source: '',
-  mode: '',
-  processState: '',
-  exception: '',
-  brand: '',
-  site: '',
-  productType: '',
-  model: '',
-  internal: '',
-  level1: '',
-  level2: '',
-  level3: '',
+  feedbackTime: '',
+  source: [] as string[],
+  createMode: [] as string[],
+  region: [] as string[],
+  site: [] as string[],
+  productType: [] as string[],
+  brand: [] as string[],
   feedbackUser: '',
-  dateFrom: '',
-  dateTo: '',
-  returned: '',
-  processRoute: '',
+  returned: [] as string[],
+  level1: typeof route.query.level1 === 'string' ? [route.query.level1] : [] as string[],
+  level2: [] as string[],
+  level3: [] as string[],
+  exception: [] as string[],
+  processRoute: [] as string[],
 })
 
 const tabOptions = [
@@ -86,46 +83,44 @@ const routeCards = [
 
 const selectedItems = computed(() => items.value.filter((item) => selectedIds.value.has(item.id)))
 
+function includesAny(values: string[], candidate: string) {
+  return !values.length || values.includes(candidate)
+}
+
+function itemRegion(item: FeedbackItem) {
+  return item.region || (item.site.includes('Amazon') ? '海外' : '国内')
+}
+
+function itemSite(item: FeedbackItem) {
+  return item.site.includes('Amazon') ? '亚马逊' : item.site
+}
+
+function matchesFeedbackTime(value: string, date: string) {
+  if (!value) return true
+  const days = value === '近7天' ? 7 : value === '近30天' ? 30 : 90
+  const end = new Date('2026-06-18')
+  const start = new Date(end)
+  start.setDate(end.getDate() - days + 1)
+  const target = new Date(date)
+  return target >= start && target <= end
+}
+
 const filteredItems = computed(() => {
   return items.value.filter((item) => {
-    const keyword = filters.value.keyword.trim().toLowerCase()
-    const text = [
-      item.id,
-      item.brand,
-      item.site,
-      item.model,
-      item.internal,
-      item.asin,
-      item.orderNo,
-      item.raw,
-      item.ai,
-      item.feedbackUser,
-      item.handler,
-      item.level1,
-      item.level2,
-      item.level3,
-    ]
-      .join(' ')
-      .toLowerCase()
-
-    const matchesKeyword = !keyword || text.includes(keyword)
-    const matchesSource = !filters.value.source || dataSource(item).includes(filters.value.source) || item.source === filters.value.source
-    const matchesMode = !filters.value.mode || item.createMode === filters.value.mode
-    const matchesState = !filters.value.processState || item.processState === filters.value.processState || (filters.value.processState === '待人工复核' && item.processState === '待复核')
-    const matchesException = !filters.value.exception || item.exception === filters.value.exception
-    const matchesBrand = !filters.value.brand || item.brand === filters.value.brand
-    const matchesSite = !filters.value.site || item.site === filters.value.site
-    const matchesProductType = !filters.value.productType || item.productType === filters.value.productType
-    const matchesModel = !filters.value.model || item.model.toLowerCase().includes(filters.value.model.toLowerCase())
-    const matchesInternal = !filters.value.internal || item.internal.toLowerCase().includes(filters.value.internal.toLowerCase())
-    const matchesLevel1 = !filters.value.level1 || item.level1 === filters.value.level1
-    const matchesLevel2 = !filters.value.level2 || item.level2.toLowerCase().includes(filters.value.level2.toLowerCase())
-    const matchesLevel3 = !filters.value.level3 || item.level3.toLowerCase().includes(filters.value.level3.toLowerCase())
-    const matchesFeedbackUser = !filters.value.feedbackUser || item.feedbackUser.includes(filters.value.feedbackUser)
-    const matchesDateFrom = !filters.value.dateFrom || item.date >= filters.value.dateFrom
-    const matchesDateTo = !filters.value.dateTo || item.date <= filters.value.dateTo
-    const matchesReturned = !filters.value.returned || item.returned === filters.value.returned
-    const matchesProcessRoute = !filters.value.processRoute || item.processRoute === filters.value.processRoute
+    const matchesTime = matchesFeedbackTime(filters.value.feedbackTime, item.date)
+    const matchesSource = !filters.value.source.length || filters.value.source.some((value) => dataSource(item).includes(value) || item.source === value)
+    const matchesCreateMode = includesAny(filters.value.createMode, item.createMode)
+    const matchesRegion = includesAny(filters.value.region, itemRegion(item))
+    const matchesSite = includesAny(filters.value.site, itemSite(item))
+    const matchesProductType = includesAny(filters.value.productType, item.productType)
+    const matchesBrand = includesAny(filters.value.brand, item.brand)
+    const matchesFeedbackUser = !filters.value.feedbackUser || item.feedbackUser === filters.value.feedbackUser
+    const matchesReturned = includesAny(filters.value.returned, item.returned)
+    const matchesLevel1 = includesAny(filters.value.level1, item.level1)
+    const matchesLevel2 = includesAny(filters.value.level2, item.level2)
+    const matchesLevel3 = includesAny(filters.value.level3, item.level3)
+    const matchesException = includesAny(filters.value.exception, item.exception)
+    const matchesProcessRoute = includesAny(filters.value.processRoute, item.processRoute)
     const matchesTab =
       activeTab.value === 'all' ||
       (activeTab.value === 'pending' && ['待处理', '待复核', '待人工复核'].includes(item.processState)) ||
@@ -134,23 +129,19 @@ const filteredItems = computed(() => {
       (activeTab.value === 'mine' && item.handler === '李工')
 
     return (
-      matchesKeyword &&
+      matchesTime &&
       matchesSource &&
-      matchesMode &&
-      matchesState &&
-      matchesException &&
-      matchesBrand &&
+      matchesCreateMode &&
+      matchesRegion &&
       matchesSite &&
       matchesProductType &&
-      matchesModel &&
-      matchesInternal &&
+      matchesBrand &&
+      matchesFeedbackUser &&
+      matchesReturned &&
       matchesLevel1 &&
       matchesLevel2 &&
       matchesLevel3 &&
-      matchesFeedbackUser &&
-      matchesDateFrom &&
-      matchesDateTo &&
-      matchesReturned &&
+      matchesException &&
       matchesProcessRoute &&
       matchesTab
     )
@@ -168,22 +159,22 @@ const feedbackStats = computed(() => {
     {
       title: '反馈总数',
       value: items.value.length,
-      note: '覆盖商品评论、退货反馈、APP反馈、客服沟通',
+      note: '',
     },
     {
-      title: '合并组',
+      title: '已处理',
       value: mergeGroups.size,
-      note: '同类问题可展开合并处理',
+      note: '',
     },
     {
       title: '待处理',
       value: items.value.filter((item) => ['待处理', '待复核', '待人工复核'].includes(item.processState)).length,
-      note: '包含待处理和待人工复核',
+      note: '',
     },
     {
       title: '待人工复核',
       value: tabCounts.value.review,
-      note: '等待人工确认分类和处理去向',
+      note: '',
     },
   ]
 })
@@ -296,10 +287,10 @@ function buildWorkOrder(targets: FeedbackItem[]): WorkOrder {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
   return {
     id: `TK-${date}-${String(Date.now()).slice(-4)}`,
-    summary: `${first.model || first.internal} ${first.level3 || '反馈问题'}处理`,
+    summary: `${first.level3 || '反馈问题'}处理`,
     relatedFeedback: targets.map((item) => item.id).join(' / '),
-    productLine: productLine(first),
-    status: '处理中',
+    productLine: productLine(first).replace('产品线', ''),
+    status: '待处理',
     owner: first.productType === '筋膜枪' ? '孙工' : '李工',
     dept: '产品部',
     sla: '24h',
@@ -311,6 +302,9 @@ function buildWorkOrder(targets: FeedbackItem[]): WorkOrder {
     step: 1,
     aiAbstract: targets.map((item) => item.ai || item.raw).join(' / '),
     closeNote: '',
+    inflowOperator: first.handler || '管理员',
+    inflowTime: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    processedAt: '',
   }
 }
 
@@ -395,7 +389,7 @@ function confirmBatchClose(payload: { route: string; closeReason: string; qa: bo
       ...item,
       processRoute: payload.route,
       processState: '已处理',
-      solution: payload.closeReason || item.solution || '批量关闭确认',
+      solution: payload.closeReason || item.solution || '批量处理确认',
       note: payload.qa ? '已同步沉淀Q&A' : item.note,
     }
     if (payload.route === '已转工单') workOrderTargets.push(next)
@@ -419,7 +413,7 @@ function submitImport() {
         <a-space direction="vertical" size="small">
           <a-typography-title :level="4" class="m-0">反馈清单</a-typography-title>
           <a-typography-text type="secondary">
-            按来源汇聚反馈，支持同类问题合并展开、复核、转异常、转需求和批量关闭。
+按来源汇聚反馈，支持同类问题合并展开、复核、批量转异常、转工单、转需求和沉淀 Q&A。
           </a-typography-text>
         </a-space>
       </a-col>
@@ -429,7 +423,7 @@ function submitImport() {
           <a-button @click="filterVisible = !filterVisible">{{ filterVisible ? '收起筛选' : '筛选' }}</a-button>
           <a-button @click="templateOpen = true">我的模板设置</a-button>
           <a-button @click="importOpen = true">批量导入</a-button>
-          <a-button @click="batchClose">批量关闭</a-button>
+          <a-button @click="batchClose">批量处理</a-button>
           <a-button type="primary" @click="addOpen = true">新增反馈</a-button>
         </a-space>
       </a-col>
@@ -439,7 +433,7 @@ function submitImport() {
       <a-col v-for="stat in feedbackStats" :key="stat.title" :xs="12" :lg="6">
         <a-card size="small" :bordered="false" class="feedback-stat-card">
           <a-statistic :title="stat.title" :value="stat.value" />
-          <a-typography-text type="secondary">{{ stat.note }}</a-typography-text>
+          <a-typography-text v-if="stat.note" type="secondary">{{ stat.note }}</a-typography-text>
         </a-card>
       </a-col>
     </a-row>

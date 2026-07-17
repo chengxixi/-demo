@@ -1,17 +1,19 @@
-export const filterPeriodOptions = ['近7天', '近30天', '近90天', '自定义']
-export const filterBrandOptions = ['全部品牌', '云康宝', 'AF', 'GE', 'LF']
-export const filterSiteOptions = ['全部站点', 'Amazon.com (US)', '天猫', '京东', '抖音']
-export const filterProductTypeOptions = ['全部产品类型', '体脂秤', '人体秤', '八电极秤', '筋膜枪']
+export const filterPeriodOptions = ['近7天', '近30天', '近90天']
+export const filterRegionOptions = ['国内', '海外']
+export const filterBrandOptions = ['云康宝', 'AF', 'GE', 'LF']
+export const filterSiteOptions = ['全部平台', '亚马逊（美国）', '天猫', '京东', '抖音']
+export const filterProductTypeOptions = ['全部产品类型', '体脂秤', '八电极秤', '筋膜枪']
 export const filterModelOptions = ['全部', 'CS20A', 'CS30B', 'BF511', 'MG20', 'MS30']
 export const filterSourceOptions = ['全部', '商品评论', '退货原因', '站内信', '客服沟通', 'APP反馈']
 
 export const defaultFilters = {
-  period: '近30天',
-  site: 'Amazon.com (US)',
-  brand: '全部品牌',
-  productType: '体脂秤',
-  model: '全部',
-  source: '全部',
+  period: '',
+  site: [],
+  region: [],
+  brand: [],
+  productType: [],
+  model: [],
+  source: [],
 }
 
 export const dashboardMetricCards = [
@@ -20,7 +22,7 @@ export const dashboardMetricCards = [
   { label: '闭环率', value: '87.45%', trend: '+3.21%', trendType: 'up-good', note1: '已闭环', note2: '3,178' },
   { label: '响应达成率', value: '92.16%', trend: '+4.57%', trendType: 'up-good', note1: '达成', note2: '3,349' },
   { label: '异常占比', value: '6.72%', trend: '+0.89%', trendType: 'up-bad', note1: '异常工单', note2: '244' },
-  { label: '差评率', value: '3.25%', trend: '-0.31%', trendType: 'down-good', note1: '差评数量', note2: '935' },
+  { label: '差评率', value: '/', trend: '/', trendType: 'down-good', note1: '差评数量', note2: '/' },
 ]
 
 export const metricFormulas: Record<string, string> = {
@@ -42,11 +44,11 @@ export const trendLineData = [
 export const trendXLabels = ['03/13', '03/27', '04/10', '04/24', '05/08', '05/22', '06/05']
 
 export const modelTop5Data: [string, number, number, string, string, string, string][] = [
-  ['YB-S100 八电极体脂秤', 6528, 856, '4.12%', '13.1%', '4.5分', '3.12%'],
-  ['YB-201 人体成分秤', 4932, 642, '4.78%', '13.0%', '4.4分', '3.38%'],
-  ['YB-301 体脂秤 Pro', 3765, 487, '4.25%', '12.9%', '4.6分', '3.01%'],
-  ['YB-M3 筋膜枪 M3 Pro', 2983, 421, '3.95%', '14.1%', '4.3分', '3.21%'],
-  ['YB-F1 智能体脂秤 F1', 2357, 309, '4.88%', '13.1%', '4.2分', '3.45%'],
+  ['YB-S100 八电极体脂秤', 6528, 856, '4.12%', '13.1%', '/', '/'],
+  ['YB-201 人体成分秤', 4932, 642, '4.78%', '13.0%', '/', '/'],
+  ['YB-301 体脂秤 Pro', 3765, 487, '4.25%', '12.9%', '/', '/'],
+  ['YB-M3 筋膜枪 M3 Pro', 2983, 421, '3.95%', '14.1%', '/', '/'],
+  ['YB-F1 智能体脂秤 F1', 2357, 309, '4.88%', '13.1%', '/', '/'],
 ]
 
 export const returnVsFeedbackData: [string, number, number][] = [
@@ -63,6 +65,7 @@ export const level1Categories = [
   { name: '物流运营', value: 14, color: '#f59e0b', mom: -2, yoy: 1 },
   { name: '平台合规', value: 9, color: '#7c3aed', mom: 2, yoy: 3 },
   { name: '咨询服务', value: 8, color: '#0891b2', mom: 1, yoy: -1 },
+  { name: '其他', value: 5, color: '#94a3b8', mom: -2, yoy: -7 },
 ]
 
 export const level2Categories = [
@@ -70,13 +73,17 @@ export const level2Categories = [
   { name: '数据准确性', value: 20, color: '#16a34a', mom: 4, yoy: 6 },
   { name: 'APP问题', value: 16, color: '#f59e0b', mom: -1, yoy: 2 },
   { name: '包装配件', value: 13, color: '#7c3aed', mom: -3, yoy: -1 },
+  { name: '功能效果', value: 11, color: '#0891b2', mom: 2, yoy: 3 },
+  { name: '其他', value: 16, color: '#94a3b8', mom: -5, yoy: -15 },
 ]
 
 export const level3Categories = [
   { name: '测脂不准', value: 28, color: '#2563eb', mom: 5, yoy: 7 },
   { name: 'APP连接问题', value: 19, color: '#16a34a', mom: 3, yoy: 5 },
-  { name: '功能改进建议', value: 16, color: '#f59e0b', mom: -2, yoy: 3 },
+  { name: '功能需求/改进建议', value: 16, color: '#f59e0b', mom: -2, yoy: 3 },
   { name: '包装/配件问题', value: 9, color: '#7c3aed', mom: -2, yoy: 1 },
+  { name: '说明书/标识问题', value: 6, color: '#0891b2', mom: 1, yoy: -1 },
+  { name: '其他问题', value: 4, color: '#94a3b8', mom: 0, yoy: -2 },
 ]
 
 export const top5ComparisonData: [string, number, number, number][] = [
@@ -107,7 +114,7 @@ export const emergencyTimelineData = [
   },
   {
     id: 'EX-20260611-007',
-    p: 'P2',
+    p: 'P0',
     dimension: '客户伤害',
     source: '退货原因',
     response: '6小时响应 / 72小时方案',
@@ -121,17 +128,17 @@ export const emergencyTimelineData = [
 
 export const emergencyStatusTags = ['新增', '已响应', '处理中']
 
-export const topQualityIssues: [string, number, string, string, string, string, string][] = [
-  ['测脂不准', 8, '23.6%', '+5.2pp', 'CS20A, CS30B', '李工', '72%'],
-  ['APP连接问题', 6, '18.9%', '+3.1pp', 'CS20A, CS10M', '王工', '86%'],
-  ['无法开机', 5, '12.7%', '-2.7pp', 'CS30B, BF511', '张工', '88%'],
-  ['充电问题', 4, '9.4%', '-1.3pp', 'CS20A, CS10M', '赵工', '80%'],
+export const topQualityIssues: [string, number, string, string, string][] = [
+  ['测脂不准', 8, '23.6%', 'CS20A, CS30B', '李工'],
+  ['APP连接问题', 6, '18.9%', 'CS20A, CS10M', '王工'],
+  ['无法开机', 5, '12.7%', 'CS30B, BF511', '张工'],
+  ['充电问题', 4, '9.4%', 'CS20A, CS10M', '赵工'],
 ]
 
 export const qualityBoardSummary = { tasks: 12, closed: 5, overdue: 3 }
 
-export const qualityBoardActions: [string, string, string, number, string][] = [
-  ['测脂不准专项', 'CS20A/CS30B', '进行中', 72, '#2563eb'],
-  ['APP连接稳定性', 'CS10/CS20A', '验证中', 86, '#16a34a'],
-  ['包装防护整改', 'CS30B', '待验证', 64, '#f97316'],
+export const qualityBoardActions: [string, string, string][] = [
+  ['测脂不准专项', '李工', '进行中'],
+  ['APP连接稳定性', '王工', '验证中'],
+  ['包装防护整改', '张工', '待验证'],
 ]

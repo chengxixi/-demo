@@ -56,6 +56,9 @@ export interface WorkOrder {
   step: number
   aiAbstract: string
   closeNote: string
+  inflowOperator?: string
+  inflowTime?: string
+  processedAt?: string
 }
 
 export interface EmergencyException {

@@ -16,34 +16,53 @@ const detailOpen = shallowRef(false)
 const detailOrder = ref<WorkOrder | null>(null)
 
 const filters = ref({
-  keyword: '',
+  id: '',
+  summary: '',
+  feedbackId: '',
   productLine: '',
-  status: '',
+  inflowTime: '',
   owner: '',
+  dept: '',
+  route: '',
 })
 
 
-const productLineOptions = computed(() => uniqueValues(orders.value.map((order) => order.productLine)))
-const statusOptions = computed(() => uniqueValues(orders.value.map((order) => order.status)))
+const productLineOptions = ['八电极', '体脂秤', '筋膜枪']
+const routeOptions = ['直接关闭', '已转异常', '已转需求', '已转Q&A', '待处理', '处理中']
 const ownerOptions = computed(() => uniqueValues(orders.value.map((order) => order.owner)))
+const departmentOptions = computed(() => uniqueValues(orders.value.map((order) => order.dept)))
+
+function routeLabel(order: WorkOrder) {
+  if (order.status === '已直接关闭' || order.closeNote) return '直接关闭'
+  if (order.exception === '是') return '已转异常'
+  if (order.requirement === '是' || order.requirement === '预留') return '已转需求'
+  if (order.qa === '是') return '已转Q&A'
+  return order.status || '-'
+}
+
+function includesText(value: string, query: string) {
+  return !query.trim() || value.toLowerCase().includes(query.trim().toLowerCase())
+}
 
 const filteredOrders = computed(() => {
   return orders.value.filter((order) => {
-    const keyword = filters.value.keyword.trim().toLowerCase()
-    const text = `${order.id} ${order.summary} ${order.productLine} ${order.relatedFeedback}`.toLowerCase()
-    const matchesKeyword = !keyword || text.includes(keyword)
+    const matchesId = includesText(order.id, filters.value.id)
+    const matchesSummary = includesText(order.summary, filters.value.summary)
+    const matchesFeedbackId = includesText(order.relatedFeedback, filters.value.feedbackId)
     const matchesProductLine = !filters.value.productLine || order.productLine === filters.value.productLine
-    const matchesStatus = !filters.value.status || order.status === filters.value.status
+    const matchesInflowTime = includesText(order.inflowTime || '', filters.value.inflowTime)
     const matchesOwner = !filters.value.owner || order.owner === filters.value.owner
+    const matchesDept = !filters.value.dept || order.dept === filters.value.dept
+    const matchesRoute = !filters.value.route || routeLabel(order) === filters.value.route
 
-    return matchesKeyword && matchesProductLine && matchesStatus && matchesOwner
+    return matchesId && matchesSummary && matchesFeedbackId && matchesProductLine && matchesInflowTime && matchesOwner && matchesDept && matchesRoute
   })
 })
 
 const stats = computed(() => ({
   total: filteredOrders.value.length,
   processing: filteredOrders.value.filter((order) => ['转工单', '处理中', '待确认'].includes(order.status) || order.status.includes('处理')).length,
-  closed: filteredOrders.value.filter((order) => ['已闭环', '已关闭'].includes(order.status)).length,
+  closed: filteredOrders.value.filter((order) => order.status === '已直接关闭').length,
   toRequirement: filteredOrders.value.filter((order) => order.requirement === '是' || order.requirement === '预留' || order.status.includes('需求')).length,
 }))
 
@@ -79,10 +98,10 @@ function persistGeneratedWorkOrders() {
 
 function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
   const routeMap = {
-    requirement: { status: '转需求', requirement: '是', qa: payload.order.qa, exception: payload.order.exception },
+    requirement: { status: '已转需求', requirement: '是', qa: payload.order.qa, exception: payload.order.exception },
     exception: { status: '转异常', exception: '是', requirement: payload.order.requirement, qa: payload.order.qa },
-    qa: { status: '转Q&A', qa: '是', requirement: payload.order.requirement, exception: payload.order.exception },
-    close: { status: '已闭环', qa: payload.order.qa, requirement: payload.order.requirement, exception: payload.order.exception },
+    qa: { status: '已转Q&A', qa: '是', requirement: payload.order.requirement, exception: payload.order.exception },
+    close: { status: '已直接关闭', qa: payload.order.qa, requirement: payload.order.requirement, exception: payload.order.exception },
   }
   const next = routeMap[payload.route]
 
@@ -99,7 +118,7 @@ function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
 </script>
 
 <template>
-  <section class="space-y-4 p-4">
+  <section v-if="!detailOpen" class="space-y-4 p-4">
     <a-row justify="space-between" align="middle">
       <a-col>
         <a-space direction="vertical" size="small">
@@ -121,10 +140,13 @@ function routeOrder(payload: { order: WorkOrder; route: RouteType }) {
     <WorkOrderFilter
       v-model:filters="filters"
       :product-lines="productLineOptions"
-      :statuses="statusOptions"
       :owners="ownerOptions"
+      :departments="departmentOptions"
+      :routes="routeOptions"
     />
     <WorkOrderTable :items="filteredOrders" @open-detail="openDetail" />
+  </section>
+  <section v-else class="space-y-4 p-4">
     <WorkOrderDetailDrawer v-model:open="detailOpen" :item="detailOrder" @save="saveOrder" @route="routeOrder" />
   </section>
 </template>

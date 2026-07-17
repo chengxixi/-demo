@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, shallowRef, watch } from 'vue'
 import { feedbackData } from '@/api/mock'
 import type { FeedbackItem, WorkOrder } from '@/types'
 
@@ -14,11 +14,14 @@ const emit = defineEmits<{
   (event: 'route', value: { order: WorkOrder; route: 'requirement' | 'exception' | 'qa' | 'close' }): void
 }>()
 
+const actionMode = shallowRef<'requirement' | 'qa' | 'close' | ''>('')
+
 const form = reactive({
   status: '',
   owner: '',
   result: '',
   closeNote: '',
+  processedAt: '',
 })
 
 const relatedFeedbackIds = computed<string[]>(() => {
@@ -31,29 +34,36 @@ const relatedFeedbackRows = computed<FeedbackItem[]>(() => {
   return feedbackData.filter((item) => relatedFeedbackIds.value.includes(item.id))
 })
 
+const isClosedOrder = computed(() => props.item?.status === '已直接关闭' || Boolean(props.item?.closeNote))
+
 const workOrderRoute = computed(() => {
   const item = props.item
   if (!item) return '-'
-  if (item.status === '已关闭' || item.closeNote) return '直接关闭'
+  if (item.status === '已直接关闭' || item.closeNote) return '直接关闭'
   if (item.exception === '是') return '已转异常'
   if (item.requirement === '是' || item.requirement === '预留') return '已转需求'
   if (item.qa === '是') return '已转Q&A'
   return item.status || '处理中'
 })
 
-const detailSummary = computed(() => {
-  if (!props.item) return ''
-  return props.item.aiAbstract || props.item.summary || '待补充工单摘要'
+
+const stepCurrent = computed(() => {
+  if (!props.item) return 0
+  if (props.item.status === '已直接关闭' || ['已转需求', '已转Q&A', '转异常'].includes(props.item.status)) return 2
+  if (props.item.status.includes('处理')) return 1
+  return 0
 })
 
 const detailCards = computed(() => {
   if (!props.item) return []
   return [
-    { label: 'AI工单摘要', value: props.item.summary || '待补充工单摘要' },
+    { label: '工单摘要', value: props.item.summary || '待补充工单摘要' },
     { label: '当前处理人', value: props.item.owner || '-' },
     { label: '处理状态', value: props.item.status || '-' },
     { label: '处理去向', value: workOrderRoute.value },
-    { label: '关闭原因', value: props.item.closeReason || props.item.closeNote || '-' },
+    { label: '流入操作人', value: props.item.inflowOperator || props.item.owner || '-' },
+    { label: '流入时间', value: props.item.inflowTime || '-' },
+    { label: '处理时间', value: props.item.processedAt || '-' },
   ]
 })
 
@@ -64,12 +74,18 @@ watch(
     form.owner = item?.owner || ''
     form.result = item?.result || ''
     form.closeNote = item?.closeNote || ''
+    form.processedAt = item?.processedAt || ''
+    actionMode.value = item?.status === '已直接关闭' ? 'close' : ''
   },
   { immediate: true },
 )
 
 function closeDrawer() {
   emit('update:open', false)
+}
+
+function currentMinute() {
+  return new Date().toISOString().slice(0, 16).replace('T', ' ')
 }
 
 function saveItem() {
@@ -80,30 +96,32 @@ function saveItem() {
 
   emit('save', {
     ...props.item,
-    status: form.status,
+    status: actionMode.value === 'close' ? '已直接关闭' : props.item.status,
     owner: form.owner,
     result: form.result,
     closeNote: form.closeNote,
+    processedAt: form.processedAt || (form.result.trim() || actionMode.value === 'close' ? currentMinute() : props.item.processedAt),
   })
   closeDrawer()
 }
 
 function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
   if (!props.item) return
+  if (route === 'close') {
+    actionMode.value = 'close'
+    form.status = '已直接关闭'
+    return
+  }
   emit('route', { order: props.item, route })
   closeDrawer()
 }
 </script>
 
 <template>
-  <a-drawer
-    :open="props.open"
-    :title="props.item?.id || '工单详情'"
-    width="860"
-    @close="closeDrawer"
-  >
+  <section v-if="props.open && props.item" class="workorder-detail-page">
     <template v-if="props.item">
       <div class="detail-head">
+        <a-button @click="closeDrawer">返回工单池</a-button>
         <div>
           <a-typography-title :level="4" class="m-0">{{ props.item.id }}</a-typography-title>
           <a-typography-text type="secondary">
@@ -120,58 +138,42 @@ function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
       </div>
 
       <a-card :bordered="false" class="detail-card mb-4">
-        <a-steps :current="Math.max(0, props.item.step - 1)" size="small">
+        <a-steps :current="stepCurrent" size="small">
           <a-step title="转工单" />
-          <a-step title="分派责任人" />
           <a-step title="处理中" />
-          <a-step title="待确认" />
-          <a-step title="已闭环" />
+          <a-step title="已处理" />
         </a-steps>
-      </a-card>
-
-      <a-card :bordered="false" class="detail-card mb-4" title="AI自动摘要">
-        <a-typography-paragraph class="m-0">{{ detailSummary }}</a-typography-paragraph>
       </a-card>
 
       <a-card :bordered="false" class="detail-card mb-4" title="关联反馈明细">
         <a-empty v-if="!relatedFeedbackRows.length" description="暂无可匹配的关联反馈明细" />
         <a-space v-else direction="vertical" size="middle" class="w-full">
           <article v-for="feedback in relatedFeedbackRows" :key="feedback.id" class="feedback-card">
-            <div>
+            <div class="feedback-main">
               <a-typography-text strong>{{ feedback.id }} · {{ feedback.level3 || feedback.level2 }}</a-typography-text>
-              <p>{{ feedback.productType }} / {{ feedback.model }} / {{ feedback.internal }}</p>
-              <p>{{ feedback.ai || feedback.raw }}</p>
+              <p>分类：{{ feedback.level1 }} / {{ feedback.level2 }} / {{ feedback.level3 }}</p>
+              <p>参数：{{ feedback.region || '-' }} / {{ feedback.source }} / {{ feedback.brand }} / {{ feedback.site }} / {{ feedback.productType }} / {{ feedback.model }} / {{ feedback.internal }}</p>
+              <p>反馈：{{ feedback.ai || feedback.raw }}</p>
+              <p>退换货：{{ feedback.returned || '-' }}；反馈人：{{ feedback.feedbackUser || '-' }}；反馈时间：{{ feedback.date || '-' }}</p>
             </div>
             <a-space wrap>
               <a-tag>{{ feedback.source }}</a-tag>
               <a-tag>{{ feedback.exception }}</a-tag>
-              <a-tag>{{ feedback.processState }}</a-tag>
             </a-space>
           </article>
         </a-space>
       </a-card>
 
-      <a-alert
-        class="mb-4"
-        type="info"
-        show-icon
-        message="AI推荐"
-        description="该工单可根据处理结果转需求、转紧急异常、沉淀 Q&A，或直接回复关闭。"
-      />
-
       <a-form layout="vertical">
         <a-row :gutter="12">
           <a-col :xs="24" :md="12">
-            <a-form-item label="状态">
-              <a-select
-                v-model:value="form.status"
-                :options="['处理中', '待确认', '已闭环', '转需求', '转异常', '转Q&A'].map((item) => ({ label: item, value: item }))"
-              />
+            <a-form-item label="负责人">
+              <a-input v-model:value="form.owner" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="负责人">
-              <a-input v-model:value="form.owner" />
+            <a-form-item label="处理时间">
+              <a-input v-model:value="form.processedAt" placeholder="处理完成后自动记录" />
             </a-form-item>
           </a-col>
           <a-col :span="24">
@@ -179,28 +181,37 @@ function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
               <a-textarea v-model:value="form.result" :rows="3" />
             </a-form-item>
           </a-col>
-          <a-col :span="24">
+          <a-col v-if="actionMode === 'close'" :span="24">
             <a-form-item label="关闭说明">
-              <a-textarea v-model:value="form.closeNote" :rows="3" />
+              <a-textarea v-model:value="form.closeNote" :rows="3" placeholder="选择直接关闭时填写关闭说明" />
             </a-form-item>
           </a-col>
         </a-row>
       </a-form>
     </template>
-    <template #footer>
+    <div class="detail-actions">
       <a-space v-if="props.item" wrap>
-        <a-button danger @click="routeTo('exception')">转异常</a-button>
-        <a-button @click="routeTo('qa')">转Q&A</a-button>
-        <a-button @click="routeTo('requirement')">转需求</a-button>
-        <a-button @click="routeTo('close')">直接关闭</a-button>
+        <template v-if="!isClosedOrder">
+          <a-button @click="routeTo('close')">直接关闭</a-button>
+          <a-button @click="routeTo('requirement')">流转需求</a-button>
+          <a-button @click="routeTo('qa')">流转Q&A</a-button>
+        </template>
         <a-button type="primary" @click="saveItem">保存</a-button>
       </a-space>
-    </template>
-  </a-drawer>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.workorder-detail-page {
+  min-height: calc(100vh - 96px);
+  padding: 4px 0 24px;
+}
+
 .detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
@@ -245,9 +256,20 @@ function routeTo(route: 'requirement' | 'exception' | 'qa' | 'close') {
   background: #fff;
 }
 
+.feedback-main {
+  min-width: 0;
+}
+
 .feedback-card p {
   margin: 4px 0 0;
   color: #475467;
+  line-height: 1.6;
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 0;
 }
 
 @media (max-width: 768px) {

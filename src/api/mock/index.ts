@@ -37,6 +37,7 @@ export {
 export { reportData, knowledgeData } from './report';
 export {
     filterPeriodOptions,
+    filterRegionOptions,
     filterBrandOptions,
     filterSiteOptions,
     filterProductTypeOptions,
