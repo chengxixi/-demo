@@ -37,7 +37,6 @@ declare module 'vue' {
     AModal: typeof import('ant-design-vue/es')['Modal']
     AppLayout: typeof import('./components/layout/AppLayout.vue')['default']
     AProgress: typeof import('ant-design-vue/es')['Progress']
-    ARadio: typeof import('ant-design-vue/es')['Radio']
     ARate: typeof import('ant-design-vue/es')['Rate']
     ARow: typeof import('ant-design-vue/es')['Row']
     ASegmented: typeof import('ant-design-vue/es')['Segmented']

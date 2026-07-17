@@ -17,7 +17,7 @@ const emit = defineEmits<{
 const showEvidenceModal = shallowRef(false)
 const showDetailModal = shallowRef(false)
 const currentCandidate = shallowRef<CandidateLead | null>(null)
-const mergeSource = shallowRef<CandidateLead | null>(null)
+const mergeActive = shallowRef(false)
 const selectedMergeIds = shallowRef<string[]>([])
 const convertedIds = shallowRef<Set<string>>(new Set())
 
@@ -26,8 +26,46 @@ const evidenceForm = reactive({
   files: [] as UploadProps['fileList'],
 })
 
+const candidateFilters = reactive({
+  id: '',
+  source: '',
+  productLine: undefined as string | undefined,
+  status: undefined as string | undefined,
+  assignee: undefined as string | undefined,
+})
+
+const candidateAssigneeMap: Record<string, string> = {
+  'REQ-CAND-001': '李工',
+  'REQ-CAND-002': '王工',
+  'REQ-CAND-003': '孙工',
+}
+
+const productLineOptions = computed(() => {
+  return Array.from(new Set(props.candidates.map(productLineOf).filter(Boolean))).map((value) => ({ label: value, value }))
+})
+
+const statusOptions = computed(() => {
+  return Array.from(new Set(props.candidates.map((item) => item.status))).map((value) => ({ label: value, value }))
+})
+
+const assigneeOptions = computed(() => {
+  return Array.from(new Set(props.candidates.map(candidateAssignee).filter(Boolean))).map((value) => ({ label: value, value }))
+})
+
+const filteredCandidates = computed(() => {
+  return props.candidates.filter((item) => {
+    const idMatched = !candidateFilters.id || item.id.includes(candidateFilters.id.trim())
+    const sourceMatched = !candidateFilters.source || item.sourceFeedback.includes(candidateFilters.source.trim())
+    const productLineMatched = !candidateFilters.productLine || productLineOf(item) === candidateFilters.productLine
+    const statusMatched = !candidateFilters.status || item.status === candidateFilters.status
+    const assigneeMatched = !candidateFilters.assignee || candidateAssignee(item) === candidateFilters.assignee
+
+    return idMatched && sourceMatched && productLineMatched && statusMatched && assigneeMatched
+  })
+})
+
 const displayCandidates = computed(() => {
-  return [...props.candidates].sort((a, b) => {
+  return [...filteredCandidates.value].sort((a, b) => {
     const aDone = isDoneCandidate(a) ? 1 : 0
     const bDone = isDoneCandidate(b) ? 1 : 0
     if (aDone !== bDone) return aDone - bDone
@@ -36,7 +74,7 @@ const displayCandidates = computed(() => {
 })
 
 const statusRows = computed(() => {
-  const groups = ['待补充', '待评分', '已转需求']
+  const groups = ['待补充', '待评分', '已转需求', '已合并']
 
   return groups.map((status) => ({
     status,
@@ -44,7 +82,13 @@ const statusRows = computed(() => {
   }))
 })
 
-const mergeActive = computed(() => Boolean(mergeSource.value))
+function productLineOf(candidate: CandidateLead) {
+  return candidate.product.split(/\s+/)[0] || ''
+}
+
+function candidateAssignee(candidate: CandidateLead) {
+  return candidateAssigneeMap[candidate.id] || ''
+}
 
 function isConverted(candidate: CandidateLead) {
   return convertedIds.value.has(candidate.id) || candidate.status === '已转需求'
@@ -63,18 +107,18 @@ function openDetail(candidate: CandidateLead) {
   showDetailModal.value = true
 }
 
-function startMerge(candidate: CandidateLead) {
-  mergeSource.value = candidate
+function startMerge() {
+  mergeActive.value = true
   selectedMergeIds.value = []
 }
 
 function cancelMerge() {
-  mergeSource.value = null
+  mergeActive.value = false
   selectedMergeIds.value = []
 }
 
 function toggleMergeTarget(candidate: CandidateLead) {
-  if (!mergeSource.value || candidate.id === mergeSource.value.id || candidate.status === '已合并') return
+  if (!mergeActive.value || candidate.status === '已合并') return
 
   selectedMergeIds.value = selectedMergeIds.value.includes(candidate.id)
     ? selectedMergeIds.value.filter((id) => id !== candidate.id)
@@ -82,30 +126,31 @@ function toggleMergeTarget(candidate: CandidateLead) {
 }
 
 function confirmMergeCandidate() {
-  if (!mergeSource.value || selectedMergeIds.value.length === 0) {
-    message.info('请选择需要合并的线索')
+  if (selectedMergeIds.value.length < 2) {
+    message.info('请选择至少 2 条需要合并的线索')
     return
   }
 
-  const mergedItems = props.candidates.filter((item) => selectedMergeIds.value.includes(item.id))
+  const selectedItems = displayCandidates.value.filter((item) => selectedMergeIds.value.includes(item.id))
+  const [mainCandidate, ...mergedItems] = selectedItems
   const mergedEvidence = mergedItems.map((item) => `${item.id}: ${item.evidence}`).join('\n')
   emit('updateCandidate', {
-    ...mergeSource.value,
-    evidence: [mergeSource.value.evidence, mergedEvidence].filter(Boolean).join('\n'),
+    ...mainCandidate,
+    evidence: [mainCandidate.evidence, mergedEvidence].filter(Boolean).join('\n'),
     nextAction: '已合并线索，进入证据评分',
-    status: mergeSource.value.status === '已转需求' ? '已转需求' : '待评分',
+    status: mainCandidate.status === '已转需求' ? '已转需求' : '待评分',
   })
 
   mergedItems.forEach((item) => {
     emit('updateCandidate', {
       ...item,
       status: '已合并',
-      nextAction: `已合并至 ${mergeSource.value?.id}`,
+      nextAction: `已合并至 ${mainCandidate.id}`,
     })
   })
 
   cancelMerge()
-  message.success('线索已合并')
+  message.success(`已合并 ${selectedItems.length} 条线索`)
 }
 
 function openSupplementEvidence(candidate: CandidateLead) {
@@ -158,16 +203,52 @@ function promoteCandidate(candidate: CandidateLead) {
       <a-col>
         <a-space size="middle">
           <a-typography-title :level="5" class="m-0">候选需求线索</a-typography-title>
-          <a-tag v-if="mergeSource" color="blue">主线索：{{ mergeSource.id }}</a-tag>
+          <a-tag v-if="mergeActive" color="blue">已选择 {{ selectedMergeIds.length }} 条</a-tag>
         </a-space>
       </a-col>
-      <a-col v-if="mergeSource">
+      <a-col>
         <a-space>
-          <a-button @click="cancelMerge">取消合并</a-button>
-          <a-button type="primary" :disabled="selectedMergeIds.length === 0" @click="confirmMergeCandidate">
+          <a-button v-if="mergeActive" @click="cancelMerge">取消合并</a-button>
+          <a-button v-if="mergeActive" type="primary" :disabled="selectedMergeIds.length < 2" @click="confirmMergeCandidate">
             合并选中线索
           </a-button>
+          <a-button v-else type="primary" :disabled="displayCandidates.length < 2" @click="startMerge">
+            合并
+          </a-button>
         </a-space>
+      </a-col>
+    </a-row>
+
+    <a-row :gutter="[12, 12]" class="candidate-filter-row">
+      <a-col :xs="24" :md="8" :xl="5">
+        <label class="candidate-filter-field">
+          <span>线索ID</span>
+          <a-input v-model:value="candidateFilters.id" allow-clear placeholder="线索ID" />
+        </label>
+      </a-col>
+      <a-col :xs="24" :md="8" :xl="5">
+        <label class="candidate-filter-field">
+          <span>来源</span>
+          <a-input v-model:value="candidateFilters.source" allow-clear placeholder="来源反馈" />
+        </label>
+      </a-col>
+      <a-col :xs="24" :md="8" :xl="4">
+        <label class="candidate-filter-field">
+          <span>产品线</span>
+          <a-select v-model:value="candidateFilters.productLine" allow-clear placeholder="产品线" :options="productLineOptions" />
+        </label>
+      </a-col>
+      <a-col :xs="24" :md="8" :xl="4">
+        <label class="candidate-filter-field">
+          <span>状态</span>
+          <a-select v-model:value="candidateFilters.status" allow-clear placeholder="状态" :options="statusOptions" />
+        </label>
+      </a-col>
+      <a-col :xs="24" :md="8" :xl="4">
+        <label class="candidate-filter-field">
+          <span>当前处理人</span>
+          <a-select v-model:value="candidateFilters.assignee" allow-clear placeholder="当前处理人" :options="assigneeOptions" />
+        </label>
       </a-col>
     </a-row>
 
@@ -182,9 +263,9 @@ function promoteCandidate(candidate: CandidateLead) {
     >
       <vxe-column v-if="mergeActive" title="" width="54" align="center">
         <template #default="{ row }">
-          <a-radio
+          <a-checkbox
             :checked="selectedMergeIds.includes(row.id)"
-            :disabled="row.id === mergeSource?.id || row.status === '已合并'"
+            :disabled="row.status === '已合并'"
             @click.stop="toggleMergeTarget(row)"
           />
         </template>
@@ -198,7 +279,6 @@ function promoteCandidate(candidate: CandidateLead) {
       <vxe-column field="category" title="分类" min-width="170" />
       <vxe-column field="title" title="线索标题" min-width="240" />
       <vxe-column field="evidence" title="证据摘要" min-width="300" />
-      <vxe-column field="product" title="适用产品" min-width="160" />
       <vxe-column field="status" title="状态" width="110">
         <template #default="{ row }">
           <a-tag :color="row.status === '待评分' ? 'blue' : row.status === '已转需求' ? 'green' : row.status === '已合并' ? 'default' : 'orange'">
@@ -206,11 +286,9 @@ function promoteCandidate(candidate: CandidateLead) {
           </a-tag>
         </template>
       </vxe-column>
-      <vxe-column field="nextAction" title="下一步动作" min-width="260" />
-      <vxe-column title="操作" width="330" fixed="right" align="center">
+      <vxe-column title="操作" width="280" fixed="right" align="center">
         <template #default="{ row }">
           <a-space size="small" wrap>
-            <a-button size="small" @click="startMerge(row)">合并</a-button>
             <a-button size="small" @click="openSupplementEvidence(row)">补证据</a-button>
             <a-button size="small" type="primary" :disabled="isConverted(row)" @click="promoteCandidate(row)">
               {{ isConverted(row) ? '已转需求' : '转产品需求' }}
@@ -263,6 +341,25 @@ function promoteCandidate(candidate: CandidateLead) {
 
 .evidence-text {
   white-space: pre-wrap;
+}
+
+.candidate-filter-row {
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+}
+
+.candidate-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #344054;
+}
+
+:deep(.candidate-filter-field .ant-select) {
+  width: 100%;
 }
 
 :deep(.candidate-row-done) {
