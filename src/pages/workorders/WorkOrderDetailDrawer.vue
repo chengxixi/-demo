@@ -67,6 +67,16 @@ const resultDisplay = computed(() => {
   return { label: item.result || '待处理', href: '' }
 })
 
+const processingRecords = computed(() => {
+  const item = props.item
+  if (!item) return []
+  const owner = form.owner || item.owner || '负责人'
+  return [
+    { time: '2026-6/18-19:20:20', content: `${owner}将工单流转到需求池。` },
+    { time: '2026-6/18-19:10:20', content: `张工将负责人流转为${owner}` },
+    { time: '2026-6/18-19:00:20', content: '张工流转到工单池' },
+  ]
+})
 const detailCards = computed(() => {
   if (!props.item) return []
   return [
@@ -208,11 +218,13 @@ function confirmExceptionRoute() {
             </a-form-item>
           </a-col>
           <a-col :span="24">
-            <a-form-item label="处理结果">
-              <a-typography-link v-if="resultDisplay.href" :href="resultDisplay.href">
-                {{ resultDisplay.label }}
-              </a-typography-link>
-              <a-typography-text v-else strong>{{ resultDisplay.label }}</a-typography-text>
+            <a-form-item label="处理记录及结果">
+              <a-timeline class="workorder-records">
+                <a-timeline-item v-for="record in processingRecords" :key="record.time">
+                  <span class="record-time">{{ record.time }}</span>
+                  <span>{{ record.content }}</span>
+                </a-timeline-item>
+              </a-timeline>
             </a-form-item>
           </a-col>
           <a-col v-if="actionMode === 'close'" :span="24">
@@ -254,6 +266,16 @@ function confirmExceptionRoute() {
   padding: 4px 0 24px;
 }
 
+.workorder-records {
+  margin: 4px 0 0;
+}
+
+.record-time {
+  color: #667085;
+  display: inline-block;
+  margin-right: 12px;
+  min-width: 150px;
+}
 .detail-head {
   display: flex;
   align-items: flex-start;
