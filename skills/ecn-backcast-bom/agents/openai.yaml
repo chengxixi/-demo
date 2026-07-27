@@ -1,0 +1,4 @@
+interface:
+  display_name: "ECN倒推BOM"
+  short_description: "根据ECN记录倒推每次变更后的完整BOM，并在明细内标记本次变动物料。"
+  default_prompt: "提供BOM清单Excel和ECN变更记录Excel，按版本倒推出每次ECN后的完整BOM，并标记本次变动物料。"
