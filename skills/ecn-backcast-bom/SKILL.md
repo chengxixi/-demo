@@ -396,3 +396,50 @@ Use these rules for 01.01.01.01575 / AF31002A1-CS(UE) V1.0 path outputs and for 
 ### Validation before delivery
 - Re-run generation scripts, then syntax-check changed scripts.
 - Read back the final workbook and verify: comments count is 0; expected sheet count includes 最新BOM_ECN记录; 03.04.10.00290 appears where required; order-review changed sheets do not show 无变动 defaults; no-print label usage changes are absent from 文件修订履历; handle ECN rows are expanded to child materials.
+
+## 2026-07-29 latest supplements for 01.01.01.01575 V1.0 QR-RD-028 outputs
+
+Use these supplements together with the 2026-07-27 rules. They capture the latest confirmed handling for the current product path.
+
+### Output scope
+- When the user asks for Excel-only corrections, do not regenerate or change the HTML unless explicitly requested.
+- Main Excel output: `D:/code/变更BOM处理/4、输出物/QR-RD-028_01.01.01.01575_产品BOM_V1.0路径.xlsx`.
+- Product path is `01.01.01.01575 / AF31002A1-CS(UE)`, sales model `CS10E`, file number `CS10E-DMR-028`, and V1.0 path only.
+
+### LatestBOM_ECN记录 rules
+- `最新BOM_ECN记录` includes only product ECNs, pending ECNs, and self-made semi-finished ECNs relevant to the V1.0 path.
+- ECNs classified as order review are excluded from `最新BOM_ECN记录`.
+- Order-review ECNs to exclude for this path include: `ECN2408290005`, `ECN2410220006`, `ECN2411080007`, `ECN2502190006`, `ECN2502190005`.
+- Pending ECN explanations must distinguish material switching from pure missing material. Only write "K3 uses X / BOM uses Y" when it is a real switch or paired comparison. For pure missing material, state that BOM lacks the actual production material.
+- `03.04.10.00290 热缩膜` is not a material switch. If K3 production material contains it but BOM lacks it, treat it as missing actual production material and pending ECN; latest BOM also needs this material where required.
+
+### Full ECN note overrides
+When these non-order-review ECNs appear, write the full ECN description into ECN records instead of a short/generated note:
+- `ECN2601070011`: 【设计更改】2026/1/7-降本增效，31002产品面壳周边双面胶较长，成本较高，减短双面胶长度后经高低温72小时测试后，面壳与玻璃间隙符合公司要求（间隙小于0.3mm），故而变更双面胶。备注：自然更换双面胶【工程需求/生产优化】
+- `ECN2601070009`: 【设计更改】2026/1/7-降本增效，31002产品面壳周边双面胶较长，成本较高，减短双面胶长度后经高低温72小时测试后，面壳与玻璃间隙符合公司要求（间隙小于0.3mm），故而变更双面胶。备注：YOL31002A（CS10E）自然更换双面胶【工程需求/生产优化】
+- `ECN2603130015`: 【供应商变更】2026/3/13-提升产品精度稳定性，对G点传感器涉及机型全面切入供应商华兰海；03.03.02.00281与03.03.02.00284供应商均为华兰海，此两料号传感器线长不一样，应为不同料号，不应是替代关系（按现有规则），故须新增料号，避免逻辑错误。备注：传感器（料号：03.03.02.00281）自然切换为传感器（料号：03.03.05.00320）【工程需求/物料替代】
+- `ECN2605150001`: 【设计更改】2026/5/15-PE反馈31002产品顶部间隙偏大，与PE、品质分析确认，顶部双面胶贴歪，双面胶贴到面壳顶部筋位上，导致间隙偏大。需改小顶部双面胶宽度，由45*10改为45*9，高低温测试72H后间隙合格，检附件报告，并与PE、品质确认OK。备注：03.05.06.06270-双面胶自然消耗为03.05.06.06500-双面胶【工程需求/物料替代】
+
+### Self-made semi-finished / handle ECN expansion
+- Self-made semi-finished ECNs must be included in the main product path and expanded to concrete child-material rows.
+- Do not show only parent `04.01.02.00370 手柄`; list the affected child materials in `最新BOM_ECN记录`.
+- Expand combined ECN ids such as `ECN2510110014/0015` and `ECN2510150011/0012` so each concrete ECN id is represented.
+- For handle ECNs, use these descriptions when writing `问题描述` or notes:
+  - `ECN2412170008`: 手柄04.01.02.00370 更换导线【工程需求/设计缺陷】
+  - `ECN2510110014` and `ECN2510110015`: 卷盘03.04.05.03630自然切换为卷盘03.04.05.04970【工程需求/生产优化】
+  - `ECN2510150011` and `ECN2510150012`: 自然切换旧料涉及的所有BOM表【工程需求/设计缺陷】
+
+### Order review and revision separation
+- Order-review materials come from the material rules workbook where `订单评审=是`.
+- File revision sheets no longer display order-review content; order review has its own sheet.
+- No-print labels (`物料名称=标贴` and spec contains `无印刷`) are common materials. Their usage changes are not file revision changes.
+- If an order review sheet has changes, do not pre-check "合格" and do not write "无变动" in the review rows; leave those fields for human review. If no changes exist, all review rows are `☑合格 ☐不合格` and remark `无变动`.
+
+### Read-back checks
+Before delivery, read the final workbook and verify:
+- workbook comments count is 0;
+- `最新BOM_ECN记录` exists;
+- order-review ECNs are absent from `最新BOM_ECN记录`;
+- `ECN2601070011`, `ECN2601070009`, `ECN2603130015`, and `ECN2605150001` have full descriptions;
+- handle ECNs such as `ECN2412170008`, `ECN2510110014/0015`, and `ECN2510150011/0012` are expanded to child-material rows;
+- `03.04.10.00290` appears where required and is treated as missing material pending ECN, not material switch.
