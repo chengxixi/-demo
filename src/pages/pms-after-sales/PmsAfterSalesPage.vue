@@ -3,19 +3,24 @@ import { computed, shallowRef } from 'vue'
 import { ExternalLink } from 'lucide-vue-next'
 
 const activePrototype = shallowRef('returnFlow')
+const baseUrl = import.meta.env.BASE_URL
+
+function assetUrl(path: string) {
+  return `${baseUrl}${path}`.replace(/\/+/g, '/')
+}
 
 const prototypes = [
   {
     key: 'returnFlow',
     title: '退货流程示意图',
     desc: '退货签收、PMS 售后刷新、维修扫码登记和持续提醒流程。',
-    src: '/pms-after-sales/return-flow.html',
+    src: assetUrl('pms-after-sales/return-flow.html'),
   },
   {
     key: 'repairMes',
     title: '售后维修 MES 原型',
     desc: '面向 iPad 维修工位的扫码、维修登记、结果确认原型。',
-    src: '/pms-after-sales/repair-mes.html',
+    src: assetUrl('pms-after-sales/repair-mes.html'),
   },
 ]
 
