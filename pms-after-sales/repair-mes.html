@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>售后维修 MES · iPad 原型</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --blue:#007AFF; --green:#34C759; --orange:#FF9500; --red:#FF3B30;
+    --bg:#F2F2F7; --card:#FFFFFF; --t1:#1C1C1E; --t2:#8E8E93;
+    --line:#E5E5EA; --inp-bd:#D1D1D6;
+  }
+  html,body{ height:100%; }
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--t1); font-size:15px; line-height:1.4;
+  }
+  .app{ max-width:1180px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+
+  /* status bar */
+  .statusbar{ display:flex; align-items:center; justify-content:space-between; padding:8px 22px; font-size:14px; font-weight:600; }
+  .statusbar .right{ display:flex; align-items:center; gap:6px; }
+
+  /* navbar */
+  .navbar{ display:flex; align-items:center; padding:10px 18px; background:rgba(249,249,249,.92); border-bottom:.5px solid var(--line); position:sticky; top:0; z-index:20; }
+  .navbar .back{ color:var(--blue); font-size:17px; display:flex; align-items:center; gap:3px; cursor:pointer; min-width:90px; }
+  .navbar .title{ flex:1; text-align:center; font-size:17px; font-weight:600; }
+  .navbar .right{ min-width:90px; text-align:right; color:var(--blue); font-size:15px; }
+
+  /* views */
+  .view{ flex:1; display:none; flex-direction:column; overflow:hidden; animation:fade .25s ease; }
+  .view.active{ display:flex; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  .scroll{ flex:1; overflow-y:auto; padding:18px 22px 14px; }
+
+  /* ===== View1 工位选择 ===== */
+  .ws-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; }
+  .ws-label{ font-size:19px; font-weight:600; }
+  .picker{ width:420px; max-width:90%; }
+  .picker-box{ background:var(--card); border:1px solid var(--inp-bd); border-radius:12px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; font-size:17px; cursor:pointer; }
+  .picker-box .ph{ color:var(--t2); }
+  .sheet{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:flex-end; z-index:50; }
+  .sheet.show{ display:flex; }
+  .sheet-panel{ width:100%; background:#F7F7F8; border-radius:14px 14px 0 0; padding:8px 0 0; animation:slideUp .25s ease; }
+  @keyframes slideUp{ from{transform:translateY(100%);} to{transform:none;} }
+  .sheet-item{ padding:16px; text-align:center; font-size:18px; border-bottom:.5px solid var(--line); cursor:pointer; }
+  .sheet-item:active{ background:#ECECEC; }
+  .sheet-item.sel{ color:var(--blue); font-weight:600; }
+  .sheet-cancel{ margin:8px 8px 24px; padding:15px; text-align:center; background:#fff; border-radius:12px; font-size:18px; font-weight:600; color:var(--red); cursor:pointer; }
+
+  /* ===== View2 扫码 ===== */
+  .scan-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; }
+  .scan-btn{ width:170px; height:170px; border-radius:50%; border:3px solid var(--blue); background:rgba(0,122,255,.06); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+  .scan-btn:active{ background:rgba(0,122,255,.14); }
+  .scan-btn .cap{ color:var(--blue); font-size:14px; font-weight:600; }
+  .scan-sub{ color:var(--t2); font-size:14px; }
+  .manual{ width:440px; max-width:92%; display:flex; gap:10px; }
+  .manual input{ flex:1; border:1px solid var(--inp-bd); border-radius:10px; padding:12px 14px; font-size:15px; }
+  .manual input:focus{ outline:none; border-color:var(--blue); }
+  .manual button{ background:var(--blue); color:#fff; border:none; border-radius:10px; padding:0 20px; font-size:15px; font-weight:600; }
+  .hint{ color:var(--t2); font-size:13px; background:#fff; border:1px dashed var(--line); border-radius:10px; padding:10px 14px; max-width:440px; text-align:center; }
+  .demo-row{ display:flex; gap:10px; }
+  .demo-row button{ background:#fff; border:1px solid var(--blue); color:var(--blue); border-radius:20px; padding:8px 16px; font-size:13px; cursor:pointer; }
+
+  /* ===== cards / fields ===== */
+  .card{ background:var(--card); border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); padding:16px 18px; margin-bottom:14px; }
+  .card h3{ font-size:17px; font-weight:700; margin-bottom:4px; }
+  .card .sub{ font-size:13px; color:var(--t2); margin-bottom:12px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field.full{ grid-column:1 / -1; }
+  .field label{ font-size:13px; color:var(--t2); }
+  .field .val{ font-size:15px; color:var(--t1); word-break:break-all; }
+  .field .val.empty{ color:var(--t2); }
+  input.f, textarea.f, select.f{ border:1px solid var(--inp-bd); border-radius:10px; padding:11px 13px; font-size:15px; font-family:inherit; background:#fff; width:100%; }
+  input.f:focus, textarea.f:focus, select.f:focus{ outline:none; border-color:var(--blue); }
+  textarea.f{ resize:vertical; min-height:64px; }
+  .req::after{ content:" *"; color:var(--red); }
+  .photo{ width:90px; height:90px; border-radius:10px; background:repeating-linear-gradient(45deg,#eee,#eee 8px,#e3e3e3 8px,#e3e3e3 16px); display:flex; align-items:center; justify-content:center; color:var(--t2); font-size:12px; cursor:pointer; }
+  .qr{ width:96px; height:96px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px; }
+
+  .tag{ display:inline-block; padding:3px 11px; border-radius:20px; font-size:13px; font-weight:600; }
+  .tag.green{ background:rgba(52,199,89,.16); color:#1a7f37; }
+  .tag.blue{ background:rgba(0,122,255,.14); color:var(--blue); }
+  .tag.gray{ background:#ECECEC; color:var(--t2); }
+
+  /* bottom action bar */
+  .actionbar{ display:flex; gap:12px; padding:12px 22px calc(12px + env(safe-area-inset-bottom)); background:#fff; border-top:.5px solid var(--line); }
+  .btn{ flex:1; border:none; border-radius:12px; padding:14px; font-size:16px; font-weight:600; cursor:pointer; }
+  .btn.primary{ background:var(--blue); color:#fff; }
+  .btn.ghost{ background:#ECECEC; color:var(--t1); }
+  .btn:active{ opacity:.85; }
+
+  /* modal */
+  .modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:60; }
+  .modal.show{ display:flex; }
+  .modal-box{ background:#fff; border-radius:18px; padding:22px; width:360px; max-width:92%; text-align:center; animation:slideUp .25s ease; }
+  .label-print{ width:330px; min-height:300px; margin:0 auto 16px; background:#fff; border:2px solid #111; border-radius:8px; padding:14px 16px; text-align:left; }
+  .label-print .lm{ font-size:15px; color:#111; font-weight:700; text-align:center; margin-bottom:8px; }
+  .label-print .sec{ font-size:12px; font-weight:700; color:var(--blue); margin:10px 0 4px; }
+  .label-print .lv{ font-size:12px; color:#222; line-height:1.6; }
+  .label-print .lv b{ color:#111; font-weight:600; }
+  .label-print svg{ display:block; margin:0 auto 6px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:8px; }
+
+  /* toast */
+  .toast{ position:fixed; top:50px; left:50%; transform:translateX(-50%) translateY(-20px); background:rgba(28,28,30,.92); color:#fff; padding:12px 24px; border-radius:12px; font-size:14px; font-weight:600; z-index:100; opacity:0; transition:all .3s ease; pointer-events:none; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* history list */
+  .hist-item{ background:var(--card); border-radius:12px; padding:14px 16px; margin-bottom:10px; box-shadow:0 1px 6px rgba(0,0,0,.04); display:flex; align-items:center; gap:14px; }
+  .hist-item .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .hist-item .dot.green{ background:var(--green); }
+  .hist-item .dot.orange{ background:var(--orange); }
+  .hist-item .info{ flex:1; min-width:0; }
+  .hist-item .info .hi{ font-size:15px; font-weight:600; }
+  .hist-item .info .hd{ font-size:13px; color:var(--t2); margin-top:2px; }
+  .hist-item .time{ font-size:12px; color:var(--t2); flex-shrink:0; }
+
+  /* empty state */
+  .empty{ text-align:center; padding:60px 20px; color:var(--t2); }
+  .empty svg{ width:64px; height:64px; margin-bottom:14px; opacity:.35; }
+  .empty p{ font-size:15px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ VIEW 1 : 工位选择 ============ -->
+  <div class="view active" id="view1">
+    <div class="statusbar">
+      <span id="clock1">9:41</span>
+      <span class="right">📶 &nbsp;🔋 100%</span>
+    </div>
+    <div class="navbar"><div class="back">‹ 返回</div><div class="title">工位选择</div><div class="right" onclick="go('view5')" style="cursor:pointer;font-size:14px">历史</div></div>
+    <div class="ws-wrap">
+      <div class="ws-label">工位选择</div>
+      <div class="picker">
+        <div class="picker-box" id="pickerBox">
+          <span class="ph" id="pickerText">选择工位</span>
+          <span>▾</span>
+        </div>
+      </div>
+    </div>
+    <div class="actionbar"><button class="btn primary" onclick="confirmStation()">确定</button></div>
+  </div>
+
+  <!-- ============ VIEW 2 : 扫码/录入 ============ -->
+  <div class="view" id="view2">
+    <div class="statusbar"><span id="clock2">9:41</span><span class="right">📶 &nbsp;🔋 100%</span></div>
+    <div class="navbar"><div class="back" onclick="go('view1')">‹ 返回</div><div class="title">售后维修</div><div class="right"></div></div>
+    <div class="scan-wrap">
+      <div class="scan-btn" onclick="simulateScan()">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2"><path d="M3 7V4h3M17 4h3v3M21 17v3h-3M7 20H4v-3M3 12h18"/></svg>
+        <span class="cap">点击扫码</span>
+      </div>
+      <div class="scan-sub">点击扫码，或手动输入条形码</div>
+      <div class="manual">
+        <input id="manualInput" placeholder="输入条形码内容" onkeydown="if(event.key==='Enter')queryManual()">
+        <button onclick="queryManual()">查询</button>
+      </div>
+      <div class="demo-row">
+        <button onclick="openExists()">演示：已登记</button>
+        <button onclick="openNew()">演示：未登记</button>
+      </div>
+      <div class="hint">逻辑：条形码已在售后系统由客服登记 → 带出信息并生成标贴；<br>若未登记 → 新建退货登记并生成标贴。</div>
+    </div>
+  </div>
+
+  <!-- ============ VIEW 3 : 详情 + 填写（已登记） ============ -->
+  <div class="view" id="view3">
+    <div class="statusbar"><span id="clock3">9:41</span><span class="right">📶 &nbsp;🔋 100%</span></div>
+    <div class="navbar"><div class="back" onclick="go('view2')">‹ 返回</div><div class="title">售后维修登记</div><div class="right" id="modeTag3"></div></div>
+    <div class="scroll" id="scroll3"></div>
+    <div class="actionbar">
+      <button class="btn ghost" onclick="go('view2')">返回</button>
+      <button class="btn ghost" onclick="saveForm();toast('✅ 已保存')">保存</button>
+      <button class="btn primary" onclick="printLabel()">打印标贴</button>
+    </div>
+  </div>
+
+  <!-- ============ VIEW 4 : 新建登记（未登记） ============ -->
+  <div class="view" id="view4">
+    <div class="statusbar"><span id="clock4">9:41</span><span class="right">📶 &nbsp;🔋 100%</span></div>
+    <div class="navbar"><div class="back" onclick="go('view2')">‹ 返回</div><div class="title">新建退货登记</div><div class="right"></div></div>
+    <div class="scroll" id="scroll4"></div>
+    <div class="actionbar">
+      <button class="btn ghost" onclick="go('view2')">返回</button>
+      <button class="btn primary" onclick="printLabel()">打印标贴</button>
+    </div>
+  </div>
+
+  <!-- picker sheet -->
+  <div class="sheet" id="sheet">
+    <div class="sheet-panel">
+      <div class="sheet-item" data-v="首件检验">首件检验</div>
+      <div class="sheet-item" data-v="品质检验">品质检验</div>
+      <div class="sheet-item" data-v="质检工位">质检工位</div>
+      <div class="sheet-item" data-v="售后维修">售后维修</div>
+      <div class="sheet-cancel" onclick="closeSheet()">取消</div>
+    </div>
+  </div>
+
+  <!-- ============ VIEW 5 : 打印历史 ============ -->
+  <div class="view" id="view5">
+    <div class="statusbar"><span id="clock5">9:41</span><span class="right">📶 &nbsp;🔋 100%</span></div>
+    <div class="navbar"><div class="back" onclick="go('view1')">‹ 返回</div><div class="title">打印历史</div><div class="right" onclick="clearHistory()" style="cursor:pointer;font-size:14px">清空</div></div>
+    <div class="scroll" id="scroll5"></div>
+  </div>
+
+  <!-- label modal -->
+  <div class="modal" id="labelModal">
+    <div class="modal-box">
+      <div class="lm" style="font-size:16px;margin-bottom:6px">标贴预览</div>
+      <div class="label-print" id="labelPrint"></div>
+      <div style="font-size:13px;color:var(--t2);margin:6px 0 10px">请确认标贴样式与内容，确认无误后点击「确认打印」</div>
+      <div class="modal-actions">
+        <button class="btn ghost" style="flex:1" onclick="closeModal()">返回修改</button>
+        <button class="btn primary" style="flex:1" onclick="doPrint()">确认打印</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+  /* ---------- Toast 提示 ---------- */
+  function toast(msg, duration=2000){
+    const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), duration);
+  }
+
+  /* ---------- 时钟 ---------- */
+  function tick(){ const d=new Date(); const t=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); ['clock1','clock2','clock3','clock4','clock5'].forEach(id=>{const e=document.getElementById(id); if(e)e.textContent=t;}); }
+  tick(); setInterval(tick,30000);
+
+  /* ---------- localStorage 持久化 key ---------- */
+  const LS_KEY='mes_after_sale_form_v1';
+
+  /* ---------- 工位选择 ---------- */
+  let selectedStation='';
+  document.getElementById('pickerBox').onclick=()=>document.getElementById('sheet').classList.add('show');
+  document.querySelectorAll('.sheet-item').forEach(it=>{
+    it.onclick=()=>{ selectedStation=it.dataset.v; document.getElementById('pickerText').textContent=it.dataset.v; document.getElementById('pickerText').classList.remove('ph'); closeSheet(); };
+  });
+  function closeSheet(){ document.getElementById('sheet').classList.remove('show'); }
+  function confirmStation(){
+    if(!selectedStation){ toast('请先选择工位'); return; }
+    if(selectedStation==='售后维修'){ go('view2'); }
+    else { toast('当前原型仅实现「售后维修」工位'); }
+  }
+
+  /* ---------- 视图切换 ---------- */
+  function go(id){ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='view5') renderHistory(); }
+
+  /* ---------- 模拟数据（客服已登记） ---------- */
+  const mock = {
+    channel:'电商退货', applyDate:'2026-04-20', model:'ZZ9869-A1-OA(CN)', defect:'屏幕花屏',
+    trackingNo:'JDV548028956445', contact:'张三', productName:'智能手表 Pro', useDays:'45',
+    isNew:'是', customerName:'李四', desc:'收到货后发现屏幕有花屏现象，疑似运输损坏',
+    order:'SO20260420-001', abnormal:'屏幕异常', custDesc:'客户反馈开机后屏幕出现横向条纹，触摸失灵',
+    company:'北京某包装制品有限公司', requirement:'待定', inspector:'王五', qtyUsed:'1', qtyBefore:'1',
+    productLine:'智能穿戴', partNo:'PN-ZZ9869-A1', returnNo:'RT20260420-008', returnReason:'屏幕花屏，客户反馈触摸失灵',
+    barcode:'JDV548028956445'
+  };
+
+  /* ---------- 渲染详情页（只读 A 区 + 可填 B/C 区） ---------- */
+  function renderDetail(editable){
+    const ro = editable ? '' : 'readonly';
+    const dis = editable ? '' : 'disabled';
+    const req = editable ? ' req' : '';
+    // 尝试从 localStorage 恢复填写过的数据
+    const saved = loadForm();
+    const sr = saved || {};
+    const A = `
+    <div class="card">
+      <h3>客户退货信息</h3>
+      <div class="sub">${editable?'请填写客服登记信息（带 * 为必填）':'来源：客服在售后系统登记，只读'}</div>
+      <div class="grid">
+        <div class="field"><label>客退渠道</label>${editable?`<input class="f" value="${sr.channel||mock.channel}">`:`<div class="val">${mock.channel}</div>`}</div>
+        <div class="field"><label>客户申请日期</label>${editable?`<input class="f" value="${sr.applyDate||mock.applyDate}">`:`<div class="val">${mock.applyDate}</div>`}</div>
+        <div class="field"><label>产品型号${req?'':''}</label>${editable?`<input class="f" value="${sr.model||mock.model}">`:`<div class="val">${mock.model}</div>`}</div>
+        <div class="field"><label>产品线</label>${editable?`<input class="f" value="${sr.productLine||mock.productLine}">`:`<div class="val">${mock.productLine}</div>`}</div>
+        <div class="field"><label>料号</label>${editable?`<input class="f" value="${sr.partNo||mock.partNo}">`:`<div class="val">${mock.partNo}</div>`}</div>
+        <div class="field"><label>疵点</label>${editable?`<input class="f" value="${sr.defect||mock.defect}">`:`<div class="val">${mock.defect}</div>`}</div>
+        <div class="field"><label>退货原因</label>${editable?`<input class="f" value="${sr.returnReason||mock.returnReason}">`:`<div class="val">${mock.returnReason}</div>`}</div>
+        <div class="field"><label>快递跟踪单号${req?'':''}</label>${editable?`<input class="f" value="${sr.trackingNo||mock.trackingNo}">`:`<div class="val">${mock.trackingNo}</div>`}</div>
+        <div class="field"><label>退货单号</label>${editable?`<input class="f" value="${sr.returnNo||mock.returnNo}">`:`<div class="val">${mock.returnNo}</div>`}</div>
+        <div class="field"><label>客户联系人${req?'':''}</label>${editable?`<input class="f" value="${sr.contact||mock.contact}">`:`<div class="val">${mock.contact}</div>`}</div>
+        <div class="field"><label>客产品名</label>${editable?`<input class="f" value="${sr.productName||mock.productName}">`:`<div class="val">${mock.productName}</div>`}</div>
+        <div class="field"><label>用户使用时间(天)</label>${editable?`<input class="f" value="${sr.useDays||mock.useDays}">`:`<div class="val">${mock.useDays}</div>`}</div>
+        <div class="field"><label>瑕疵照片</label><div class="photo" onclick="alert('查看大图')">瑕疵照片</div></div>
+        <div class="field"><label>新否/配件</label>${editable?`<input class="f" value="${sr.isNew||mock.isNew}">`:`<div class="val"><span class="tag green">${mock.isNew}</span></div>`}</div>
+        <div class="field"><label>客户姓名${req?'':''}</label>${editable?`<input class="f" value="${sr.customerName||mock.customerName}">`:`<div class="val">${mock.customerName}</div>`}</div>
+        <div class="field"><label>订单信息</label>${editable?`<input class="f" value="${sr.order||mock.order}">`:`<div class="val">${mock.order}</div>`}</div>
+        <div class="field"><label>异常标签类型</label>${editable?`<input class="f" value="${sr.abnormal||mock.abnormal}">`:`<div class="val"><span class="tag blue">${mock.abnormal}</span></div>`}</div>
+        <div class="field"><label>二维码</label><div class="qr">${qrSVG()}</div></div>
+        <div class="field full"><label>客户问题描述</label>${editable?`<textarea class="f">${sr.custDesc||mock.custDesc}</textarea>`:`<div class="val">${mock.custDesc}</div>`}</div>
+        <div class="field full"><label>客户</label>${editable?`<input class="f" value="${sr.company||mock.company}">`:`<div class="val">${mock.company}</div>`}</div>
+        <div class="field"><label>客户要求</label>${editable?`<select class="f" id="custReq"><option value="退货" ${sr.requirement==='退货'?'selected':''}>退货</option><option value="换货" ${sr.requirement==='换货'?'selected':''}>换货</option><option value="维修" ${sr.requirement==='维修'?'selected':''}>维修</option><option value="待定" ${(!sr.requirement||sr.requirement==='待定')?'selected':''}>待定</option></select>`:`<div class="val"><span class="tag blue">${mock.requirement}</span></div>`}</div>
+        <div class="field"><label>检验者</label>${editable?`<input class="f" value="${sr.inspector||mock.inspector}">`:`<div class="val">${mock.inspector}</div>`}</div>
+        <div class="field"><label>咨通使用数量</label>${editable?`<input class="f" value="${sr.qtyUsed||mock.qtyUsed}">`:`<div class="val">${mock.qtyUsed}</div>`}</div>
+        <div class="field"><label>咨到货前数量</label>${editable?`<input class="f" value="${sr.qtyBefore||mock.qtyBefore}">`:`<div class="val">${mock.qtyBefore}</div>`}</div>
+        <div class="field full"><label>备查描述</label>${editable?`<textarea class="f">${sr.desc||mock.desc}</textarea>`:`<div class="val">${mock.desc}</div>`}</div>
+      </div>
+    </div>`;
+
+    const JUDGE = `
+    <div class="card">
+      <h3>维修判定</h3>
+      <div class="sub">售后维修工程师核对客服产品登记信息，先进行异常判定</div>
+      <div class="grid">
+        <div class="field"><label>售后机状态</label>
+          <select class="f" id="repStatus">
+            <option value="待处理" ${sr.repStatus==='待处理'?'selected':''}>待处理</option>
+            <option value="已处理" ${sr.repStatus==='已处理'?'selected':''}>已处理</option>
+            <option value="已报废" ${sr.repStatus==='已报废'?'selected':''}>已报废</option>
+          </select></div>
+        <div class="field"><label>是否有异常</label>
+          <select class="f" id="hasAnomaly" onchange="toggleAnomaly()">
+            <option value="yes" ${sr.hasAnomaly==='no'?'':'selected'}>有异常</option>
+            <option value="no" ${sr.hasAnomaly==='no'?'selected':''}>无异常</option>
+          </select></div>
+      </div>
+    </div>`;
+
+    const B = `
+    <div class="card" id="cardB">
+      <h3>售后维修工程师处理状况</h3>
+      <div class="sub">有异常时需填写不良原因与处理意见</div>
+      <div class="grid">
+        <div class="field"><label>确认不良原因</label><input class="f" id="badReason" placeholder="确认不良原因" value="${sr.badReason||''}"></div>
+        <div class="field"><label>确认原因</label><input class="f" id="reason" placeholder="确认原因" value="${sr.reason||''}"></div>
+        <div class="field full"><label>检测处理意见备注</label><textarea class="f" id="note" placeholder="检测处理意见备注">${sr.note||''}</textarea></div>
+      </div>
+    </div>`;
+
+    const C = `
+    <div class="card" id="cardC">
+      <h3>售后故障判断信息</h3>
+      <div class="sub">有异常时填写责任归属 / 改善措施</div>
+      <div class="grid">
+        <div class="field"><label>责任归属</label><input class="f" id="resp" value="${sr.resp||'无'}"></div>
+        <div class="field"><label>责任部门</label><input class="f" id="respDept" value="${sr.respDept||'无'}"></div>
+        <div class="field"><label>检查改善措施执行</label><input class="f" id="improveExec" value="${sr.improveExec||'无'}"></div>
+        <div class="field"><label>根据市场反馈确认是否结案</label><input class="f" id="closeCase" value="${sr.closeCase||'无'}"></div>
+        <div class="field"><label>初步嫌疑</label><input class="f" id="suspect" placeholder="初步嫌疑" value="${sr.suspect||''}"></div>
+        <div class="field"><label>深层原因</label><input class="f" id="deepReason" placeholder="深层原因" value="${sr.deepReason||''}"></div>
+        <div class="field full"><label>改善措施</label><textarea class="f" id="improve" placeholder="改善措施">${sr.improve||''}</textarea></div>
+      </div>
+    </div>`;
+
+    return A + JUDGE + B + C;
+  }
+
+  /* ---------- 二维码 SVG（模拟） ---------- */
+  function qrSVG(){
+    let cells=''; const n=11;
+    for(let r=0;r<n;r++){ for(let c=0;c<n;c++){ if(Math.random()>0.5){ cells+=`<rect x="${c*8}" y="${r*8}" width="8" height="8" fill="#111"/>`; } } }
+    const finder=(x,y)=>`<rect x="${x}" y="${y}" width="32" height="32" fill="#111"/><rect x="${x+4}" y="${y+4}" width="24" height="24" fill="#fff"/><rect x="${x+8}" y="${y+8}" width="16" height="16" fill="#111"/>`;
+    return `<svg width="88" height="88" viewBox="0 0 88 88">${cells}${finder(0,0)}${finder(56,0)}${finder(0,56)}</svg>`;
+  }
+
+  /* ---------- 流程分支 ---------- */
+  function openExists(){ document.getElementById('scroll3').innerHTML=renderDetail(false); document.getElementById('modeTag3').innerHTML='<span class="tag green">已登记</span>'; toggleAnomaly(); go('view3'); }
+  function openNew(){ document.getElementById('scroll4').innerHTML=renderDetail(true); toggleAnomaly(); go('view4'); }
+  function simulateScan(){ openExists(); }
+  function queryManual(){ const v=document.getElementById('manualInput').value.trim(); if(!v){ toast('请输入条形码'); return; } if(v.toUpperCase()==='NEW'){ openNew(); } else { openExists(); } }
+
+  /* 异常判定：无异常则隐藏 处理状况(B) 与 故障判断(C) */
+  function toggleAnomaly(){
+    const sel=document.getElementById('hasAnomaly'); if(!sel) return;
+    const show = sel.value==='yes';
+    const b=document.getElementById('cardB'), c=document.getElementById('cardC');
+    if(b) b.style.display = show ? '' : 'none';
+    if(c) c.style.display = show ? '' : 'none';
+  }
+
+  /* ---------- 表单数据收集（从当前页面所有 input/select/textarea） ---------- */
+  function collectForm(){
+    const data={};
+    const container=document.querySelector('.view.active .scroll') || document.querySelector('.view.active');
+    if(!container) return data;
+    container.querySelectorAll('input.f, select.f, textarea.f').forEach(el=>{
+      const id=el.id || el.name;
+      // 用字段名或 id 作为 key
+      const label=el.closest('.field')?.querySelector('label')?.textContent || id || 'field';
+      data[label]=el.value.trim();
+    });
+    return data;
+  }
+
+  /* ---------- localStorage 持久化 ---------- */
+  function saveForm(){
+    const data=collectForm();
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e){}
+  }
+  function loadForm(){
+    try{ return JSON.parse(localStorage.getItem(LS_KEY)); } catch(e){ return null; }
+  }
+
+  /* ---------- 必填校验 ---------- */
+  function validateForm(){
+    const errs=[];
+    // 关键必填字段检查
+    const checks=[
+      {id:'repStatus', name:'售后机状态'},
+      {id:'hasAnomaly', name:'是否有异常'},
+    ];
+    checks.forEach(({id,name})=>{
+      const el=document.getElementById(id);
+      if(el && !el.value) errs.push(name);
+    });
+    // 如果有异常，B区和C区关键字段也要填
+    const anomEl=document.getElementById('hasAnomaly');
+    if(anomEl && anomEl.value==='yes'){
+      const extra=[
+        {id:'badReason', name:'确认不良原因'},
+        {id:'reason', name:'确认原因'},
+      ];
+      extra.forEach(({id:name})=>{
+        const el=document.getElementById(id);
+        if(el && !el.value.trim()) errs.push(name+'（有异常时必填）');
+      });
+    }
+    return errs;
+  }
+
+  /* ---------- 标贴预览（含校验） ---------- */
+  function printLabel(){
+    // 先保存当前表单
+    saveForm();
+    // 校验
+    const errs=validateForm();
+    if(errs.length>0){
+      toast('请填写：'+errs.join('、'), 2800);
+      // 让第一个错误字段聚焦
+      const firstErr=errs[0].replace(/（.*）/,'');
+      document.querySelectorAll('.card input.f, .card select.f').forEach(el=>{
+        const label=el.closest('.field')?.querySelector('label')?.textContent;
+        if(label===firstErr){ el.focus(); el.style.borderColor='var(--red)'; setTimeout(()=>el.style.borderColor='', 2000); }
+      });
+      return;
+    }
+    // 正常弹出预览
+    const statusEl=document.getElementById('repStatus'); const status=statusEl?statusEl.value:'待处理';
+    const anomEl=document.getElementById('hasAnomaly'); const anom=anomEl?(anomEl.value==='yes'?'有异常':'无异常'):'有异常';
+    let rType='待定'; const cr=document.getElementById('custReq'); if(cr) rType=cr.value;
+    const reasonEl=document.getElementById('reason'); const reason=reasonEl?reasonEl.value:'';
+    document.getElementById('labelPrint').innerHTML=`
+      <div class="lm">售后维修标贴</div>
+      <svg id="bc" width="300" height="56" viewBox="0 0 300 56"></svg>
+      <div class="sec">一、基本信息</div>
+      <div class="lv"><b>产品线：</b>${mock.productLine}</div>
+      <div class="lv"><b>料号：</b>${mock.partNo}</div>
+      <div class="lv"><b>型号：</b>${mock.model}</div>
+      <div class="sec">二、退货信息</div>
+      <div class="lv"><b>退货单号：</b>${mock.returnNo}</div>
+      <div class="lv"><b>退货类型：</b>${rType}</div>
+      <div class="lv"><b>退货原因：</b>${mock.returnReason}</div>
+      <div class="sec">三、售后处理</div>
+      <div class="lv"><b>售后机状态：</b>${status}</div>
+      <div class="lv"><b>异常判定：</b>${anom}</div>
+      <div class="lv"><b>售后原因分析：</b>${reason||'—'}</div>
+      <div class="lv" style="margin-top:6px;color:#888">${new Date().toLocaleDateString()}</div>`;
+    barcodeSVG(document.getElementById('bc'), mock.barcode);
+    document.getElementById('labelModal').classList.add('show');
+  }
+
+  /* ---------- 确认打印（记录历史） ---------- */
+  function doPrint(){
+    closeModal();
+    // 记录到打印历史
+    addHistory({
+      model: mock.model,
+      trackingNo: mock.trackingNo,
+      returnNo: mock.returnNo,
+      status: document.getElementById('repStatus')?.value || '待处理',
+      anomaly: document.getElementById('hasAnomaly')?.value === 'yes' ? '有异常' : '无异常',
+      time: new Date().toLocaleString()
+    });
+    toast('✅ 标贴已发送至打印机');
+    // 清空表单缓存
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  }
+  function closeModal(){ document.getElementById('labelModal').classList.remove('show'); }
+
+  /* ---------- 打印历史 ---------- */
+  const HIST_KEY='mes_print_history_v1';
+  function getHistory(){
+    try{ return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e){ return []; }
+  }
+  function addHistory(item){
+    const h=getHistory(); h.unshift(item); if(h.length>50) h.length=50;
+    try{ localStorage.setItem(HIST_KEY, JSON.stringify(h)); }catch(e){}
+  }
+  function clearHistory(){
+    if(confirm('确定清空所有打印历史？')){ try{localStorage.removeItem(HIST_KEY);}catch(e){} renderHistory(); toast('已清空'); }
+  }
+  function renderHistory(){
+    const h=getHistory();
+    const c=document.getElementById('scroll5');
+    if(h.length===0){
+      c.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><p>暂无打印记录</p><p style="font-size:13px;margin-top:6px">打印标贴后记录会显示在这里</p></div>`;
+      return;
+    }
+    c.innerHTML=h.map((it,i)=>`
+      <div class="hist-item">
+        <div class="dot ${it.status==='已处理'?'green':(it.status==='已报废'?'orange':'green')}"></div>
+        <div class="info">
+          <div class="hi">${it.model} · ${it.returnNo}</div>
+          <div class="hd">快递单号：${it.trackingNo} ｜ ${it.status} ｜ ${it.anomaly}</div>
+        </div>
+        <div class="time">${it.time}</div>
+      </div>`).join('');
+  }
+
+  /* 条形码 SVG */
+  function barcodeSVG(svg, code){
+    const chars=code.split(''); let x=4; let s='';
+    chars.forEach((ch,i)=>{ const w=2+ (ch.charCodeAt(0)%4); s+=`<rect x="${x}" y="4" width="${w}" height="44" fill="#111"/>`; x+=w+2; });
+    s+=`<text x="4" y="60" font-size="12" fill="#111" font-family="monospace">${code}</text>`;
+    svg.innerHTML=s;
+  }
+
+  /* 页面离开前自动保存 */
+  window.addEventListener('beforeunload', saveForm);
+</script>
+</body>
+</html>
