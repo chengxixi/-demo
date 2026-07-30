@@ -46,6 +46,11 @@ const router = createRouter({
       meta: { title: '紧急异常详情' },
     },
     {
+      path: '/pms-after-sales',
+      name: 'pmsAfterSales',
+      component: () => import('@/pages/pms-after-sales/PmsAfterSalesPage.vue'),
+      meta: { title: 'PMS售后优化', keepAlive: true },
+    },    {
       path: '/requirements',
       name: 'requirements',
       component: () => import('@/pages/requirements/RequirementsPage.vue'),

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ChevronDown, ChevronRight } from 'lucide-vue-next'
 import type { FeedbackItem } from '@/types'
 
 type FeedbackTableRow =
@@ -34,6 +35,8 @@ const emit = defineEmits<{
 }>()
 
 const expandedGroups = ref<Set<string>>(new Set())
+const GROUP_ROW_INFO_COLSPAN = 19
+const GROUP_ROW_OPERATION_COLUMN_INDEX = 20
 
 const allSelected = computed(() => {
   return props.items.length > 0 && props.items.every((item) => props.selectedIds.has(item.id))
@@ -137,9 +140,6 @@ function groupIds(members: FeedbackItem[]) {
 }
 
 
-function groupAiSummary(members: FeedbackItem[]) {
-  return members.map((item) => item.ai).join(' / ')
-}
 
 function rowItem(row: FeedbackTableRow) {
   return row.rowType === 'group' ? row.lead : row.item
@@ -158,6 +158,20 @@ function rowOrderNo(item: FeedbackItem) {
 }
 
 
+function mergeSpanMethod({ row, columnIndex }: { row: FeedbackTableRow; columnIndex: number }) {
+  if (row.rowType !== 'group') return undefined
+
+  if (columnIndex === 1) {
+    return { rowspan: 1, colspan: GROUP_ROW_INFO_COLSPAN }
+  }
+
+  if (columnIndex > 1 && columnIndex < GROUP_ROW_OPERATION_COLUMN_INDEX) {
+    return { rowspan: 0, colspan: 0 }
+  }
+
+  return undefined
+}
+
 function rowClassName({ row }: { row: FeedbackTableRow }) {
   if (row.rowType === 'group') {
     return 'feedback-group-row'
@@ -167,7 +181,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
     return 'feedback-child-row'
   }
 
-  return ''
+  return 'feedback-single-row'
 }
 </script>
 
@@ -180,6 +194,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
     height="560"
     :row-config="{ keyField: 'id' }"
     :row-class-name="rowClassName"
+    :span-method="mergeSpanMethod"
     :export-config="{}"
   >
     <vxe-column width="54" align="center" fixed="left">
@@ -207,20 +222,25 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
 
     <vxe-column title="编号/合并组" width="230">
       <template #default="{ row }">
-        <a-space v-if="row.rowType === 'group'" direction="vertical" size="small">
-          <a-space>
-            <a-button size="small" @click="toggleGroup(row.mergeGroup)">
-              {{ isGroupExpanded(row.mergeGroup) ? '-' : '+' }}
+        <div v-if="row.rowType === 'group'" class="merge-group-cell">
+          <a-tooltip :title="isGroupExpanded(row.mergeGroup) ? '收起' : '展开'">
+            <a-button class="merge-toggle" size="small" type="text" @click.stop="toggleGroup(row.mergeGroup)">
+              <ChevronDown v-if="isGroupExpanded(row.mergeGroup)" :size="14" />
+              <ChevronRight v-else :size="14" />
             </a-button>
-            <a-typography-text strong>{{ row.title }}</a-typography-text>
-          </a-space>
-          <a-typography-text type="secondary">
-            {{ row.members.length }} 条反馈 / {{ row.lead.source }} / {{ row.lead.feedbackUser }}
-          </a-typography-text>
-        </a-space>
-        <a-space v-else direction="vertical" size="small">
+          </a-tooltip>
+          <a-tag color="blue" class="feedback-row-kind merge-group-kind">合并</a-tag>
+          <span class="merge-title">{{ row.title }}</span>
+          <span class="merge-meta">
+            （数量：{{ row.members.length }}）
+          </span>
+        </div>
+        <div v-else :class="['feedback-id-cell', { 'feedback-child-cell': row.parentGroup, 'feedback-single-cell': !row.parentGroup }]">
+          <span v-if="!row.parentGroup" class="feedback-toggle-spacer"></span>
+          <a-tag v-if="row.parentGroup" class="feedback-row-kind">明细</a-tag>
+          <a-tag v-else color="blue" class="feedback-row-kind">单条</a-tag>
           <a-typography-text strong>{{ row.item.id }}</a-typography-text>
-        </a-space>
+        </div>
       </template>
     </vxe-column>
 
@@ -249,7 +269,7 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
     </vxe-column>
     <vxe-column title="AI翻译/摘要" min-width="320">
       <template #default="{ row }">
-        {{ row.rowType === 'group' ? groupAiSummary(row.members) : row.item.ai }}
+        {{ rowItem(row).ai }}
       </template>
     </vxe-column>
     <vxe-column title="问题反馈时间" width="130">
@@ -304,13 +324,83 @@ function rowClassName({ row }: { row: FeedbackTableRow }) {
 </template>
 
 <style scoped>
-:deep(.feedback-group-row) {
-  background: #f2f7ff;
+:deep(.feedback-group-row td) {
+  background: #dbeafe !important;
+  border-top: 1px solid #93c5fd;
+  border-bottom: 1px solid #93c5fd;
+  color: #1e293b;
   font-weight: 600;
 }
 
-:deep(.feedback-child-row) {
-  background: #fcfdff;
+:deep(.feedback-child-row td) {
+  background: #f8fafc !important;
   color: #475569;
+}
+
+:deep(.feedback-child-row:nth-child(even) td) {
+  background: #f1f5f9 !important;
+}
+
+:deep(.feedback-single-row td) {
+  background: #fff !important;
+}
+
+:deep(.feedback-single-row td:nth-child(2)) {
+  box-shadow: inset 3px 0 0 #60a5fa;
+}
+
+.merge-group-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.merge-toggle,
+.feedback-toggle-spacer {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.merge-toggle {
+  padding: 0;
+  color: #2563eb;
+}
+
+.merge-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.merge-meta {
+  overflow: hidden;
+  color: #334155;
+  text-overflow: ellipsis;
+}
+
+.feedback-id-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.feedback-child-cell {
+  padding-left: 18px;
+}
+
+.feedback-row-kind {
+  flex: none;
+  margin-inline-end: 0;
+}
+
+.merge-group-kind {
+  background: #eff6ff;
+  border-color: #91caff;
 }
 </style>

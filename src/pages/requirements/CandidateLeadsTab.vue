@@ -181,12 +181,6 @@ function beforeUpload() {
 }
 
 function promoteCandidate(candidate: CandidateLead) {
-  convertedIds.value = new Set([...convertedIds.value, candidate.id])
-  emit('updateCandidate', {
-    ...candidate,
-    status: '已转需求',
-    nextAction: '已进入产品需求池，仍可继续合并证据',
-  })
   emit('openPromote', candidate)
 }
 </script>
@@ -371,3 +365,4 @@ function promoteCandidate(candidate: CandidateLead) {
   background: #f5f5f5 !important;
 }
 </style>
+

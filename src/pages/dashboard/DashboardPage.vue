@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { defaultFilters } from '@/api/mock'
 import BusinessBoard from './BusinessBoard.vue'
 import QualityBoard from './QualityBoard.vue'
+import PmsAfterSalesBoard from './PmsAfterSalesBoard.vue'
 
 const activeTab = ref('business')
 const comparison = ref<'环比' | '同比'>('环比')
@@ -50,6 +51,9 @@ function formatChange(value: number): string {
           :format-num="formatNum"
           :format-change="formatChange"
         />
+      </a-tab-pane>
+      <a-tab-pane key="pms" tab="PMS售后仪表盘">
+        <PmsAfterSalesBoard />
       </a-tab-pane>
     </a-tabs>
   </section>

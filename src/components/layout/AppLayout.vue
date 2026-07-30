@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { LayoutDashboard, MessageSquareText, ClipboardList, AlertTriangle, Lightbulb, BarChart3, FileText, BookOpen, Settings } from 'lucide-vue-next'
+import { LayoutDashboard, MessageSquareText, ClipboardList, AlertTriangle, Lightbulb, Wrench, BarChart3, FileText, BookOpen, Settings } from 'lucide-vue-next'
 
 const route = useRoute()
 
@@ -10,6 +10,7 @@ const navItems = [
   { path: '/workorders', label: '工单池', icon: ClipboardList },
   { path: '/emergency', label: '紧急异常处理', icon: AlertTriangle },
   { path: '/requirements', label: '需求管理', icon: Lightbulb },
+  { path: '/pms-after-sales', label: 'PMS售后优化', icon: Wrench },
   { path: '/competitors', label: '竞品分析/差评聚类', icon: BarChart3 },
   { path: '/reports', label: '报告中心', icon: FileText },
   { path: '/knowledge', label: 'Q&A/案例库', icon: BookOpen },
