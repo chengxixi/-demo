@@ -40,6 +40,7 @@ const handleOpen = shallowRef(false)
 const physicalStarted = shallowRef(false)
 const activeTab = shallowRef('competitor')
 const marketStatus = shallowRef<MarketStatus>('all')
+const opinionSearch = shallowRef('')
 const currentCompetitor = ref<Competitor | null>(null)
 const handleTarget = shallowRef('')
 const compareSlots = ref<number[]>([0, 1, -1, -1])
@@ -136,10 +137,44 @@ const opinionGroups = [
 ]
 
 const mediaRows = [
-  { source: 'Amazon评论', brand: 'Withings', sentiment: '负向', content: '体脂率随水分波动明显，用户开始质疑整体准确性。', tag: '准确性' },
-  { source: '媒体测评', brand: 'RENPHO', sentiment: '正向', content: 'App趋势功能被多篇测评作为核心优势提及。', tag: 'App体验' },
-  { source: '京东问答', brand: '华为', sentiment: '中性', content: '用户集中询问是否支持多人识别和离线保存。', tag: '离线/多人' },
+  { source: 'Amazon评论', brand: 'Withings', asin: 'B0CS20AUS1', sentiment: '负向', content: '体脂率随水分波动明显，用户开始质疑整体准确性。', tag: '准确性' },
+  { source: '媒体测评', brand: 'RENPHO', asin: 'B0RENPHO01', sentiment: '正向', content: 'App趋势功能被多篇测评作为核心优势提及。', tag: 'App体验' },
+  { source: '京东问答', brand: '华为', asin: 'JD-HW-SCALE3', sentiment: '中性', content: '用户集中询问是否支持多人识别和离线保存。', tag: '离线/多人' },
 ]
+
+const normalizedOpinionSearch = computed(() => opinionSearch.value.trim().toLowerCase())
+
+const collectionSearchText = computed(() =>
+  collectionConditions.map((item) => `${item.label} ${item.value}`).join(' ').toLowerCase()
+)
+
+const filteredOpinionGroups = computed(() => {
+  const keyword = normalizedOpinionSearch.value
+  if (!keyword) return opinionGroups
+
+  return opinionGroups
+    .map((group) => {
+      const groupText = `${group.title} ${group.tone} ${collectionSearchText.value}`.toLowerCase()
+      const rows = groupText.includes(keyword)
+        ? group.rows
+        : group.rows.filter((row) => Object.values(row).join(' ').toLowerCase().includes(keyword))
+
+      return { ...group, rows }
+    })
+    .filter((group) => group.rows.length > 0)
+})
+
+const filteredOpinionResultCount = computed(() =>
+  filteredOpinionGroups.value.reduce((total, group) => total + group.rows.length, 0)
+)
+
+const filteredMediaRows = computed(() => {
+  const keyword = normalizedOpinionSearch.value
+  if (!keyword) return mediaRows
+
+  return mediaRows.filter((row) => Object.values(row).join(' ').toLowerCase().includes(keyword))
+})
+
 
 const monitorItems: MonitorItem[] = [
   { key: 'avgPrice', label: '近期成交均价', owner: '胡锦弘', desc: '海外/国内主渠道近7日平均成交价' },
@@ -517,14 +552,6 @@ function recordSnapshot() {
         </a-col>
       </a-row>
 
-      <a-row :gutter="[12, 12]" class="stat-grid">
-        <a-col v-for="stat in stats" :key="stat.label" :xs="12" :lg="6">
-          <a-card size="small" class="stat-card">
-            <a-statistic :title="stat.label" :value="stat.value" />
-            <a-typography-text type="secondary">{{ stat.desc }}</a-typography-text>
-          </a-card>
-        </a-col>
-      </a-row>
 
       <a-tabs v-model:active-key="activeTab" class="page-tabs">
         <a-tab-pane key="competitor" tab="竞品信息" />
@@ -533,6 +560,14 @@ function recordSnapshot() {
       </a-tabs>
 
       <template v-if="activeTab === 'competitor'">
+      <a-row :gutter="[12, 12]" class="stat-grid">
+        <a-col v-for="stat in stats" :key="stat.label" :xs="12" :lg="6">
+          <a-card size="small" class="stat-card">
+            <a-statistic :title="stat.label" :value="stat.value" />
+            <a-typography-text type="secondary">{{ stat.desc }}</a-typography-text>
+          </a-card>
+        </a-col>
+      </a-row>
         <a-card :bordered="false" class="filter-card">
           <a-row :gutter="[12, 12]" align="middle">
             <a-col :xs="24" :lg="16">
@@ -650,6 +685,26 @@ function recordSnapshot() {
       </template>
 
       <template v-else>
+        <a-card :bordered="false" class="filter-card">
+          <a-row :gutter="[12, 12]" align="middle">
+            <a-col :xs="24" :lg="16">
+              <label class="filter-field">
+                <span>舆情搜索</span>
+                <a-input-search
+                  v-model:value="opinionSearch"
+                  allow-clear
+                  placeholder="输入竞品名称、ASIN、品牌、来源、关键词或评论内容"
+                />
+              </label>
+            </a-col>
+            <a-col :xs="24" :lg="8" class="filter-actions">
+              <a-typography-text type="secondary">
+                观点 {{ filteredOpinionResultCount }} 条 / 评论 {{ filteredMediaRows.length }} 条
+              </a-typography-text>
+            </a-col>
+          </a-row>
+        </a-card>
+
         <a-row :gutter="[12, 12]">
           <a-col :xs="24" :lg="16">
             <a-card title="本周AI舆情采集" :bordered="false" class="panel-card">
@@ -678,7 +733,7 @@ function recordSnapshot() {
         </a-row>
 
         <a-row :gutter="[12, 12]" class="opinion-grid">
-          <a-col v-for="group in opinionGroups" :key="group.title" :xs="24" :lg="8">
+          <a-col v-for="group in filteredOpinionGroups" :key="group.title" :xs="24" :lg="8">
             <a-card :title="group.title" :bordered="false" class="panel-card">
               <a-list :data-source="group.rows" item-layout="vertical">
                 <template #renderItem="{ item }">
@@ -698,7 +753,7 @@ function recordSnapshot() {
         </a-row>
 
         <a-card title="典型评论与媒体线索" :bordered="false" class="table-card">
-          <vxe-table :data="mediaRows" border stripe :export-config="{}">
+          <vxe-table :data="filteredMediaRows" border stripe :export-config="{}">
             <vxe-column field="source" title="来源" width="130"><template #default="{ row }"><a-tag>{{ row.source }}</a-tag></template></vxe-column>
             <vxe-column field="brand" title="品牌" width="120" />
             <vxe-column field="sentiment" title="倾向" width="100"><template #default="{ row }"><a-tag :color="row.sentiment === '正向' ? 'success' : row.sentiment === '负向' ? 'error' : 'default'">{{ row.sentiment }}</a-tag></template></vxe-column>
