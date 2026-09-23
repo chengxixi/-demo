@@ -50,8 +50,26 @@ If the exact requested version is a saved/review minor version that is not publi
    - count each lag relationship only once, especially when two change tasks are connected.
    - do not infer lag from date overlap; use explicit FS lag settings only.
 8. If the review remark's `预测最终-旧` percentage disagrees with a recalculation from current task rows, report both and state the exact task-derived `change_days`, because unpublished review remarks can lag behind the current draft plan detail.
+9. For an unpublished version's current forecast, determine the current accounting task from that draft with the rules in `Draft Accounting Task Selection`. Do not reuse `forecast_list_new.account_task_name`, because it belongs to the currently published version.
 
 Example: if `V4.1` is unpublished, include all critical-path `task_type = 7` change rows, then apply explicit adjacent lag. If the raw change rows total 18 days but the following critical-path task references `变更任务-确认供应商报价` as `18-4 FS -1`, subtract 1 day and use 17 as `change_days`. Do not use critical-path abnormal rows to make 16 days.
+
+## Draft Accounting Task Selection
+
+Use these rules to determine the current accounting task for an unpublished saved/review version:
+
+1. Fetch task rows from both the unpublished draft and `V0` / the initiation plan. Use task rows only: `detail_type = 3`.
+2. Keep only draft critical-path tasks: `whether_critical_task = 1`.
+3. Every candidate must have a corresponding task in `V0` / the initiation plan. Match the normalized task name first; when duplicate names exist, use product suffix, critical-path context, and predecessor relationships to identify the corresponding task. Do not use a candidate that cannot be mapped to the initiation plan.
+4. Build both candidate groups, then compare them together. Neither group has priority and there is no fallback order:
+   - delayed-task type: `task_type = 8`; use `actual_end_date` as its accounting date when present, otherwise use its planned `end_date`
+   - closed normal task: `task_type = 5` with `actual_end_date` present; use `actual_end_date` as its accounting date
+5. Exclude open normal tasks, abnormal tasks (`task_type = 6`), change tasks (`task_type = 7`), non-critical tasks, and tasks without a corresponding initiation-plan task from accounting-task candidacy.
+6. Combine the two candidate groups and select the task with the latest accounting date. Compare the derived accounting date itself, not task-list order, row order, serial number, or position on the critical path.
+7. If the latest accounting date is tied and the API does not expose a stronger current-task marker, report the tied candidates instead of silently choosing one by row order.
+8. After selecting the accounting task, compare its accounting date with the corresponding initiation-plan task's planned `end_date` and count PM working days after that baseline date through the accounting date. This is the draft `delay_days` calculation.
+
+Regression example: if critical-path delayed task `老化-CP30G` has no actual end and a planned end of `2026-09-23`, while critical-path normal task `输出DVT验收样机-CP30G` is closed on `2026-09-22`, and both have corresponding initiation-plan tasks, select `老化-CP30G` because `2026-09-23` is the later accounting date.
 
 ## Required Explanation Shapes
 
