@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>终端产品需求管理 · 交互原型</title>
+<style>
+#terminal-requirements-module{--primary:#3267e9;--primary-soft:#edf3ff;--text:#19243b;--muted:#7c879b;--line:#e8ecf3;--bg:#f6f8fc;--green:#198569;--orange:#c67b23;--red:#d14d57;font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);min-height:100vh;font-size:14px;line-height:1.55;padding:32px 36px 20px;box-sizing:border-box}
+#terminal-requirements-module *{box-sizing:border-box}
+#terminal-requirements-module button,#terminal-requirements-module input,#terminal-requirements-module select,#terminal-requirements-module textarea{font:inherit}
+#terminal-requirements-module button{cursor:pointer}
+#terminal-requirements-module button:disabled{opacity:.42;cursor:not-allowed}
+#terminal-requirements-module :focus-visible{outline:3px solid #a8c2ff;outline-offset:3px}
+#terminal-requirements-module h1,#terminal-requirements-module h2,#terminal-requirements-module h3,#terminal-requirements-module p{margin:0}
+#terminal-requirements-module .page{max-width:1600px;margin:auto}
+#terminal-requirements-module .eyebrow{font-size:11px;letter-spacing:1.4px;color:#8c98ac;font-weight:650;margin-bottom:7px}
+#terminal-requirements-module .page-head{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:27px}
+#terminal-requirements-module h1{font-size:26px;letter-spacing:-.7px;font-weight:700;line-height:1.4}
+#terminal-requirements-module .page-sub{font-size:13px;color:var(--muted);margin-top:6px}
+#terminal-requirements-module .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#terminal-requirements-module .spread{justify-content:space-between}
+#terminal-requirements-module .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:8px 13px;border:1px solid #dfe5ef;border-radius:7px;background:#fff;color:#46536c;font-size:13px;white-space:nowrap;line-height:1.35;transition:background .12s}
+#terminal-requirements-module .btn:hover{background:#f6f8fd}
+#terminal-requirements-module .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 3px 8px #3267e91c}
+#terminal-requirements-module .btn.primary:hover{background:#2458d4}
+#terminal-requirements-module .btn.danger{color:var(--red);border-color:#f0ced1}
+#terminal-requirements-module .btn.small{padding:5px 9px;min-height:29px;font-size:12px}
+#terminal-requirements-module .btn.quiet{border-color:transparent;background:transparent}
+#terminal-requirements-module .btn.quiet:hover{background:#edf2fa}
+#terminal-requirements-module .link{background:none;border:0;color:var(--primary);padding:0;text-align:left;font:inherit;cursor:pointer;text-decoration:none}
+#terminal-requirements-module .link:hover{text-decoration:underline}
+#terminal-requirements-module .icon{display:inline-flex;flex:none;vertical-align:middle}
+#terminal-requirements-module .icon svg{width:18px;height:18px}
+#terminal-requirements-module .icon.large svg{width:22px;height:22px}
+#terminal-requirements-module .demo-tag{display:inline-flex;align-items:center;gap:6px;border-radius:5px;background:#eaf0f8;color:#8190a5;font-size:11px;letter-spacing:.5px;padding:4px 7px}
+#terminal-requirements-module .stats{display:grid;grid-template-columns:repeat(4,minmax(max-content,1fr));gap:10px;margin-bottom:16px;overflow-x:auto}
+#terminal-requirements-module .stat{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;text-align:left;white-space:nowrap;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--text);box-shadow:0 2px 5px #23375903;transition:box-shadow .15s,border-color .15s}
+#terminal-requirements-module .stat:hover,#terminal-requirements-module .stat.selected{border-color:#adcbff;box-shadow:0 3px 14px #3267e90c}
+#terminal-requirements-module .stat-label{color:#738098;font-size:13px;flex:none}
+#terminal-requirements-module .stat-value{display:inline-flex;align-items:baseline;gap:3px;margin-left:auto}
+#terminal-requirements-module .stat-value strong{font-size:20px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums}
+#terminal-requirements-module .stat-value small{font-size:11px;font-weight:400;color:#99a3b4}
+#terminal-requirements-module .stat-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;background:#eff4ff;color:#648be9;border-radius:6px}
+#terminal-requirements-module .stat-icon.amber{background:#fff5e8;color:#dca35b}
+#terminal-requirements-module .stat-icon.violet{background:#f2effc;color:#9a84da}
+#terminal-requirements-module .stat-icon.rose{background:#fff0f1;color:#dd8793}
+#terminal-requirements-module .board{background:white;border:1px solid var(--line);border-radius:11px;box-shadow:0 4px 18px #21314f03;overflow:hidden}
+#terminal-requirements-module .tabs-bar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:0 22px;gap:14px;overflow-x:auto}
+#terminal-requirements-module .tabs{display:flex;align-items:center;gap:26px;min-width:max-content}
+#terminal-requirements-module .tab{display:flex;align-items:center;gap:7px;border:0;border-bottom:2px solid transparent;padding:18px 0 15px;background:transparent;color:#7a8597;font-weight:500;white-space:nowrap}
+#terminal-requirements-module .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:650}
+#terminal-requirements-module .count{font-size:10px;padding:1px 6px;border-radius:4px;background:#f0f3f8;color:#91a0b5;line-height:1.6}
+#terminal-requirements-module .tab.active .count{background:#eaf1ff;color:var(--primary)}
+#terminal-requirements-module .toolbar{padding:18px 22px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+#terminal-requirements-module .search{display:flex;align-items:center;gap:8px;width:260px;min-height:36px;border:1px solid #e4e9f1;border-radius:6px;padding:0 10px;color:#9ca7b8;background:#fff}
+#terminal-requirements-module .search input{border:0;outline:0;width:100%;height:34px;font-size:12px;color:var(--text);background:transparent}
+#terminal-requirements-module .search input::placeholder{color:#a5afbf}
+#terminal-requirements-module .filter{max-width:170px;min-width:120px;height:36px;border:1px solid #e4e9f1;border-radius:6px;padding:0 27px 0 10px;font-size:12px;color:#6c7890;background:#fff}
+#terminal-requirements-module .toolbar-tail{margin-left:auto;color:#8b97aa;font-size:12px}
+#terminal-requirements-module .active-filter{padding:0 22px 13px;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+#terminal-requirements-module .table-wrap{overflow:auto;max-width:100%}
+#terminal-requirements-module table{width:100%;border-collapse:collapse;min-width:880px;text-align:left}
+#terminal-requirements-module th{height:42px;background:#f9fafc;color:#8b97a9;font-size:11px;font-weight:500;border-top:1px solid #f0f2f7;border-bottom:1px solid var(--line);padding:11px 16px;white-space:nowrap}
+#terminal-requirements-module td{padding:17px 16px;border-bottom:1px solid #f0f2f7;vertical-align:middle;font-size:12px;color:#5b6880}
+#terminal-requirements-module th:first-child,#terminal-requirements-module td:first-child{padding-left:23px}
+#terminal-requirements-module tbody tr:hover{background:#fbfcff}
+#terminal-requirements-module tr.selected-row{background:#f1f6ff}
+#terminal-requirements-module tbody tr:last-child td{border-bottom:0}
+#terminal-requirements-module .title-cell{display:flex;align-items:flex-start;gap:11px;min-width:240px;max-width:420px}
+#terminal-requirements-module .type-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:#f1f5fd;color:#7b9acf;flex:none;margin-top:2px}
+#terminal-requirements-module .title-link{border:0;background:transparent;text-align:left;padding:0;color:#344159;font-weight:550;font-size:13px;line-height:1.6;cursor:pointer}
+#terminal-requirements-module .title-link:hover{color:var(--primary)}
+#terminal-requirements-module .meta{font-size:11px;color:#9aa5b6;margin-top:4px;line-height:1.6}
+#terminal-requirements-module .nowrap{white-space:nowrap}
+#terminal-requirements-module .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;color:#6b7891;background:#f1f4f9;font-size:11px;font-weight:450;line-height:1.5;white-space:nowrap}
+#terminal-requirements-module .badge.blue{color:#4972ce;background:#edf3ff}
+#terminal-requirements-module .badge.green{color:#398a75;background:#eaf7f1}
+#terminal-requirements-module .badge.orange{color:#b68339;background:#fff5e5}
+#terminal-requirements-module .badge.red{color:#c0646c;background:#fff0f1}
+#terminal-requirements-module .badge.purple{color:#8a71bf;background:#f3effb}
+#terminal-requirements-module .avatar{width:23px;height:23px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#edf1fa;color:#788bb2;font-size:10px;margin-right:6px}
+#terminal-requirements-module .priority{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#terminal-requirements-module .dot{width:6px;height:6px;border-radius:50%;background:#9eafc7;display:inline-block}
+#terminal-requirements-module .dot.high{background:#e6a152}
+#terminal-requirements-module .dot.urgent{background:#dc737e}
+#terminal-requirements-module .footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--line);color:#9ba5b6;font-size:11px}
+#terminal-requirements-module .page-note{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:17px;color:#a2acbc;font-size:11px}
+#terminal-requirements-module .empty{padding:65px 20px;text-align:center;color:var(--muted)}
+#terminal-requirements-module .empty .icon{color:#b5c3db;margin-bottom:12px}
+#terminal-requirements-module .empty strong{display:block;color:#66748e;font-size:14px;margin-bottom:5px;font-weight:550}
+#terminal-requirements-module input[type=checkbox]{accent-color:var(--primary);width:15px;height:15px;cursor:pointer;vertical-align:middle}
+#terminal-requirements-module dialog{color:var(--text);font:inherit}
+#terminal-requirements-module dialog::backdrop{background:#12234636;backdrop-filter:blur(1px)}
+#terminal-requirements-module .drawer{width:min(1080px,calc(100vw - 64px));max-width:none;height:100dvh;max-height:none;margin:0 0 0 auto;padding:0;border:0;border-left:1px solid var(--line);box-shadow:-14px 0 55px #18315d15;background:#f7f9fc}
+#terminal-requirements-module .drawer[open]{display:flex;flex-direction:column}
+#terminal-requirements-module .drawer-head{padding:23px 28px 19px;background:#fff;border-bottom:1px solid var(--line);flex:none}
+#terminal-requirements-module .drawer h2{font-size:21px;font-weight:650;line-height:1.45;max-width:830px}
+#terminal-requirements-module .close{padding:6px;background:transparent;border:0;color:#8a97ab;display:inline-flex;border-radius:5px}
+#terminal-requirements-module .close:hover{background:#edf1f9;color:#526480}
+#terminal-requirements-module .drawer-nav{background:#fff;display:flex;gap:25px;padding:0 28px;border-bottom:1px solid var(--line);flex:none;overflow:auto}
+#terminal-requirements-module .drawer-body{overflow:auto;flex:1;padding:24px 28px}
+#terminal-requirements-module .drawer-actions{padding:14px 28px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+#terminal-requirements-module .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px;margin-bottom:16px}
+#terminal-requirements-module .card h3{font-size:14px;font-weight:650;margin-bottom:14px}
+#terminal-requirements-module .card .table-wrap{margin:10px -20px -20px}
+#terminal-requirements-module .card table{min-width:620px}
+#terminal-requirements-module .card td{padding:13px 15px}
+#terminal-requirements-module .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+#terminal-requirements-module .kv{display:grid;grid-template-columns:110px 1fr;gap:12px 15px;font-size:13px}
+#terminal-requirements-module .kv dt{color:#929caf;margin:0}
+#terminal-requirements-module .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+#terminal-requirements-module .paragraph{white-space:pre-wrap;color:#59677f;font-size:13px;line-height:1.85;overflow-wrap:anywhere}
+#terminal-requirements-module .muted{color:var(--muted);font-size:12px}
+#terminal-requirements-module .notice{display:flex;gap:9px;padding:12px 14px;border-radius:6px;background:#eff5ff;border:1px solid #e0eaff;color:#5775a4;font-size:12px;margin-bottom:15px;align-items:flex-start}
+#terminal-requirements-module .notice.warn{background:#fff9ed;border-color:#f5e8cd;color:#a08043}
+#terminal-requirements-module .notice.error{background:#fff2f3;border-color:#f4dce0;color:#ad6570}
+#terminal-requirements-module .notice.success{background:#edf8f3;border-color:#d9eee4;color:#528b74}
+#terminal-requirements-module .gate-track{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:21px}
+#terminal-requirements-module .gate{background:white;border:1px solid var(--line);border-radius:8px;padding:15px;display:flex;align-items:center;gap:10px;text-align:left}
+#terminal-requirements-module .gate.active{border-color:#92b5fc;background:#f4f8ff}
+#terminal-requirements-module .gate-num{width:28px;height:28px;border-radius:50%;background:#f0f3f9;color:#8b99af;display:grid;place-items:center;font-size:12px;flex:none}
+#terminal-requirements-module .gate.passed .gate-num{background:#e5f4ee;color:#4c937a}
+#terminal-requirements-module .gate.active .gate-num{background:var(--primary);color:white}
+#terminal-requirements-module .gate strong{font-size:12px;font-weight:600;display:block}
+#terminal-requirements-module .timeline{border-left:1px solid #e4eaf3;margin:10px 5px;padding-left:20px}
+#terminal-requirements-module .timeline-item{position:relative;padding-bottom:20px;font-size:12px}
+#terminal-requirements-module .timeline-item:before{content:"";position:absolute;left:-24px;top:6px;width:7px;height:7px;border:2px solid #c7d6ee;border-radius:50%;background:white}
+#terminal-requirements-module .timeline-item strong{font-size:12px;font-weight:550}
+#terminal-requirements-module .modal{width:min(790px,calc(100vw - 36px));max-width:none;max-height:90dvh;border:1px solid #e4eaf3;border-radius:13px;padding:0;box-shadow:0 18px 80px #192b4c26}
+#terminal-requirements-module .modal[open]{display:flex;flex-direction:column}
+#terminal-requirements-module .modal-head{padding:20px 24px 15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;flex:none}
+#terminal-requirements-module .modal h2{font-size:18px;font-weight:650}
+#terminal-requirements-module .modal-body{padding:22px 24px;overflow:auto;min-height:0}
+#terminal-requirements-module .modal-actions{padding:15px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;background:#fff;flex:none}
+#terminal-requirements-module .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;min-width:0}
+#terminal-requirements-module .field label{font-size:12px;color:#66738b;font-weight:500}
+#terminal-requirements-module .required{color:#d2858e;margin-left:3px}
+#terminal-requirements-module .field input:not([type=checkbox]),#terminal-requirements-module .field select,#terminal-requirements-module .field textarea{width:100%;border:1px solid #dee5ef;border-radius:6px;padding:9px 11px;background:#fff;color:#34425b;min-height:38px;font-size:13px}
+#terminal-requirements-module .field textarea{min-height:82px;resize:vertical}
+#terminal-requirements-module .field input:focus,#terminal-requirements-module .field select:focus,#terminal-requirements-module .field textarea:focus{border-color:#8caef3;outline:2px solid #edf3ff}
+#terminal-requirements-module .field small{color:#98a3b5;font-size:11px}
+#terminal-requirements-module .check-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#66758c;margin:8px 0}
+#terminal-requirements-module .select-card{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:7px;padding:12px;margin-bottom:9px}
+#terminal-requirements-module .select-card.disabled{opacity:.55;background:#f8fafc}
+#terminal-requirements-module .steps{display:flex;gap:7px;margin:0 0 20px}
+#terminal-requirements-module .step{flex:1;border-bottom:2px solid #e9eef7;padding:0 0 10px;color:#a0aabc;font-size:11px}
+#terminal-requirements-module .step.current{color:var(--primary);border-color:var(--primary)}
+#terminal-requirements-module .form-error{color:#be5864;background:#fff1f3;border-radius:6px;padding:10px 13px;font-size:12px;margin:12px 0}
+#terminal-requirements-module .doc-preview{border:1px solid #e3e9f2;background:white;border-radius:7px;padding:30px;box-shadow:0 4px 13px #233a5d05}
+#terminal-requirements-module .doc-preview h3{font-size:20px;margin:8px 0 25px}
+#terminal-requirements-module .doc-preview h4{font-size:13px;margin:20px 0 8px}
+#terminal-requirements-module .doc-preview p{font-size:13px;color:#7b879a;line-height:1.9}
+#terminal-requirements-module .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10000;background:#253551;color:#fff;border-radius:8px;padding:12px 19px;box-shadow:0 5px 20px #132b5126;font-size:13px;max-width:90vw;pointer-events:none}
+#terminal-requirements-module .checklist{display:flex;flex-direction:column;gap:8px}
+#terminal-requirements-module .checklist-item{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);border-radius:6px;padding:12px 13px;font-size:12px}
+#terminal-requirements-module .mini-strip{display:flex;gap:4px;align-items:center;margin-top:6px}
+#terminal-requirements-module .mini-step{width:24px;height:3px;border-radius:2px;background:#e9eef7}
+#terminal-requirements-module .mini-step.done{background:#70bca3}
+#terminal-requirements-module .mini-step.current{background:#6d96ed}
+#terminal-requirements-module .source-note{padding:13px;border-left:3px solid #d7e2f4;background:#f8faff;font-size:13px;line-height:1.85;white-space:pre-wrap}
+#terminal-requirements-module .spacer{flex:1}
+#terminal-requirements-module .grow{flex:1;min-width:0}
+#terminal-requirements-module .end{justify-content:flex-end}
+#terminal-requirements-module .right{text-align:right}
+#terminal-requirements-module .indent{margin-left:43px}
+#terminal-requirements-module .span2{grid-column:1/-1}
+#terminal-requirements-module .text-orange{color:var(--orange)}
+#terminal-requirements-module .dot.orange{background:#e6a152}
+#terminal-requirements-module .dot.blue{background:#7ba0df}
+#terminal-requirements-module .type-icon.purple{background:#f3effb;color:#9b86c7}
+#terminal-requirements-module .meta span{padding:0 5px}
+#terminal-requirements-module .stat.active{border-color:#a0bdf8;background:#fcfdff}
+#terminal-requirements-module .stat-icon.orange{background:#fff5e8;color:#d49a50}
+#terminal-requirements-module .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:16px}
+#terminal-requirements-module .section-head h3{margin-bottom:5px}
+#terminal-requirements-module .kv{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;font-size:13px;margin:15px 0 20px}
+#terminal-requirements-module .kv dt{font-size:11px;margin-bottom:5px}
+#terminal-requirements-module .notice{display:block;line-height:1.8;overflow-wrap:anywhere}
+#terminal-requirements-module .notice .btn{margin-top:8px}
+#terminal-requirements-module .notice>.icon{margin-right:5px}
+#terminal-requirements-module .card .paragraph{margin:8px 0 14px}
+#terminal-requirements-module blockquote{margin:14px 0;padding:12px 15px;border-left:3px solid #d5e2f5;background:#f9fbff}
+#terminal-requirements-module .icon-btn{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:#8c98ab;padding:5px;border-radius:5px}
+#terminal-requirements-module .icon-btn:hover{background:#edf2fa;color:#4b638e}
+#terminal-requirements-module .drawer-head h2{margin:13px 0 10px}
+#terminal-requirements-module .drawer-nav button{border:0;border-bottom:2px solid transparent;background:transparent;padding:15px 0;color:#7b879b;white-space:nowrap;font-size:13px}
+#terminal-requirements-module .drawer-nav button.active{border-bottom-color:var(--primary);color:var(--primary);font-weight:600}
+#terminal-requirements-module .gate small{display:block;font-size:11px;color:#8e9bae;margin-top:3px}
+#terminal-requirements-module .gate-num.done{background:#e5f4ee;color:#4c937a}
+#terminal-requirements-module .review-row{padding:15px 0;border-bottom:1px solid var(--line)}
+#terminal-requirements-module .review-row:last-child{border-bottom:0;padding-bottom:0}
+#terminal-requirements-module .checklist-item{margin-bottom:9px}
+#terminal-requirements-module .external-id{display:flex;align-items:center;gap:10px;margin:17px 0;font-size:16px;color:#425675}
+#terminal-requirements-module .mini-strip>span{width:25px;height:3px;background:#e8edf6;border-radius:2px}
+#terminal-requirements-module .mini-strip>span.done{background:#70bca3}
+#terminal-requirements-module .mini-strip>span.current{background:#6d96ed}
+#terminal-requirements-module .modal>form{display:flex;flex-direction:column;max-height:90dvh;min-height:0}
+#terminal-requirements-module .modal-body{flex:1}
+#terminal-requirements-module .field>span:first-child{font-size:12px;color:#63718a}
+#terminal-requirements-module .field-hint{font-size:11px;color:#929eb2;margin-top:-5px;margin-bottom:15px}
+#terminal-requirements-module select option:disabled{color:#aeb6c3;background:#f1f3f6}
+#terminal-requirements-module .source-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:-5px;margin-bottom:14px}
+#terminal-requirements-module .source-chip{font-size:10px;padding:3px 7px;border-radius:999px;background:#edf8f4;color:#39816d;border:1px solid #cde8df}
+#terminal-requirements-module .source-chip.off{background:#f2f4f7;color:#9aa4b2;border-color:#e0e4ea;text-decoration:line-through}
+#terminal-requirements-module .select-card:has(input:disabled){opacity:.55;background:#f8fafc}
+#terminal-requirements-module .select-card.selected{border-color:#bed0f7;background:#f8fbff}
+#terminal-requirements-module .select-card .meta{display:block}
+#terminal-requirements-module .step b{display:inline-flex;justify-content:center;align-items:center;width:20px;height:20px;border-radius:50%;background:#f1f4f9;margin-right:5px;font-weight:500}
+#terminal-requirements-module .step.active{color:var(--primary);border-color:var(--primary)}
+#terminal-requirements-module .step.active b{color:white;background:var(--primary)}
+#terminal-requirements-module .step.done{color:#699e8f;border-color:#a6d1c3}
+#terminal-requirements-module details{margin-top:18px;font-size:12px;color:#6d7d96}
+#terminal-requirements-module summary{cursor:pointer;padding:8px 0}
+#terminal-requirements-module .check-col{width:43px}
+#terminal-requirements-module .empty h3{font-size:15px;margin:8px 0}
+#terminal-requirements-module .empty p{font-size:12px;margin-bottom:16px}
+#terminal-requirements-module .icon-only{padding:5px;min-height:27px}
+#terminal-requirements-module #main-list{max-height:clamp(180px,calc(100dvh - 464px),760px)}
+#terminal-requirements-module #main-list thead th{position:sticky;top:0;z-index:1}
+@media(max-width:1100px){#terminal-requirements-module{padding:24px 20px}#terminal-requirements-module .stat{padding:10px 12px}#terminal-requirements-module .filter{min-width:100px;max-width:145px}#terminal-requirements-module .search{width:225px}#terminal-requirements-module .toolbar-tail{margin-left:0}}
+@media(max-width:760px){#terminal-requirements-module{padding:18px 12px}#terminal-requirements-module h1{font-size:22px}#terminal-requirements-module .page-head{align-items:flex-start;flex-wrap:wrap}#terminal-requirements-module .stats{gap:6px}#terminal-requirements-module .stat{min-height:44px;padding:8px;gap:5px}#terminal-requirements-module .stat-label{font-size:12px}#terminal-requirements-module .stat-value strong{font-size:18px}#terminal-requirements-module .stat-icon{width:20px;height:20px;border-radius:5px}#terminal-requirements-module .stat-icon svg{width:16px;height:16px}#terminal-requirements-module .drawer{width:calc(100vw - 12px)}#terminal-requirements-module .drawer-head,#terminal-requirements-module .drawer-body{padding:18px}#terminal-requirements-module .drawer-nav{padding:0 18px;gap:18px}#terminal-requirements-module .grid2{grid-template-columns:1fr;gap:0}#terminal-requirements-module .page-note{flex-wrap:wrap}#terminal-requirements-module .gate-track{gap:6px}#terminal-requirements-module .gate{padding:11px;gap:6px}#terminal-requirements-module .gate-num{width:23px;height:23px}#terminal-requirements-module .toolbar{padding:15px}#terminal-requirements-module .tabs-bar{padding:0 15px}}
+</style>
+</head>
+<body style="margin:0">
+<!-- 单页可嵌入原型。业务依据：终端产品需求管理池沟通确认稿（2026-11-01）。所有资料、人员与跨系统操作均为本地演示。 -->
+<main id="terminal-requirements-module">
+  <div class="page">
+    <header class="page-head">
+      <div><div class="eyebrow">产品线经理工作台</div><h1>终端产品需求管理</h1><p class="page-sub">统一管理产品需求、开发方案、事务承接与评审变更</p></div>
+      <div class="row"><span class="demo-tag">交互原型 · 演示数据</span><button class="btn primary" data-action="create"><span data-icon="Plus"></span>新建需求</button></div>
+    </header>
+    <div class="notice" style="margin-bottom:14px"><strong>已确认的跨系统去向：</strong>反馈系统选择“转产品需求 / 转产品规划 / 转事务处理”，不以“关闭”代替流转。仅“转产品需求”同步进入本需求池并持续回写状态；品牌规划在线下确认后，由品牌经理或产品经理再次手动录入。</div>
+    <section class="stats" id="stats" aria-label="需求处理提醒"></section>
+    <section class="board">
+      <div class="tabs-bar"><nav class="tabs" id="main-tabs" aria-label="页内视图"></nav><span class="muted nowrap" id="scope-label"></span></div>
+      <div class="toolbar" id="toolbar"></div>
+      <div id="filter-note"></div>
+      <div class="table-wrap" id="main-list"></div>
+      <footer class="footer" id="list-footer"></footer>
+    </section>
+    <div class="page-note"><span>所有演示操作仅保存在当前浏览器 · 资料与外部同步均为模拟</span><button class="link" data-action="reset" style="font-size:11px;color:#98a4b7">重置演示数据</button></div>
+  </div>
+  <dialog id="detail-drawer" class="drawer" aria-label="业务详情"></dialog>
+  <dialog id="business-dialog" class="modal" aria-label="业务操作"></dialog>
+  <dialog id="priority-dialog" class="modal" aria-label="需求等级说明"></dialog>
+  <div id="toast-host" aria-live="polite"></div>
+</main>
+<script id="prototype-code">
+'use strict';
+(() => {
+/*
+Icons: Lucide, rendered inline for an offline single-file prototype.
+ISC License
+Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part
+of Feather (MIT). All other copyright (c) for Lucide are held by Lucide
+Contributors 2022.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+const ICONS = {"Plus":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg>","Inbox":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-inbox\"><polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\"></polyline><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"></path></svg>","ClipboardCheck":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-clipboard-check\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\" ry=\"1\"></rect><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"></path><path d=\"m9 14 2 2 4-4\"></path></svg>","FileClock":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-file-clock\"><path d=\"M16 22h2a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3\"></path><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"></path><circle cx=\"8\" cy=\"16\" r=\"6\"></circle><path d=\"M9.5 17.5 8 16.25V14\"></path></svg>","Clock3":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-clock3\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16.5 12\"></polyline></svg>","Search":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-search\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.3-4.3\"></path></svg>","Filter":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-filter\"><polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"></polygon></svg>","X":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg>","ChevronRight":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg>","ChevronLeft":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg>","ArrowUpRight":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-arrow-up-right\"><path d=\"M7 7h10v10\"></path><path d=\"M7 17 17 7\"></path></svg>","FileText":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-file-text\"><path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"></path><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"></path><path d=\"M10 9H8\"></path><path d=\"M16 13H8\"></path><path d=\"M16 17H8\"></path></svg>","Layers":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-layers\"><path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z\"></path><path d=\"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12\"></path><path d=\"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17\"></path></svg>","FolderOpen":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-folder-open\"><path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2\"></path></svg>","Check":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-check\"><path d=\"M20 6 9 17l-5-5\"></path></svg>","TriangleAlert":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-triangle-alert\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"></path><path d=\"M12 9v4\"></path><path d=\"M12 17h.01\"></path></svg>","RefreshCw":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-refresh-cw\"><path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"></path><path d=\"M21 3v5h-5\"></path><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"></path><path d=\"M8 16H3v5\"></path></svg>","Upload":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-upload\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><polyline points=\"17 8 12 3 7 8\"></polyline><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"></line></svg>","Eye":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-eye\"><path d=\"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>","ArrowLeft":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-arrow-left\"><path d=\"m12 19-7-7 7-7\"></path><path d=\"M19 12H5\"></path></svg>","ArrowRight":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-arrow-right\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg>","Users":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-users\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"></path><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"></path></svg>","CalendarDays":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\"><path d=\"M8 2v4\"></path><path d=\"M16 2v4\"></path><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"></rect><path d=\"M3 10h18\"></path><path d=\"M8 14h.01\"></path><path d=\"M12 14h.01\"></path><path d=\"M16 14h.01\"></path><path d=\"M8 18h.01\"></path><path d=\"M12 18h.01\"></path><path d=\"M16 18h.01\"></path></svg>","History":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-history\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path><path d=\"M12 7v5l4 2\"></path></svg>","Link2":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-link2\"><path d=\"M9 17H7A5 5 0 0 1 7 7h2\"></path><path d=\"M15 7h2a5 5 0 1 1 0 10h-2\"></path><line x1=\"8\" x2=\"16\" y1=\"12\" y2=\"12\"></line></svg>","ListChecks":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-list-checks\"><path d=\"m3 17 2 2 4-4\"></path><path d=\"m3 7 2 2 4-4\"></path><path d=\"M13 6h8\"></path><path d=\"M13 12h8\"></path><path d=\"M13 18h8\"></path></svg>","Pencil":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-pencil\"><path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"></path><path d=\"m15 5 4 4\"></path></svg>","Pause":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-pause\"><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"></rect><rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"></rect></svg>","Play":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play\"><polygon points=\"6 3 20 12 6 21 6 3\"></polygon></svg>","MessageSquare":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-message-square\"><path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"></path></svg>","Flag":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-flag\"><path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"></path><line x1=\"4\" x2=\"4\" y1=\"22\" y2=\"15\"></line></svg>","Send":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-send\"><path d=\"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z\"></path><path d=\"m21.854 2.147-10.94 10.939\"></path></svg>","GitMerge":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-git-merge\"><circle cx=\"18\" cy=\"18\" r=\"3\"></circle><circle cx=\"6\" cy=\"6\" r=\"3\"></circle><path d=\"M6 21V9a9 9 0 0 0 9 9\"></path></svg>","RotateCcw":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-rotate-ccw\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path></svg>","FolderKanban":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-folder-kanban\"><path d=\"M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z\"></path><path d=\"M8 10v4\"></path><path d=\"M12 10v2\"></path><path d=\"M16 10v6\"></path></svg>"};
+const ROOT=document.getElementById('terminal-requirements-module');
+ const STORE_KEY='yolanda.terminal-requirements.prototype.v3';
+const CONTEXT={today:'2026-10-27',currentUser:'pm-1',users:[{id:'pm-1',name:'林悦',role:'产品经理'},{id:'pm-2',name:'周宁',role:'产品经理'},{id:'rd-1',name:'陈卓',role:'研发负责人'},{id:'pj-1',name:'许知远',role:'项目经理'}],lines:[{id:'scale',name:'体脂秤',owner:'pm-1'},{id:'massage',name:'筋膜枪',owner:'pm-2'},{id:'neck',name:'肩颈按摩仪',owner:'pm-2'},{id:'other',name:'待确定产品线',owner:''}],products:[{id:'S20',name:'S20 智能体脂秤',line:'scale'},{id:'S30',name:'S30 八电极体脂秤',line:'scale'},{id:'M20',name:'M20 便携筋膜枪',line:'massage'},{id:'N10',name:'N10 肩颈按摩仪',line:'neck'}]};
+const GATES=['可行性评审','需求评审','立项评审'];
+const DOC_TYPES={report:'立项报告',plan:'产品规划书',project:'项目说明书',hardware:'硬件设计说明',software:'软件设计说明',structure:'结构设计说明',other:'补充资料'};
+ const SOURCE={manual:'手动创建',feedback:'反馈线索',strategy:'战略',public:'公海需求池'};
+ const MANUAL_CATEGORY={brand:'品牌规划输入',research:'研发规划',customer:'客户定制',other:'其他'};
+ const CREATE_SCENE={detail:'新建待办需求',package:'新建开发需求包'};
+const CREATE_KIND={new:'新产品开发',iteration:'产品迭代开发',optimization:'产品优化',other:'其他'};
+const KIND={unclassified:'待分类',...CREATE_KIND};
+ const DESTINATION={pool:'产品需求',development:'开发需求',transaction:'事务处理'};
+function requirementKind(o){
+ if(KIND[o.kind])return o.kind;
+ // 兼容旧版以 transaction 标记 POM 承接的数据，需求类型与去向分别展示。
+ return [o.requirementKind,o.initialKind,o.originSnapshot?.kind].find(kind=>KIND[kind])||'unclassified';
+}
+const kindLabel=o=>KIND[requirementKind(o)];
+ const sourceCode=o=>SOURCE[o.source]?o.source:MANUAL_CATEGORY[o.source]?'manual':'';
+const sourceLabel=o=>SOURCE[sourceCode(o)]||'未记录';
+const manualCategoryOf=o=>MANUAL_CATEGORY[o.manualCategory]?o.manualCategory:MANUAL_CATEGORY[o.source]?o.source:o.customer?'customer':'other';
+function normalizeSource(o){
+ const channel=sourceCode(o);
+ if(channel==='manual'){
+  const category=manualCategoryOf(o);
+  if(o.source!=='manual'&&!o.legacySource)o.legacySource=o.source;
+  o.source='manual';o.manualCategory=category;
+ }
+ return o;
+}
+function normalizeVocabulary(s){
+ [...s.requirements,...s.packages].forEach(o=>{normalizeSource(o);o.level=o.level||LEGACY_PRIORITY_LEVEL[o.priority]||'L3';delete o.priority});
+ if(!s.requirements.some(r=>r.id==='REQ-017'))s.requirements.push(makeReq('REQ-017','跟进 S20 售后换新流程说明',{source:'manual',manualCategory:'other',sourceDetails:{sourceDetail:'售后流程补充事项'},kind:'transaction',status:'active',line:'scale',product:'S20',owner:'pm-2',assignment:'manual',desired:day(6),createdAt:'2026-11-01T16:00:00',transaction:{department:'售后支持',owner:'pm-2',due:day(6),criteria:'完成换新条件、操作步骤及客服话术确认。',pomId:'POM-030',status:'处理中',result:''}}));
+ s.counters.REQ=Math.max(Number(s.counters.REQ)||0,17);
+ s.counters.POM=Math.max(Number(s.counters.POM)||0,...s.requirements.map(r=>Number(String(r.transaction?.pomId||'').match(/(\d+)$/)?.[1]||0)));
+ s.requirements.filter(r=>r.kind==='transaction').forEach(r=>{const t=r.transaction||(r.transaction={});if(t.status==='处理中')t.status='开发中';if(!POM_PROGRESS[t.status])t.status='规划中';t.planningName=t.planningName||t.transactionName||r.title;t.planningContent=t.planningContent||r.description||r.scope||'';t.startedAt=t.startedAt||(t.pomId?r.createdAt:'');t.actualEnd=t.actualEnd||(t.status==='已完成'?r.acceptedAt||'':'');if(['待承接','开发中','待验收','已完成'].includes(t.status)&&!t.currentVersion){t.currentVersion=1;t.versions=[{version:1,name:t.planningName,content:t.planningContent,at:r.createdAt||stamp(),actor:r.owner||CONTEXT.currentUser,reason:'进入待承接后冻结'}]}else t.versions=t.versions||[];if(['开发中','待验收','已完成'].includes(t.status)){t.handler=t.handler||t.owner||'';t.transactionName=t.transactionName||t.planningName}});
+ (s.transactionPackages||[]).forEach(p=>{if(p.status==='处理中')p.status='开发中';if(!POM_PROGRESS[p.status])p.status='开发中';const ms=s.requirements.filter(r=>r.transactionPackageId===p.id);p.planningName=p.planningName||p.title;p.planningContent=p.planningContent||p.reason||ms.map(r=>r.title).join('、');p.versions=p.versions||[];if(['待承接','开发中','待验收','已完成'].includes(p.status)&&!p.currentVersion){p.currentVersion=1;p.versions.push({version:1,name:p.planningName,content:p.planningContent,members:ms.map(r=>({id:r.id,title:r.title,scope:r.scope||r.description||'',acceptance:r.acceptance||r.transaction?.criteria||''})),at:p.createdAt||stamp(),actor:p.owner||CONTEXT.currentUser,reason:'事务包进入承接后整包冻结'})}ms.forEach(r=>{r.transaction={...(r.transaction||{}),department:p.department,owner:p.owner,due:p.due,status:p.status};r.status=['已完成','需求终止'].includes(p.status)?'closed':p.status==='挂起'?'hold':'active';r.fulfilled=p.status==='已完成'})});
+ return s; // 原始证据、操作记录和已送审快照保持原样。
+}
+const isDevelopmentKind=kind=>kind==='new'||kind==='iteration';
+const isLocalRequirement=r=>r&&(r.kind==='optimization'||r.kind==='other');
+const hasPomAssignment=r=>r.kind==='transaction';
+const canJoinPackage=r=>r&&!r.packageId&&r.kind!=='transaction'&&!['hold','closed'].includes(r.status)&&!pendingMembership(r.id);
+ const canJoinTransactionPackage=r=>r&&r.kind==='transaction'&&!r.transactionPackageId&&!['hold','closed'].includes(r.status);
+const OPTIMIZATION_AREAS={experience:'体验优化',quality:'质量改善',performance:'性能提升',cost:'成本优化',other:'其他'};
+const MANUAL_FIELDS={brand:[['brandName','品牌 / 产品系列'],['planningBasis','品牌规划依据']],research:[['researchTopic','研发课题 / 技术方向'],['researchBasis','研发依据与预期价值']],customer:[['customer','客户名称 / 代号'],['constraints','交期与定制约束']],other:[['sourceDetail','背景说明']]};
+const PACKAGE_STATUS={draft:'草稿',pending:'待分析',active:'推进中',hold:'挂起',closed:'关闭'};
+const PACKAGE_FLOW_STATUS={'规划中':'规划中','评审中':'评审中','待立项':'待立项','开发中':'开发中','待验收':'待验收','已完成':'已完成','挂起':'挂起','需求终止':'需求终止'};
+const ALL_FLOW_STATUS={'待办':'待办','已逾期':'已逾期',...PACKAGE_FLOW_STATUS,'待承接':'待承接'};
+const REQUIREMENT_STATUS={assigned:'已分配',pending:'待分析',active:'推进中',hold:'挂起',closed:'关闭'};
+const REVIEW_STATUS={unstarted:'未发起',reviewing:'评审中',conditional:'有条件通过',passed:'已通过',rework:'待补充复审',rejected:'未通过',withdrawn:'已撤回'};
+ const PROJECT_STATUS={pending:'待立项',initiated:'已立项',doing:'开发中',complete:'已完成',production:'已转量',paused:'暂停',cancelled:'已取消'};
+const POM_PROGRESS={'规划中':'规划中','待承接':'待承接','开发中':'开发中','待验收':'待验收','已完成':'已完成','挂起':'挂起','需求终止':'需求终止'};
+const pomNextStatuses=status=>({规划中:['规划中','待承接','挂起','需求终止'],待承接:['待承接','开发中','挂起','需求终止'],开发中:['开发中','待验收','挂起','需求终止'],待验收:['待验收','开发中','已完成','挂起','需求终止'],已完成:['已完成'],挂起:['挂起','规划中','待承接','开发中','需求终止'],需求终止:['需求终止']}[status]||['规划中']);
+const LOCAL_PROGRESS={'待处理':'待处理','处理中':'处理中','已完成':'已完成'};
+const LEGACY_PRIORITY_LEVEL={urgent:'L1',high:'L2',normal:'L3',low:'L4'};
+ const DEMAND_LEVEL={L1:'L1 紧急修复',L2:'L2 体验优化',L3:'L3 功能升级',L4:'L4 换代开发'};
+const e=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const I=n=>'<span class="icon" aria-hidden="true">'+(ICONS[n]||'')+'</span>';
+const userName=id=>(CONTEXT.users.find(x=>x.id===id)||{}).name||'待分派';
+const lineName=id=>(CONTEXT.lines.find(x=>x.id===id)||{}).name||'待确定';
+const lineOwner=id=>(CONTEXT.lines.find(x=>x.id===id)||{}).owner||'';
+const stamp=()=>new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).replace(' ','T');
+const dateText=s=>s?String(s).slice(0,10).replaceAll('-','.'):'未设置';
+const timeText=s=>s?String(s).replace('T',' ').slice(0,16):'—';
+const day=n=>{const d=new Date(CONTEXT.today+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const badge=(text,color)=>'<span class="badge '+(color||'')+'">'+e(text)+'</span>';
+ function makeReq(id,title,opts){return normalizeSource(Object.assign({id,title,initialKind:opts?.kind||'unclassified',source:'feedback',line:'scale',product:'S20',owner:'pm-1',assignment:'auto',kind:'unclassified',status:'pending',level:'L2',description:title,original:'用户原始诉求：'+title,analysis:'建议结合使用场景和反馈证据进一步明确产品侧需求。',acceptance:'完成对应功能验证，并由产品经理确认体验与交付结果。',scope:title,feedbackIds:[],feedbackFlow:{route:'productDemand',sourceStatus:'已转产品需求',syncStatus:'已同步'},sourceId:'SRC-'+id,sourceNote:'来自反馈系统的产品需求，状态与终端产品需求池同步。',packageId:'',transactionPackageId:'',fulfilled:false,desired:day(5),createdAt:'2026-10-23T10:00:00',customer:'',strategy:'',evidence:'反馈摘要与用户场景记录',scores:['','','','','']},opts||{}))}
+ function makePkg(id,title,opts){return normalizeSource(Object.assign({id,title,kind:'new',line:'scale',owner:'pm-1',assignment:'auto',product:'新款家用体脂秤',currentVersion:'',targetVersion:'V1.0',description:'围绕家庭用户的日常测量体验，明确本次开发范围与可验证的交付目标。',scope:title,source:'strategy',customer:'',strategy:'年度产品路线图',status:'active',level:'L2',desired:day(8),version:1,professionals:[],planningAdmission:{configuration:'',classification:'',purpose:''},gates:GATES.map(()=>({status:'unstarted'})),bindings:[{},{},{}],baseline:null,baselineHistory:[],external:{plan:null,project:null},failNext:false,feedbackStatus:'未回写'},opts||{}))}
+function seed(){
+  const s={schema:2,session:Math.random().toString(36),counters:{REQ:17,PKG:4,TPK:1,DOC:0,REV:0,LOG:0,CHG:0,SYNC:0,BASE:0,ECR:0},requirements:[],packages:[],transactionPackages:[],documents:[],reviews:[],changes:[],audit:[],syncLogs:[]};
+ const reqs=[
+  ['REQ-001','增大显示字体，改善站立读取体验',{feedbackIds:['FB-201','FB-202','FB-203'],priority:'high',desired:day(-1),original:'站在秤上时，体重数字偏小，光线稍暗就看不清。',acceptance:'按约定阅读距离完成清晰度验证；字体规格与确认样机一致。'}],
+  ['REQ-002','增加无需手机的离线测量体验',{feedbackIds:['FB-202','FB-204'],priority:'high',desired:day(1),original:'希望没有连接手机时，也能在设备上直接查看关键测量结果。'}],
+  ['REQ-003','优化首次连接与异常恢复引导',{feedbackIds:['FB-205'],priority:'normal',desired:day(3)}],
+  ['REQ-004','家庭成员识别与结果展示优化',{packageId:'PKG-001',kind:'new',status:'active',source:'strategy',strategy:'家庭健康场景产品规划',feedbackIds:['FB-206','FB-207']}],
+  ['REQ-005','新款产品支持大屏信息分区',{packageId:'PKG-001',kind:'new',status:'active',source:'customer',customer:'ODM 客户 A',original:'客户期望大屏同时显示本次结果与测量提示。',desired:day(7)}],
+  ['REQ-006','S20 断连后自动恢复连接',{packageId:'PKG-002',kind:'iteration',status:'active',feedbackIds:['FB-208','FB-209'],priority:'high'}],
+  ['REQ-007','优化 S20 配对提示文案',{packageId:'PKG-002',kind:'iteration',status:'active',feedbackIds:['FB-209','FB-210']}],
+  ['REQ-008','八电极新品的引导式测量流程',{packageId:'PKG-003',kind:'new',status:'active',source:'strategy',strategy:'高端产品线规划',product:'S30',feedbackIds:['FB-211']}],
+  ['REQ-009','M20 按键与档位反馈优化',{packageId:'PKG-004',kind:'iteration',status:'active',line:'massage',product:'M20',owner:'pm-1',assignment:'manual',feedbackIds:['FB-212','FB-213']}],
+   ['REQ-010','补充包装内快速上手指引',{kind:'transaction',status:'active',desired:day(-2),transactionPackageId:'TPK-001',transaction:{department:'产品支持',owner:'pm-1',due:day(-2),criteria:'指引完成校对并同步给相关渠道。',pomId:'POM-026',status:'处理中',result:''}}],
+  ['REQ-011','新增便携收纳方案',{source:'public',line:'massage',product:'M20',owner:'pm-2',status:'hold',holdReason:'等待目标客群与成本约束补充',resumeCondition:'完成调研并明确成本上限',reviewDate:day(10),beforeHold:'pending'}],
+  ['REQ-012','增加非核心娱乐功能',{source:'manual',status:'closed',closeReason:'不采纳',closeNote:'与当前健康产品定位关联较弱，保留记录。'}],
+  ['REQ-013','肩颈产品海外定制需求初步讨论',{source:'customer',customer:'ODM 客户 B',line:'other',owner:'',product:'',priority:'normal'}],
+   ['REQ-014','整理 S20 常见问题说明',{source:'manual',kind:'transaction',status:'active',transactionPackageId:'TPK-001',transaction:{department:'产品支持',owner:'pm-1',due:day(4),criteria:'完成 FAQ 审核及交接记录。',pomId:'POM-027',status:'待承接',result:''}}],
+   ['REQ-015','整理海外版使用视频字幕',{source:'manual',kind:'transaction',status:'active',transaction:{department:'品牌内容',owner:'pm-1',due:day(8),criteria:'字幕审核通过并归档。',pomId:'POM-028',status:'待承接',result:''}}],
+   ['REQ-016','补充产品规格页参数说明',{source:'manual',kind:'transaction',status:'active',transaction:{department:'品牌内容',owner:'pm-1',due:day(8),criteria:'规格页参数经产品经理复核。',pomId:'POM-029',status:'待承接',result:''}}],
+   ['REQ-017','跟进 S20 售后换新流程说明',{source:'manual',manualCategory:'other',sourceDetails:{sourceDetail:'售后流程补充事项'},kind:'transaction',status:'active',line:'scale',product:'S20',owner:'pm-2',assignment:'manual',desired:day(6),createdAt:'2026-11-01T16:00:00',transaction:{department:'售后支持',owner:'pm-2',due:day(6),criteria:'完成换新条件、操作步骤及客服话术确认。',pomId:'POM-030',status:'处理中',result:''}}]
+  ];s.requirements=reqs.map(x=>makeReq(x[0],x[1],x[2]));
+  s.transactionPackages=[{id:'TPK-001',title:'S20 包装与指引事务包',department:'产品支持',owner:'pm-1',due:day(4),status:'处理中',reason:'同一产品、同一承接团队的事务合并处理',createdAt:'2026-10-25T09:00:00'}];
+ s.packages=[
+  makePkg('PKG-001','家庭健康大屏体脂秤开发',{product:'家庭大屏体脂秤',desired:day(2)}),
+  makePkg('PKG-002','S20 连接体验迭代',{kind:'iteration',source:'feedback',product:'S20',currentVersion:'V1.2',targetVersion:'V1.3',professionals:['software'],desired:day(-1)}),
+  makePkg('PKG-003','八电极新品体验升级',{product:'新款八电极体脂秤',desired:day(3)}),
+  makePkg('PKG-004','M20 操控体验迭代',{kind:'iteration',line:'massage',product:'M20',currentVersion:'V2.0',targetVersion:'V2.1',owner:'pm-1',assignment:'manual',desired:day(1)})
+ ];
+ function sd(p,cat,g){const d={id:'DOC-'+String(++s.counters.DOC).padStart(3,'0'),packageId:p.id,category:cat,version:'V'+(g+1)+'.0',fileName:p.title+'-'+DOC_TYPES[cat]+'.pdf',provider:'pm-1',uploadedBy:'pm-1',uploadedAt:'2026-10-24T09:30:00',stage:g,na:false,reason:'',size:245760,simulated:true};s.documents.push(d);p.bindings[g][cat]=d.id;return d}
+ function snap(p,g){return {packageVersion:p.version,title:p.title,scope:p.scope,requirements:s.requirements.filter(r=>r.packageId===p.id).map(clone),materials:Object.values(p.bindings[g]).map(id=>clone(s.documents.find(d=>d.id===id)))}}
+ function sr(p,g,status){const id='REV-'+String(++s.counters.REV).padStart(3,'0');p.gates[g].status=status;s.reviews.push({id,packageId:p.id,gate:g,round:1,status,organizer:p.owner,participants:['pm-1','rd-1','pj-1'],confirmer:'rd-1',startedAt:'2026-10-24T10:00:00',finishedAt:status==='reviewing'?'':'2026-10-24T11:00:00',conclusion:status==='passed'?'通过':'补充后复审',summary:status==='passed'?'本轮范围及材料已确认，按结论推进。':'请补充项目说明书，明确周期与资源约束。',notes:[{actor:'rd-1',text:'已核对目标范围，后续按送审版本开展工作。',at:'2026-10-24T10:30:00'}],conditions:[],snapshot:snap(p,g)});return id}
+ function external(p,projectStatus){p.external.plan={id:'PLAN-'+p.id.slice(4),status:'admitted',syncStatus:'success',lastSuccess:'2026-10-24T11:01:00',planned:day(65)};p.external.project={id:'PRJ-'+p.id.slice(4),status:projectStatus,syncStatus:'success',lastSuccess:'2026-10-24T11:01:00',manager:'pj-1',planned:day(60),pendingOp:''}}
+ const p1=s.packages[0];['report','plan'].forEach(c=>sd(p1,c,0));
+ const p2=s.packages[1];['report','plan'].forEach(c=>sd(p2,c,0));sr(p2,0,'passed');external(p2,'pending');['report','plan','software'].forEach(c=>sd(p2,c,1));sr(p2,1,'rework');
+  for(const p of s.packages.slice(2)){p.planningAdmission={configuration:'标准配置 / 目标配置待样机确认',classification:'新品 / 迭代规划',purpose:'纳入产品路线图并进入研发立项'};for(let g=0;g<3;g++){(g===0?['report']:g===1?['plan',...p.professionals]:['report','plan','project',...p.professionals]).forEach(c=>sd(p,c,g));sr(p,g,'passed')}p.baseline={id:'BASE-'+String(++s.counters.BASE).padStart(3,'0'),version:1,at:'2026-10-25T15:00:00',actor:'pm-1',snapshot:snap(p,2),deferred:[],source:'立项评审'};external(p,p.id==='PKG-004'?'complete':'pending')}
+ const p3=s.packages[2];p3.external.project.syncStatus='error';p3.external.project.pendingOp='initiate';p3.external.project.error='项目系统暂未响应，立项评审结果已保存。';
+ s.audit=[{id:'LOG-001',entityType:'package',entityId:'PKG-003',action:'立项评审通过',detail:'送审版本 V1 已确认，自动立项同步失败，等待重试。',actor:'pm-1',at:'2026-10-26T14:30:00'},{id:'LOG-002',entityType:'package',entityId:'PKG-002',action:'需求评审待补充',detail:'需补齐项目说明书后发起新轮次。',actor:'pm-1',at:'2026-10-26T10:30:00'}];s.counters.LOG=2;
+ return normalizeVocabulary(s);
+}
+let storageIssue=false;
+ function loadState(){try{const raw=localStorage.getItem(STORE_KEY);if(!raw)return seed();const s=JSON.parse(raw);if(s.schema!==2||!Array.isArray(s.requirements)||!Array.isArray(s.packages)||!Array.isArray(s.transactionPackages))throw Error('invalid');return normalizeVocabulary(s)}catch(err){storageIssue=true;return seed()}}
+let state=loadState();
+// Interrupted mock requests remain retryable after refresh; no real acknowledgment is inferred.
+state.packages.forEach(p=>['plan','project'].forEach(target=>{const o=p.external[target];if(o&&o.syncStatus==='syncing'){o.syncStatus='error';o.error='页面刷新中断了模拟回执，请重试确认同步结果。'}}));
+state.syncLogs.forEach(log=>{if(log.status==='syncing'){log.status='error';log.detail='页面刷新中断了模拟回执，等待重试。'}});
+ let view={tab:'todo',search:'',line:'',owner:'',source:'',status:'',kind:'',gate:'',taskFilter:'',selected:new Set(),txSelected:new Set(),detail:null,detailStack:[],modal:null,page:1};
+const reqById=id=>state.requirements.find(r=>r.id===id);
+const pkgById=id=>state.packages.find(p=>p.id===id);
+ const txPkgById=id=>state.transactionPackages.find(p=>p.id===id);
+ const txMembers=p=>state.requirements.filter(r=>r.transactionPackageId===p.id);
+ const txPackageFrozen=p=>p&&['待承接','开发中','待验收','已完成','挂起','需求终止'].includes(p.status);
+ const txPackageSnapshot=p=>({version:p.currentVersion||1,name:p.planningName||p.title,content:p.planningContent||p.reason||'',members:txMembers(p).map(r=>({id:r.id,title:r.title,scope:r.scope||r.description||'',acceptance:r.acceptance||r.transaction?.criteria||''})),at:stamp(),actor:CONTEXT.currentUser,reason:'历史版本补录'});
+const members=p=>state.requirements.filter(r=>r.packageId===p.id);
+const pendingMembership=(id,exceptId)=>state.changes.find(c=>c.id!==exceptId&&c.status==='pending'&&c.operation!=='content'&&c.ids.includes(id));
+function routingSnapshot(r){
+ return clone({kind:r.kind,requirementKind:requirementKind(r),packageId:r.packageId,status:r.status,owner:r.owner,scope:r.scope,acceptance:r.acceptance,transaction:r.transaction||null,localProgress:r.localProgress||null});
+}
+function recordRouting(r,before,reason){
+ if(!r.originSnapshot)r.originSnapshot={...clone(before),at:stamp()};
+ if(!r.initialKind)r.initialKind=before.kind;
+ r.routingHistory=r.routingHistory||[];
+ r.routingHistory.push({at:stamp(),actor:CONTEXT.currentUser,reason,before:clone(before),after:routingSnapshot(r)});
+}
+const effectiveOwner=r=>r.packageId?(pkgById(r.packageId)||{}).owner||r.owner:r.owner;
+const currentGate=p=>{const i=p.gates.findIndex(g=>g.status!=='passed');return i<0?2:i};
+const allPassed=p=>p.gates.every(g=>g.status==='passed');
+const lastRound=(p,g)=>state.reviews.filter(r=>r.packageId===p.id&&r.gate===g).at(-1);
+const feedbackCount=list=>new Set(list.flatMap(r=>r.feedbackIds||[])).size;
+function uid(prefix){state.counters[prefix]=(state.counters[prefix]||0)+1;return prefix+'-'+String(state.counters[prefix]).padStart(3,'0')}
+function audit(type,id,action,detail){state.audit.push({id:uid('LOG'),entityType:type,entityId:id,action,detail:detail||'',actor:CONTEXT.currentUser,at:stamp()})}
+function persist(){if(storageIssue)return;try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(err){toast('浏览器存储已满，本次操作仅保留在当前页面。')}}
+function commit(){persist();render();if(view.detail)renderDrawer()}
+function toast(text){
+ ROOT.querySelectorAll('.toast').forEach(node=>node.remove());
+ const host=ROOT.querySelector('#business-dialog[open]')||ROOT.querySelector('#detail-drawer[open]')||ROOT.querySelector('#toast-host');
+ const node=document.createElement('div');node.className='toast';node.setAttribute('role','status');node.textContent=text;host.append(node);
+ clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.remove(),3600);
+}
+function fail(message){throw new Error(message)}
+ function requiredDocs(p,g){
+  if(g===0)return ['report'];
+  if(g===1)return ['plan',...p.professionals];
+  return ['report','plan','project',...p.professionals];
+ }
+function boundDoc(p,g,cat){return state.documents.find(d=>d.id===p.bindings[g][cat])}
+function materialMissing(p,g){return requiredDocs(p,g).filter(cat=>{const d=boundDoc(p,g,cat);return !d||(d.na&&!d.reason)||(['report','plan','project'].includes(cat)&&d.na)})}
+function reviewBlockers(p,g){
+ const list=[];if(!isDevelopmentKind(p.kind))list.push('仅新产品开发、产品迭代开发进入开发评审流程');if(p.status!=='active')list.push('请先恢复需求包为推进中');if(!p.owner)list.push('请指定负责产品经理');if(!members(p).length)list.push('请先添加需求明细');if(!p.scope.trim())list.push('请明确本次开发范围');
+ if(g===0&&!admissionReady(p))list.push('请补全产品规划必填字段：分类、配置、目的');
+ if(g>0&&p.gates[g-1].status!=='passed')list.push('请先通过'+GATES[g-1]);
+ if(p.gates[g].status==='reviewing')list.push('当前关口正在评审');
+ if(p.gates[g].status==='conditional')list.push('请先完成本轮放行条件并确认通过，或撤回后重新送审');
+ if(p.gates[g].status==='passed')list.push('当前关口已通过，范围变更请通过变更流程处理');
+ materialMissing(p,g).forEach(c=>list.push('缺少'+DOC_TYPES[c]));
+ if(state.changes.some(c=>c.status==='pending'&&(c.packageId===p.id||c.targetId===p.id)))list.push('请先处理待确认的范围变更');
+ return list;
+}
+function snapshot(p,g){return {packageVersion:p.version,title:p.title,scope:p.scope,planningAdmission:clone(p.planningAdmission||{}),requirements:clone(members(p)),materials:Object.values(p.bindings[g]).map(id=>state.documents.find(d=>d.id===id)).filter(Boolean).map(clone)}}
+function startReview(p,g,data){
+ const errors=reviewBlockers(p,g);if(errors.length)fail(errors.join('；'));
+ const round={id:uid('REV'),packageId:p.id,gate:g,round:state.reviews.filter(r=>r.packageId===p.id&&r.gate===g).length+1,status:'reviewing',organizer:data.organizer||p.owner,participants:data.participants||['pm-1','rd-1','pj-1'],confirmer:'',startedAt:stamp(),finishedAt:'',conclusion:'',summary:'',notes:[],conditions:[],snapshot:snapshot(p,g)};
+ state.reviews.push(round);p.gates[g].status='reviewing';audit('package',p.id,'发起'+GATES[g],'第 '+round.round+' 轮 · 需求包 V'+p.version);commit();return round;
+}
+ function admissionReady(p){const a=p.planningAdmission||{};return ['configuration','classification','purpose'].every(k=>String(a[k]||'').trim())}
+ function freezeAtInitiation(p,round){
+  if(p.baseline)p.baselineHistory.push(clone(p.baseline));
+  p.baseline={id:uid('BASE'),version:p.version,at:stamp(),actor:round.confirmer||CONTEXT.currentUser,snapshot:clone(round.snapshot),deferred:[],source:'立项评审'};
+  audit('package',p.id,'立项评审冻结需求基线',p.baseline.id+' · V'+p.version);
+ }
+ function confirmPass(p,round){
+  round.status='passed';round.finishedAt=stamp();p.gates[round.gate].status='passed';audit('package',p.id,GATES[round.gate]+'通过','第 '+round.round+' 轮 · 依据 V'+round.snapshot.packageVersion);
+  if(round.gate===2)freezeAtInitiation(p,round);
+  commit();if(round.gate===0&&admissionReady(p))syncPackage(p.id,'admit');if(round.gate===2)syncPackage(p.id,'initiate');
+}
+async function syncPackage(id,op){
+ let p=pkgById(id);if(!p)return;
+ if(!isDevelopmentKind(p.kind))return toast('只有新产品或产品迭代开发需求包可以同步规划与项目');
+  if(op==='admit'&&p.gates[0].status!=='passed')return toast('可行性评审通过后才能同步准入结果');
+  if(op==='admit'&&!admissionReady(p))return toast('请先补全配置、分类和规划目的，再转入产品规划');
+ if(op==='initiate'&&!allPassed(p))return toast('立项评审通过后才能发起项目立项');
+  if(op==='baseline'&&(!p.baseline||p.gates[2].status!=='passed'))return toast('立项评审冻结需求后才能同步');
+ if(p.external.project&&p.external.project.syncStatus==='syncing')return toast('同步正在进行，请稍候');
+ if(!p.external.plan)p.external.plan={id:'PLAN-'+p.id.slice(4),status:'candidate',syncStatus:'idle',planned:day(65)};
+ if(!p.external.project)p.external.project={id:'PRJ-'+p.id.slice(4),status:'pending',syncStatus:'idle',manager:'pj-1',planned:day(60)};
+ const targets=op==='initiate'?['project']:['plan','project'];const session=state.session;
+ const events=targets.map(target=>{const log={id:uid('SYNC'),packageId:id,target,op,status:'syncing',at:stamp(),detail:''};state.syncLogs.push(log);p.external[target].syncStatus='syncing';p.external[target].pendingOp=op;return log.id});
+ commit();await new Promise(resolve=>setTimeout(resolve,450));if(session!==state.session)return;p=pkgById(id);if(!p)return;
+ const failure=!!p.failNext;p.failNext=false;
+ targets.forEach((target,i)=>{const obj=p.external[target];const log=state.syncLogs.find(x=>x.id===events[i]);if(failure&&target==='project'){obj.syncStatus='error';obj.error='模拟连接超时，请稍后重试。';log.status='error';log.detail=obj.error}else{obj.syncStatus='success';obj.lastSuccess=stamp();obj.error='';obj.pendingOp='';if(target==='plan')obj.status='admitted';if(target==='project'&&op==='initiate')obj.status='initiated';obj.scopeVersion=p.version;log.status='success';log.detail='已更新 '+obj.id+'，未新建重复记录。'}});
+ if(op==='initiate'&&p.external.project.syncStatus==='success')p.external.plan.projectStatus='initiated';
+ audit('package',id,'同步'+(op==='admit'?'准入结果':op==='baseline'?'需求基线':'立项结果'),failure?'部分同步失败，可重试':'关联对象已更新');commit();toast(failure?'评审结论已保存，项目同步失败':'同步完成，已更新关联记录');
+}
+function assign(obj,owner,reason){if(!reason.trim())fail('请填写调整原因');const before=obj.owner;obj.owner=owner;obj.assignment='manual';audit(obj.id.startsWith('PKG')?'package':'requirement',obj.id,'手动调整负责人',userName(before)+' → '+userName(owner)+'；'+reason)}
+function changeLine(obj,line){obj.line=line;if(obj.assignment!=='manual')obj.owner=lineOwner(line)}
+function assertPackageEditable(p){if(p.gates.some(g=>g.status==='reviewing'))fail('需求包正在评审，请先撤回当前轮次再调整范围');if(p.status!=='active'&&p.status!=='draft')fail('请先恢复需求包再调整范围')}
+function validateMembership(ids,operation,sourceId,changeId){
+ if(!ids.length)fail('请选择至少一条需求');
+ ids.forEach(id=>{
+  const r=reqById(id);if(!r)fail('需求不存在');
+  if(['hold','closed'].includes(r.status))fail(id+' 已挂起或关闭，请先恢复');
+  if(r.kind==='transaction'||hasPomAssignment(r))fail(id+' 已进入事务承接，不能同时归入开发需求包');
+  if(pendingMembership(id,changeId))fail(id+' 有待确认归属变更，请先确认或取消');
+  if(operation==='add'&&r.packageId)fail(id+' 已归属 '+r.packageId+'，请使用转移操作');
+  if(operation!=='add'&&r.packageId!==sourceId)fail('需求归属已变化，请重新打开');
+ });
+}
+function applyMembership(targetId,ids,scopeMap,operation,sourceId,reason,changeId){
+ const target=targetId?pkgById(targetId):null;
+ if(targetId&&!target)fail('目标需求包不存在');
+ if(target&&!isDevelopmentKind(target.kind))fail('目标必须是新产品或产品迭代开发需求包');
+ validateMembership(ids,operation,sourceId,changeId);
+ if(target&&target.status==='draft')target.status='active';
+ ids.forEach(id=>{
+  const r=reqById(id),before=routingSnapshot(r),previous=r.packageId,originalKind=r.initialKind||r.originSnapshot?.kind||r.kind;
+  r.packageId=targetId||'';r.kind=target?target.kind:['optimization','other'].includes(originalKind)?originalKind:'unclassified';
+  r.status=target||isLocalRequirement(r)?'active':'pending';r.fulfilled=false;r.acceptanceEvidence='';r.acceptedBy='';r.acceptedAt='';
+  if(!target&&isLocalRequirement(r))r.localProgress={...(r.localProgress||{}),status:'待处理',result:''};
+  if(scopeMap&&scopeMap[id]){r.scope=scopeMap[id].scope;r.acceptance=scopeMap[id].acceptance}
+  const note=reason||'确认需求范围与验收要求后分配';recordRouting(r,before,note);
+  audit('requirement',id,operation==='remove'?'移出需求包':previous?'转移需求归属':'归入开发需求包',(previous||'需求池')+' → '+(targetId||'需求池')+'；'+note);
+ });
+ if(target)audit('package',target.id,'更新需求明细',ids.join('、'));
+ if(sourceId&&sourceId!==targetId)audit('package',sourceId,'调整需求归属',ids.join('、'));
+}
+ function invalidateForChange(p,impact){
+ p.version+=1;
+ p.feedbackStatus='未回写';members(p).forEach(r=>{r.fulfilled=false;r.feedbackProgress='范围变更待复审与验收'});
+ if(p.baseline){p.baselineHistory.push(clone(p.baseline));p.baseline=null}
+  const earliest=impact==='feasibility'?0:p.gates[1].status==='passed'?1:currentGate(p);
+ p.gates.forEach((g,i)=>{if(i>=earliest)g.status='unstarted'});
+ p.scopePending=true;
+}
+function requestMembership(targetId,ids,scopeMap,operation,sourceId,reason,impact){
+ const target=targetId?pkgById(targetId):null;const source=sourceId?pkgById(sourceId):null;
+ if(targetId&&(!target||!isDevelopmentKind(target.kind)))fail('请选择有效的新产品或产品迭代开发需求包');
+ [source,target].filter(Boolean).forEach(assertPackageEditable);
+ validateMembership(ids,operation,sourceId);
+  const initiated=[source,target].filter(Boolean).some(p=>p.gates[2].status==='passed');
+  if(initiated){if(!reason||!reason.trim())fail('立项后的范围调整需要填写 ECR 变更原因');const record={id:uid('CHG'),ecrId:uid('ECR'),changeType:'ECR',packageId:(source||target).id,targetId:targetId||'',sourceId:sourceId||'',ids:clone(ids),scopes:clone(scopeMap||{}),operation,reason,impact:impact||'requirements',status:'pending',at:stamp(),actor:CONTEXT.currentUser,before:clone([source,target].filter(Boolean).map(p=>({id:p.id,version:p.version,requirements:members(p)})))};state.changes.push(record);audit('package',record.packageId,'提出 ECR 设计变更',record.ecrId+' · '+reason);ids.forEach(id=>audit('requirement',id,'提出 ECR 归属变更',record.ecrId+' · '+(sourceId||'需求池')+' → '+(targetId||'需求池')+'；确认前保持原去向'));commit();return 'pending'}
+  applyMembership(targetId,ids,scopeMap,operation,sourceId,reason);[source,target].filter(Boolean).forEach(p=>{if(p.gates[1].status==='passed'){p.version+=1;p.gates[1].status='unstarted';p.gates[2].status='unstarted';audit('package',p.id,'立项前调整需求','已在产品规格书标注；工作版本 V'+p.version+'，重新确认关键需求')}});commit();return 'applied';
+}
+function confirmChange(id){
+ const c=state.changes.find(x=>x.id===id);if(!c||c.status!=='pending')fail('该变更已处理');
+ const affected=[...new Set([c.sourceId,c.targetId,c.packageId].filter(Boolean))].map(pkgById).filter(Boolean);affected.forEach(assertPackageEditable);
+ if(c.changeType==='ECR'&&affected.some(p=>p.external.project?.status==='production'))fail('项目已转量，后续变更走 ECN，本需求池不再跟进');
+ if(c.operation==='content'){
+  if(c.patchType==='requirement'){const r=reqById(c.ids[0]);if(r.packageId!==c.packageId)fail('需求归属已变化，请重新提出变更');Object.assign(r,c.patch)}
+  else Object.assign(pkgById(c.packageId),c.patch);
+ }else{
+  applyMembership(c.targetId,c.ids,c.scopes,c.operation,c.sourceId,c.reason,c.id);
+ }
+  affected.forEach(p=>{
+    if(c.changeType==='ECR'){
+    if(p.baseline)p.baselineHistory.push(clone(p.baseline));p.version+=1;
+    if(p.baseline){p.baseline={...clone(p.baseline),id:uid('BASE'),version:p.version,at:stamp(),actor:CONTEXT.currentUser,source:c.ecrId}}
+    const trace=makeReq(uid('REQ'),'ECR变更追溯：'+p.title,{source:'manual',manualCategory:'other',sourceDetails:{sourceDetail:c.ecrId+' · '+c.reason},sourceId:c.ecrId,line:p.line,product:p.product,owner:p.owner,assignment:'manual',kind:p.kind,status:'assigned',packageId:p.id,description:c.reason,original:c.reason,analysis:'立项后设计变更，规格书与需求池同步留痕。',scope:c.reason,acceptance:'按 ECR 审批结果更新资料并验证。',createdAt:stamp(),feedbackIds:[],feedbackFlow:null});state.requirements.push(trace);
+    if(p.external.plan)p.external.plan.scopeVersion=p.version;if(p.external.project)p.external.project.scopeVersion=p.version;
+    state.syncLogs.push({id:uid('SYNC'),packageId:p.id,target:'project',op:'ecr',status:'success',at:stamp(),detail:c.ecrId+' 已同步需求记录与规格书版本 V'+p.version});
+    audit('package',p.id,'确认 ECR 并同步资料',c.ecrId+'；规格书与需求池更新至 V'+p.version+'；新增追溯 '+trace.id);
+   }else{invalidateForChange(p,c.impact);audit('package',p.id,'确认范围变更',c.id+'；新版本 V'+p.version+'，需完成受影响关口复审')}
+  });c.status='confirmed';c.confirmedAt=stamp();c.confirmer=CONTEXT.currentUser;commit();
+}
+function cancelChange(id){
+ const c=state.changes.find(x=>x.id===id);if(!c||c.status!=='pending')fail('该变更已处理');
+ c.status='cancelled';c.cancelledAt=stamp();audit('package',c.packageId,'取消待确认变更',c.id+'；原批准范围保持不变');
+ c.ids.forEach(id=>audit('requirement',id,'取消待确认变更',c.id+'；保留当前状态与去向'));commit();
+}
+// 我的待办只管理尚未完成业务分配的需求；人员分派不代表需求已分配出去。
+const isMyPoolRequirement=r=>r.owner===CONTEXT.currentUser&&!r.packageId&&!hasPomAssignment(r)&&!['hold','closed'].includes(r.status);
+function getTasks(){
+ return state.requirements.filter(isMyPoolRequirement).map(r=>{
+  let category='analysis',label='待分析',action='分析需求';
+  if(pendingMembership(r.id)){category='allocation';label='分配待确认';action='查看分配进展'}
+  else if(r.kind==='transaction'){category='transaction';label='待纳入部门 POM';action='关联部门 POM'}
+  else if(isLocalRequirement(r)){category='local';label='待处理需求';action='分配或处理需求'}
+  return {id:'task-'+r.id,type:'requirement',entityId:r.id,title:r.title,line:r.line,product:r.product,owner:r.owner,due:r.desired,level:r.level,category,label,action,source:sourceLabel(r)};
+ }).sort((a,b)=>String(a.due).localeCompare(String(b.due)));
+}
+// 开发包的评审、资料与交付提醒独立派生，不计入需求池的待办数量。
+function getPackageTasks(){
+ const tasks=[];
+ state.packages.forEach(p=>{
+  if(p.owner!==CONTEXT.currentUser||!['active','draft'].includes(p.status))return;
+  let category='review',label='待发起评审',action='准备评审';
+  const g=currentGate(p);
+  if(allPassed(p)){if(p.external.project&&p.external.project.syncStatus==='error'){category='sync';label='同步异常';action='重试同步'}else if(p.external.project&&p.external.project.status==='complete'&&members(p).some(r=>!r.fulfilled)){category='accept';label='待确认实现';action='验收需求'}else return}
+  else if(p.gates[g].status==='reviewing'){label='评审进行中';action='记录结论'}
+  else if(p.gates[g].status==='conditional'){category='materials';label='待完成整改';action='跟进整改'}
+  else if(materialMissing(p,g).length){category='materials';label='待补评审资料';action='补充资料'}
+  tasks.push({id:'task-'+p.id,type:'package',entityId:p.id,title:p.title,line:p.line,product:p.product,owner:p.owner,due:p.desired,level:p.level,category,label,action,source:GATES[g]});
+ });
+ return tasks.sort((a,b)=>String(a.due).localeCompare(String(b.due)));
+}
+const overdue=x=>!!x.due&&x.due<CONTEXT.today;
+/* Presentation: every view is derived from the same local state. */
+const btn=(label,action,attrs,cls,icon)=>'<button type="button" class="btn '+(cls||'')+'" data-action="'+action+'" '+(attrs||'')+'>'+(icon?I(icon):'')+label+'</button>';
+const link=(label,action,attrs)=>'<button type="button" class="link" data-action="'+action+'" '+(attrs||'')+'>'+label+'</button>';
+const attrs=(id,type)=>'data-id="'+e(id)+'"'+(type?' data-type="'+type+'"':'');
+const opt=(value,label,selected)=>'<option value="'+e(value)+'"'+(String(value)===String(selected)?' selected':'')+'>'+e(label)+'</option>';
+function options(map,selected,empty){return (empty!==undefined?opt('',empty,selected):'')+Object.entries(map).map(([k,v])=>opt(k,v,selected)).join('')}
+const userOptions=(selected,empty)=>options(Object.fromEntries(CONTEXT.users.map(u=>[u.id,u.name+' · '+u.role])),selected,empty);
+const lineOptions=(selected,empty)=>options(Object.fromEntries(CONTEXT.lines.map(l=>[l.id,l.name])),selected,empty);
+const productOptions=(selected,empty)=>options(Object.fromEntries(CONTEXT.products.map(p=>[p.id,p.name])),selected,empty);
+const avatar=id=>'<span class="avatar">'+e(userName(id).slice(-2))+'</span><span>'+e(userName(id))+'</span>';
+const statusBadge=s=>badge(PACKAGE_STATUS[s]||s,s==='active'?'blue':s==='hold'?'orange':s==='closed'?'':'');
+function packageFlowStatus(p){
+ if(p.status==='hold'||p.external?.project?.status==='paused')return '挂起';
+ if(p.status==='closed'||['cancelled','production'].includes(p.external?.project?.status))return p.external?.project?.status==='production'?'已完成':'需求终止';
+ if(p.gates.some(g=>['reviewing','conditional','rework'].includes(g.status)))return '评审中';
+ const project=p.external?.project;
+ if(project?.status==='complete')return members(p).length&&members(p).every(r=>r.fulfilled)?'已完成':'待验收';
+ if(['initiated','doing'].includes(project?.status))return '开发中';
+ if(project?.status==='pending'||allPassed(p))return '待立项';
+ return '规划中';
+}
+function transactionFlowStatus(r){
+ const tp=txPkgById(r.transactionPackageId);
+ return POM_PROGRESS[tp?.status||r.transaction?.status]||'规划中';
+}
+function requirementFlowStatus(r){
+ if(r.kind==='transaction')return transactionFlowStatus(r);
+ if(r.packageId){const p=pkgById(r.packageId);if(p)return packageFlowStatus(p)}
+ if(r.status==='hold')return '挂起';
+ if(r.status==='closed')return '需求终止';
+ return overdue(r)?'已逾期':'待办';
+}
+const flowBadge=status=>badge(status,status==='已完成'?'green':['已逾期','挂起','待验收'].includes(status)?'orange':status==='需求终止'?'':'blue');
+function taskManagementStatus(o,type){
+ if(['hold','closed'].includes(o.status))return o.status;
+ // 分配表示需求已纳入开发方案或部门 POM，与人员分派、下游执行进度无关。
+ if(destinationCode(o,type)!=='pool')return 'assigned';
+ return o.status==='active'?'active':'pending';
+}
+function destinationCode(o,type){
+ const development=type==='package'?o:pkgById(o.packageId);
+ if(development&&isDevelopmentKind(development.kind))return 'development';
+ return hasPomAssignment(o)?'transaction':'pool';
+}
+const taskDestination=(o,type)=>DESTINATION[destinationCode(o,type)];
+function taskStateBadge(o,type){
+ const status=type==='package'?packageFlowStatus(o):requirementFlowStatus(o);
+ return flowBadge(status);
+}
+function taskStatusCell(o,type,linked){
+ const destination=taskDestination(o,type);
+ const route=linked&&o.packageId?link(destination,'detail',attrs(o.packageId,'package')+' title="'+e(o.packageId)+'"'):e(destination);
+ const txHint=o.transaction&&(o.transaction.department||o.transaction.pomId)?' title="'+e((o.transaction.department||'待规划承接')+' · '+(o.transaction.pomId||'POM尚未创建'))+'"':'';
+ return taskStateBadge(o,type)+'<div class="meta"'+(hasPomAssignment(o)?txHint:'')+'>'+route+'</div>';
+}
+function compareCreatedDescending(a,b){
+ const time=o=>{const value=Date.parse(o.createdAt);return Number.isFinite(value)?value:-Infinity};
+ return time(b)-time(a)||String(b.id).localeCompare(String(a.id),undefined,{numeric:true});
+}
+function creationTimeCell(r){
+ if(!Number.isFinite(Date.parse(r.createdAt)))return '<span class="muted">未记录</span>';
+ return e(dateText(r.createdAt))+'<div class="meta">'+e(timeText(r.createdAt).slice(11))+'</div>';
+}
+const levelBadge=level=>'<span class="priority"><i class="dot '+(level==='L1'||level==='L2'?'orange':'blue')+'"></i>'+e(DEMAND_LEVEL[level]||DEMAND_LEVEL.L3)+'</span>';
+const gateColor=s=>s==='passed'?'green':s==='reviewing'?'blue':['conditional','rework'].includes(s)?'orange':s==='rejected'?'red':'';
+const entityTitle=(o,type)=>'<div class="title-cell"><span class="type-icon '+(type==='package'?'purple':'')+'">'+I(type==='package'?'Layers':o.kind==='transaction'?'ListChecks':'FileText')+'</span><div><button class="title-link" data-action="detail" '+attrs(o.id,type)+'>'+e(o.title)+'</button><div class="meta">'+e(o.id)+'<span>·</span>'+e(type==='package'?kindLabel(o):sourceLabel(o))+'</div></div></div>';
+const dueHtml=d=>'<span class="'+(d&&d<CONTEXT.today?'text-orange':'muted')+'">'+e(dateText(d))+'</span>'+(d&&d<CONTEXT.today?'<div class="meta text-orange">已逾期</div>':'');
+const detailLink=(o,type)=>o?link(e(o.title),'detail',attrs(o.id,type)):'<span class="muted">尚未关联</span>';
+function pomLink(r,full){
+ const t=r?.transaction||{};if(!t.pomId)return '<span class="muted">开发中自动创建 POM</span>';
+ const label=full?t.pomId+' · '+(t.transactionName||r.title+'处理事务'):t.pomId;
+ const closed=['已完成','需求终止'].includes(t.status),url='pom-transaction-detail.html?pomId='+encodeURIComponent(t.pomId)+'&requirementId='+encodeURIComponent(r.id)+'&name='+encodeURIComponent(t.transactionName||r.title+'处理事务')+'&owner='+encodeURIComponent(userName(t.handler||t.owner||r.owner))+'&startAt='+encodeURIComponent(t.startedAt||r.createdAt||'')+'&plannedEnd='+encodeURIComponent(t.due||r.desired||'')+'&actualEnd='+encodeURIComponent(t.actualEnd||r.acceptedAt||'')+'&closed='+encodeURIComponent(closed?'已关闭':'未关闭')+'&businessStatus='+encodeURIComponent(t.status||'开发中');
+ return '<a class="link" href="'+e(url)+'" target="_blank" rel="noopener" title="跳转到 POM 事务">'+e(label)+' ↗</a>';
+}
+function miniGates(p){return '<div class="mini-strip">'+p.gates.map((g,i)=>'<span class="'+(g.status==='passed'?'done':i===currentGate(p)?'current':'')+'" title="'+e(GATES[i]+'：'+REVIEW_STATUS[g.status])+'"></span>').join('')+'</div><div class="meta">'+(allPassed(p)?'三关口已通过':e(GATES[currentGate(p)]+' · '+REVIEW_STATUS[p.gates[currentGate(p)].status]))+'</div>'}
+function render(){
+ const focused=document.activeElement,focusId=focused&&focused.id,selection=focused&&focused.selectionStart;
+ view.selected.forEach(id=>{if(!canJoinPackage(reqById(id)))view.selected.delete(id)});
+ view.txSelected.forEach(id=>{if(!canJoinTransactionPackage(reqById(id)))view.txSelected.delete(id)});
+ const tasks=getTasks(),packageTasks=getPackageTasks();
+ const stats=[['analysis','待我分析',tasks.filter(t=>t.category==='analysis').length,'Inbox','todo','查看我的待办中待分析的需求'],['review','待我评审',packageTasks.filter(t=>t.category==='review').length,'ClipboardCheck','packages','查看开发需求包中的评审事项'],['materials','待补资料',packageTasks.filter(t=>t.category==='materials').length,'FileClock','packages','查看开发需求包中的资料与整改事项'],['overdue','逾期事项',tasks.filter(overdue).length,'Clock3','todo','查看我的待办中逾期的未分配需求']];
+ ROOT.querySelector('#stats').innerHTML=stats.map(([key,label,count,icon,tab,hint])=>'<button class="stat '+(view.tab===tab&&view.taskFilter===key?'active':'')+'" data-action="stat" data-value="'+key+'" title="'+e(hint)+'" aria-pressed="'+(view.tab===tab&&view.taskFilter===key)+'"><span class="stat-label">'+label+'</span><span class="stat-value"><strong>'+count+'</strong><small>项</small></span><span class="stat-icon '+(key==='overdue'?'orange':'')+'">'+I(icon)+'</span></button>').join('');
+ const tabs=[['todo','我的待办',tasks.length],['packages','开发需求包',state.packages.length],['transactions','事务需求',state.transactionPackages.length+state.requirements.filter(r=>r.kind==='transaction'&&!r.transactionPackageId).length],['requirements','全部需求明细',state.requirements.length]];
+ ROOT.querySelector('#main-tabs').innerHTML=tabs.map(([key,title,n])=>'<button class="tab '+(view.tab===key?'active':'')+'" data-action="tab" data-value="'+key+'"'+(key==='todo'?' title="由我负责、未分配、未关闭且未挂起的需求"':key==='requirements'?' title="需求总清单：包含全部负责人和全部状态，按创建时间从新到旧显示"':'')+' aria-selected="'+(view.tab===key)+'">'+title+'<span class="count">'+n+'</span></button>').join('');
+ ROOT.querySelector('#scope-label').innerHTML=I('Users')+' 当前用户：'+e(userName(CONTEXT.currentUser));
+ const filter=(name,label,content)=>'<select class="filter" data-filter="'+name+'" aria-label="'+label+'">'+content+'</select>';
+ const txPackageMode=view.tab==='transactions';
+ ROOT.querySelector('#toolbar').innerHTML='<div class="search">'+I('Search')+'<input id="search-input" aria-label="'+(txPackageMode?'搜索事务包或明细':'搜索需求')+'" placeholder="'+(txPackageMode?'搜索事务包、需求明细或部门…':'搜索需求名称、编号或产品…')+'" value="'+e(view.search)+'"></div>'+
+ (txPackageMode?filter('owner','负责人筛选',userOptions(view.owner,'全部负责人'))+filter('status','事务状态筛选',options(POM_PROGRESS,view.status,'全部状态')):filter('line','产品线筛选',lineOptions(view.line,'全部产品线'))+filter('owner','负责人筛选',userOptions(view.owner,'全部负责人'))+filter('source','来源筛选',options(SOURCE,view.source,'全部来源'))+
+ (view.tab!=='todo'?filter('status',view.tab==='packages'?'需求包状态筛选':view.tab==='transactions'?'事务状态筛选':'需求状态筛选',options(view.tab==='packages'?PACKAGE_FLOW_STATUS:view.tab==='transactions'?POM_PROGRESS:ALL_FLOW_STATUS,view.status,'全部状态')):'')+
+ (view.tab!=='todo'?filter('kind','需求类型筛选',options(view.tab==='packages'?{new:KIND.new,iteration:KIND.iteration}:KIND,view.kind,'全部类型')):'')+
+ (view.tab==='packages'?filter('gate','评审关口筛选',options({0:GATES[0],1:GATES[1],2:GATES[2]},view.gate,'全部关口')):''))+
+ '<span class="spacer"></span>'+(view.tab==='requirements'?btn('归入开发需求包'+(view.selected.size?' · '+view.selected.size:''),'group','','', 'GitMerge'):view.tab==='transactions'?btn('合并为事务包'+(view.txSelected.size?' · '+view.txSelected.size:''),'tx-package','','', 'GitMerge'):'');
+ const hasFilter=view.search||view.line||view.owner||view.source||view.status||view.kind||view.gate!==''||view.taskFilter;
+ ROOT.querySelector('#filter-note').innerHTML=hasFilter?'<div class="active-filter">'+I('Filter')+'<span>'+(view.taskFilter?e((stats.find(s=>s[0]===view.taskFilter)||[])[1]):'已应用筛选条件')+'</span>'+link('清除筛选','clear-filter')+'</div>':'';
+ const transactionEntries=txPackageMode?[...state.transactionPackages.map(entity=>({entryType:'package',entity})),...state.requirements.filter(r=>r.kind==='transaction'&&!r.transactionPackageId).map(entity=>({entryType:'single',entity}))].sort((a,b)=>{const status=x=>x.entryType==='package'?x.entity.status:x.entity.transaction?.status,priority=x=>status(x)==='待承接'?0:1,created=x=>Date.parse(x.entity.createdAt)||0;return priority(a)-priority(b)||created(b)-created(a)||String(a.entity.id).localeCompare(String(b.entity.id),undefined,{numeric:true})}):[];
+ let rows=view.tab==='todo'?tasks:view.tab==='packages'?state.packages:view.tab==='transactions'?transactionEntries:state.requirements;
+ const reminderPackageIds=new Set(packageTasks.filter(t=>t.category===view.taskFilter).map(t=>t.entityId));
+ rows=rows.filter(r=>{if(txPackageMode){const o=r.entity,memberText=r.entryType==='package'?txMembers(o).map(x=>x.title+' '+x.id+' '+(x.transaction?.status||'')).join(' '):'';const text=(o.title+' '+o.id+' '+(o.department||o.transaction?.department||'')+' '+memberText).toLowerCase();const owner=r.entryType==='package'?o.owner:effectiveOwner(o),status=POM_PROGRESS[r.entryType==='package'?o.status:o.transaction?.status]||'规划中';return (!view.search||text.includes(view.search.toLowerCase()))&&(!view.owner||owner===view.owner)&&(!view.status||status===view.status)}const owner=view.tab==='todo'||view.tab==='packages'?r.owner:effectiveOwner(r);const status=view.tab==='requirements'?requirementFlowStatus(r):view.tab==='packages'?packageFlowStatus(r):r.status;const kind=view.tab==='requirements'?requirementKind(r):r.kind;const matchesReminder=!view.taskFilter||(view.tab==='todo'?(view.taskFilter==='overdue'?overdue(r):r.category===view.taskFilter):view.tab==='packages'?reminderPackageIds.has(r.id):true);return (!view.search||(r.title+' '+(r.entityId||r.id)+' '+r.product).toLowerCase().includes(view.search.toLowerCase()))&&(!view.line||r.line===view.line)&&(!view.owner||owner===view.owner)&&(!view.source||sourceCode(view.tab==='todo'?reqById(r.entityId):r)===view.source)&&(!view.status||status===view.status)&&(!view.kind||kind===view.kind)&&(view.gate===''||view.tab!=='packages'||currentGate(r)===Number(view.gate))&&matchesReminder});
+ if(view.tab==='requirements')rows.sort(compareCreatedDescending);
+ const total=rows.length,pageSize=8,maxPage=Math.max(1,Math.ceil(total/pageSize));view.page=Math.min(view.page,maxPage);
+ rows=rows.slice((view.page-1)*pageSize,view.page*pageSize);
+ let heads='',body='';
+ if(view.tab==='todo'){
+  heads='<th>事项 / 需求名称</th><th>产品线</th><th>状态 / 去向</th><th>需求等级</th><th>期望完成</th><th class="right">下一步</th>';
+  body=rows.map(t=>{const o=t.type==='package'?pkgById(t.entityId):reqById(t.entityId);return '<tr><td>'+entityTitle(o,t.type)+'</td><td>'+e(lineName(t.line))+'<div class="meta">'+e(t.product||'新品待定义')+'</div></td><td>'+taskStatusCell(o,t.type)+'</td><td>'+levelBadge(t.level)+'</td><td>'+dueHtml(t.due)+'</td><td class="right">'+link(e(t.action)+' '+I('ArrowUpRight'),'task',attrs(t.entityId,t.type)+' data-category="'+t.category+'" title="'+e(t.label+' · '+t.source)+'"')+'</td></tr>'}).join('');
+ }else if(view.tab==='packages'){
+  heads='<th>开发需求包</th><th>产品经理</th><th>需求 / 反馈</th><th>评审进展</th><th>需求包 / 项目状态</th><th class="right">操作</th>';
+  body=rows.map(p=>'<tr><td>'+entityTitle(p,'package')+'<div class="meta indent">'+e(lineName(p.line))+' · '+e(p.targetVersion)+'</div></td><td><span class="row">'+avatar(p.owner)+'</span></td><td><strong>'+members(p).length+'</strong> 条需求<div class="meta">'+feedbackCount(members(p))+' 条反馈（去重）</div></td><td>'+miniGates(p)+'</td><td>'+flowBadge(packageFlowStatus(p))+'<div class="meta">'+e(p.external.project?(p.external.project.syncStatus==='error'?'项目同步异常':PROJECT_STATUS[p.external.project.status]):'尚未准入')+'</div></td><td class="right">'+link('查看详情','detail',attrs(p.id,'package'))+'</td></tr>').join('');
+ }else if(txPackageMode){
+  heads='<th class="check-col"><input type="checkbox" data-action="tx-select-all" aria-label="选择本页可合并事务"></th><th>事务 / 需求明细</th><th>承接部门 / 负责人</th><th>明细与处理进度</th><th>期限 / POM</th><th>状态</th><th class="right">操作</th>';
+  body=rows.map(entry=>{if(entry.entryType==='package'){const p=entry.entity,ms=txMembers(p),packageStatus=POM_PROGRESS[p.status]||'开发中';return '<tr><td class="check-col"></td><td><div class="title-cell"><span class="type-icon purple">'+I('ListChecks')+'</span><div><button class="title-link" data-action="detail" '+attrs(p.id,'transactionPackage')+'>'+e(p.title)+'</button><div class="meta">'+e(p.id)+' · 已合并事务包</div></div></div></td><td>'+e(p.department)+'<div class="meta">'+e(userName(p.owner))+'</div></td><td><strong>统一进度：'+e(packageStatus)+'</strong>'+ms.map(r=>'<div class="meta">'+link(e(r.id+' · '+r.title),'detail',attrs(r.id,'requirement'))+' · 随包管理</div>').join('')+'</td><td>'+dateText(p.due)+'<div class="meta">'+ms.map(r=>pomLink(r,false)).join(' · ')+'</div></td><td>'+flowBadge(packageStatus)+'</td><td class="right">'+link('查看事务包','detail',attrs(p.id,'transactionPackage'))+'</td></tr>'}const r=entry.entity,t=r.transaction||{},txStatus=POM_PROGRESS[t.status]||'规划中';return '<tr><td class="check-col"><input type="checkbox" data-tx-select="'+r.id+'" aria-label="选择 '+e(r.title)+'" '+(view.txSelected.has(r.id)?'checked':'')+'></td><td>'+entityTitle(r,'requirement')+'<div class="meta indent">未合并 · 单条事务</div></td><td>'+e(t.department||'规划中，待明确承接')+'<div class="meta">'+e(t.owner?userName(t.owner):'尚未流转负责人')+'</div></td><td>'+e(txStatus)+'<div class="meta">'+e(t.criteria||r.acceptance||'规划中，待补充完成标准')+'</div></td><td>'+dateText(t.due)+'<div class="meta">'+pomLink(r,true)+'</div></td><td>'+flowBadge(txStatus)+'</td><td class="right">'+link('处理事务','transaction',attrs(r.id,'requirement'))+'</td></tr>'}).join('');
+ }else{
+  const trans=view.tab==='transactions';
+  heads='<th class="check-col"><input type="checkbox" data-action="'+(trans?'tx-select-all':'select-all')+'" aria-label="选择本页可合并需求"></th><th>需求名称</th><th>产品线 / 负责人</th><th>'+(trans?'承接与期限':'类型 / 来源')+'</th>'+(trans?'<th>事务包</th>':'')+'<th>状态 / 去向</th>'+(!trans?'<th aria-sort="descending" title="按创建时间从新到旧；同一时间按需求编号倒序">创建时间 ↓</th>':'')+'<th class="right">操作</th>';
+  body=rows.map(r=>{const tp=trans&&txPkgById(r.transactionPackageId);return '<tr><td class="check-col"><input type="checkbox" '+(trans?'data-tx-select':'data-select')+'="'+r.id+'" aria-label="选择 '+e(r.title)+'" '+((trans?view.txSelected:view.selected).has(r.id)?'checked ':'')+(!(trans?canJoinTransactionPackage(r):canJoinPackage(r))?'disabled title="当前状态或归属不可选择"':'')+'></td><td>'+entityTitle(r,'requirement')+'</td><td>'+e(lineName(r.line))+'<div class="meta">'+e(userName(effectiveOwner(r)))+(r.assignment==='manual'?' · 手动指定':'')+'</div></td><td>'+(trans?e((r.transaction||{}).department||'待承接')+'<div class="meta">'+dateText((r.transaction||{}).due)+' · POM：'+e(POM_PROGRESS[(r.transaction||{}).status]||'待承接')+'</div>':badge(kindLabel(r),r.kind==='new'?'purple':r.kind==='iteration'?'blue':'')+'<div class="meta">'+e(sourceLabel(r))+'</div>')+'</td>'+(trans?'<td>'+(tp?'<strong>'+e(tp.title)+'</strong><div class="meta">'+e(tp.id)+' · '+txMembers(tp).length+' 条</div>':'<span class="muted">单条事务</span>')+'</td>':'')+'<td>'+taskStatusCell(r,'requirement',true)+'</td>'+(!trans?'<td class="nowrap">'+creationTimeCell(r)+'</td>':'')+'<td class="right">'+link(trans?'处理事务':'查看详情',trans?'transaction':'detail',attrs(r.id,'requirement'))+'</td></tr>'}).join('');
+ }
+ const packageEntryCount=txPackageMode?transactionEntries.filter(x=>x.entryType==='package').length:0,looseEntryCount=txPackageMode?transactionEntries.filter(x=>x.entryType==='single').length:0;
+ ROOT.querySelector('#main-list').innerHTML=total?'<table><thead><tr>'+heads+'</tr></thead><tbody>'+body+'</tbody></table>':view.tab==='todo'&&!hasFilter?'<div class="empty">'+I('Inbox')+'<h3>暂无待处理需求</h3><p>当前没有需要你处理的未分配需求。已分配、挂起或关闭的记录可在“全部需求明细”中查看。</p>'+btn('查看全部需求明细','tab','data-value="requirements"')+'</div>':txPackageMode?'<div class="empty">'+I('ListChecks')+'<h3>暂无事务需求</h3><p>合并事务与未合并事务将在同一列表展示。</p></div>':'<div class="empty">'+I('Search')+'<h3>暂无符合条件的记录</h3><p>试试其他关键词，或清除筛选查看全部需求。</p>'+btn('清除筛选','clear-filter')+'</div>';
+ const selectedCount=view.tab==='transactions'?view.txSelected.size:view.selected.size;
+ ROOT.querySelector('#list-footer').innerHTML='<span>共 '+total+' '+(txPackageMode?'条展示记录':'条')+(txPackageMode?' · '+packageEntryCount+' 个事务包 · '+looseEntryCount+' 条未合并事务':'')+(selectedCount?' · 已选 '+selectedCount+' 条需求':'')+'</span><div class="row">'+btn(I('ChevronLeft'),'page','data-value="-1" aria-label="上一页" '+(view.page===1?'disabled':''),'icon-only')+'<span>'+view.page+' / '+maxPage+'</span>'+btn(I('ChevronRight'),'page','data-value="1" aria-label="下一页" '+(view.page===maxPage?'disabled':''),'icon-only')+'</div>';
+ if(focusId==='search-input'){const input=ROOT.querySelector('#search-input');input.focus();try{input.setSelectionRange(selection,selection)}catch(err){}}
+}
+function openDetail(type,id,tab){
+ if(view.detail){view.detail.scroll=ROOT.querySelector('.drawer-body')?.scrollTop||0;view.detailStack.push(clone(view.detail))}
+ view.detail={type,id,tab:tab||'overview',gate:type==='package'?currentGate(pkgById(id)):0,scroll:0};
+ renderDrawer();const d=ROOT.querySelector('#detail-drawer');if(!d.open)d.showModal();
+}
+function closeDetail(){ROOT.querySelector('#detail-drawer').close();view.detail=null;view.detailStack=[]}
+function backDetail(){if(view.detailStack.length){view.detail=view.detailStack.pop();renderDrawer()}else closeDetail()}
+function kv(label,value){return '<div><dt>'+label+'</dt><dd>'+value+'</dd></div>'}
+function history(type,id){const records=state.audit.filter(a=>a.entityType===type&&a.entityId===id).slice().reverse();return records.length?'<div class="timeline">'+records.map(a=>'<div class="timeline-item"><div class="row"><strong>'+e(a.action)+'</strong><span class="spacer"></span><span class="muted">'+timeText(a.at)+'</span></div><p>'+e(a.detail)+'</p><span class="meta">'+e(userName(a.actor))+'</span></div>').join('')+'</div>':'<div class="muted">尚无新增操作记录。创建、分派和后续业务操作将在此保留。</div>'}
+function entityActions(o,type){
+ const a=attrs(o.id,type);
+ if(o.status==='closed')return btn('重新开启','lifecycle',a+' data-mode="reopen"','','RotateCcw');
+ if(o.status==='hold')return btn('恢复推进','lifecycle',a+' data-mode="resume"','primary','Play')+btn('关闭','lifecycle',a+' data-mode="close"');
+ const pending=type==='requirement'&&pendingMembership(o.id);
+ if(pending)return btn('取消归属变更','cancel-change',attrs(pending.id)) +btn('调整负责人','assign',a,'','Users');
+ return btn('调整负责人','assign',a,'','Users')+btn('挂起','lifecycle',a+' data-mode="hold"','','Pause')+btn(type==='requirement'&&isLocalRequirement(o)?'在需求池关闭':'关闭','lifecycle',a+' data-mode="close"');
+}
+function renderRoutingOrigin(r){
+ const original=r.originSnapshot;if(!original)return '';
+ return '<section class="card"><details><summary>首次分配前的需求内容（只读）</summary><dl class="kv">'+kv('分配前类型',e(kindLabel(original)))+kv('原负责人',e(userName(original.owner)))+kv('保留时间',timeText(original.at))+'</dl><h4>原需求范围</h4><p class="paragraph">'+e(original.scope)+'</p><h4>原验收要求</h4><p class="paragraph">'+e(original.acceptance)+'</p>'+(original.localProgress?.result?'<p class="paragraph">原处理进展：'+e(original.localProgress.result)+'</p>':'')+'</details></section>';
+}
+function renderRequirement(r){
+ const p=pkgById(r.packageId),txp=r.transactionPackageId?txPkgById(r.transactionPackageId):null,local=isLocalRequirement(r),progress=r.localProgress||{},pending=pendingMembership(r.id),editable=!pending&&(!local||!['hold','closed'].includes(r.status));
+ const tx=r.transaction||{},txStatus=POM_PROGRESS[txp?.status||tx.status]||'规划中',txVersions=tx.versions||[],txVersion=tx.currentVersion||0;
+ const txActions=txp?btn('查看事务包','detail',attrs(txp.id,'transactionPackage'),'small'):btn('更新事务','transaction',attrs(r.id),'small')+(['待承接','开发中','待验收'].includes(tx.status)?btn('升级需求版本','tx-version',attrs(r.id),'small','Layers'):'');
+ const txVersionHistory=txVersions.length?'<details><summary>查看需求版本记录（当前 V'+txVersion+'）</summary>'+txVersions.slice().reverse().map(v=>'<div class="review-row"><div class="row"><strong>V'+v.version+' · '+e(v.name)+'</strong><span class="spacer"></span><span class="muted">'+timeText(v.at)+'</span></div><p class="paragraph">'+e(v.content)+'</p><div class="meta">'+e(userName(v.actor))+' · '+e(v.reason||'版本冻结')+'</div></div>').join('')+'</details>':'';
+ return (pending?'<div class="notice warn">归属变更 '+e(pending.id)+' 待确认，当前状态与去向保持不变。请先在 '+detailLink(pkgById(pending.packageId),'package')+' 的“变更与记录”中确认，或取消本次申请。</div>':local?'<div class="notice">先保存在需求池，可归入开发需求包、转入部门 POM，或在需求池内处理并关闭。</div>':'')+
+ '<div class="grid2"><section class="card"><h3>需求信息</h3><dl class="kv">'+kv('产品线',e(lineName(r.line)))+kv('当前负责人',e(userName(effectiveOwner(r))))+kv('需求来源',badge(sourceLabel(r),'blue'))+(r.initialKind?kv('创建时类型',e(KIND[r.initialKind]||KIND.unclassified)):'')+kv('需求类型',e(kindLabel(r)))+kv('状态 / 去向',taskStatusCell(r,'requirement',true))+kv('产品 / 型号',e(r.product||'未关联具体产品'))+kv('期望时间',dateText(r.desired))+kv('需求等级',levelBadge(r.level))+kv('当前关联',p?detailLink(p,'package'):hasPomAssignment(r)?(r.transaction?.pomId?pomLink(r,true):e('POM '+(r.transaction?.status||'规划中')+'（尚未创建事务）')):'尚未分配出去')+(r.kind==='optimization'?kv('优化方向',e(OPTIMIZATION_AREAS[r.optimizationArea]||'待明确')):'')+'</dl><p class="meta">'+(r.assignment==='manual'?'负责人由手动指定；产品线变化不会覆盖此设置。':'按产品线自动分派，缺少映射时进入待分派。')+'</p></section><section class="card"><div class="section-head"><h3>'+(local?(r.kind==='optimization'?'当前问题与优化目标':'需求背景与处理目标'):'产品侧分析')+'</h3>'+(editable?btn('编辑','edit-requirement',attrs(r.id),'small','Pencil'):'')+'</div><p class="paragraph">'+e(r.analysis||'尚未补充分析')+'</p><h4>'+(local?'处理范围与完成标准':'纳入范围与验收要求')+'</h4><p class="paragraph">'+e(r.scope)+'</p><div class="notice">'+e(r.acceptance||'待补充验收要求')+'</div>'+(!local?'<div class="meta">五维评分：'+r.scores.map((s,i)=>['用户价值','业务影响','可行性','竞争影响','库存影响'][i]+' '+(s===''?'未评分':e(s))).join(' · ')+'</div>':'')+'</section></div>'+ 
+ '<section class="card"><div class="section-head"><h3>原始来源与证据</h3>'+badge('原始来源只读')+'</div><dl class="kv">'+kv('来源编号',e(r.sourceId))+kv('原提报信息',e(r.sourceNote))+kv('关联反馈',e(r.feedbackIds.join('、')||'无原始反馈'))+sourceInfo(r)+'</dl><blockquote class="paragraph">'+e(r.original||r.description)+'</blockquote><p class="paragraph muted">'+e(r.evidence)+'</p></section>'+
+ (local?'<section class="card"><h3>处理进展与验收</h3><dl class="kv">'+kv('承接部门',e(progress.department||'待补充'))+kv('池内处理进度',e(r.status==='hold'?REQUIREMENT_STATUS.hold:r.status==='closed'?(r.fulfilled?'已完成':REQUIREMENT_STATUS.closed):LOCAL_PROGRESS[progress.status]||'待处理'))+kv('进展 / 完成证据',e(progress.result||'待处理'))+(r.acceptedAt?kv('验收确认',e(userName(r.acceptedBy))+' · '+timeText(r.acceptedAt)):'')+'</dl></section>':'')+
+ (r.kind==='transaction'?'<section class="card"><div class="section-head"><h3>事务承接</h3><div class="row">'+txActions+'</div></div>'+(txp?'<div class="notice">本明细随事务包统一承接和管理，不单独改变承接状态。</div>':'')+'<dl class="kv">'+kv('事务组织',txp?e(txp.title)+' · '+e(txp.id):'单条事务')+kv('POM 事务状态',e(txStatus))+kv('需求版本',txVersion?'V'+txVersion:'规划草稿')+kv('需求名称',e(tx.planningName||r.title))+kv('需求内容',e(tx.planningContent||r.description||r.scope))+kv('承接部门 / 负责人',e((txp?.department||tx.department)||'规划中，待明确')+' / '+e((txp?.owner||tx.owner)?userName(txp?.owner||tx.owner):'尚未流转'))+kv('具体处理人',e(tx.handler?userName(tx.handler):'开发中指定'))+kv('完成期限',dateText(txp?.due||tx.due))+kv('POM 编号 / 事务名称',tx.pomId?pomLink(r,true):e('开发中由系统自动创建并回写'))+kv('完成标准',e(tx.criteria||r.acceptance||'规划中待补充'))+kv('处理结果',e(tx.result||txp?.result||'未登记结果'))+'</dl>'+txVersionHistory+'</section>':'')+
+ renderRoutingOrigin(r)+(r.status==='hold'?'<div class="notice warn">挂起原因：'+e(r.holdReason)+'<br>恢复条件：'+e(r.resumeCondition)+' · 复查时间：'+dateText(r.reviewDate)+'</div>':'')+
+ (r.status==='closed'?'<div class="notice">关闭结果：'+e(r.closeReason)+' · '+e(r.closeNote)+'</div>':'')+
+ '<section class="card"><h3>处理记录</h3>'+history('requirement',r.id)+'</section>';
+}
+function renderPackageOverview(p){
+ const rs=members(p);
+ return '<div class="grid2"><section class="card"><div class="section-head"><h3>开发目标</h3>'+btn('编辑概况','edit-package',attrs(p.id),'small','Pencil')+'</div><p class="paragraph">'+e(p.description)+'</p><dl class="kv">'+kv('目标产品',e(p.product||'新品待定义'))+kv('主要产品线',e(lineName(p.line)))+kv('当前 / 目标版本',e(p.currentVersion||'新品')+' → '+e(p.targetVersion))+kv('需求来源',e(sourceLabel(p)))+kv('需求期望时间',dateText(p.desired))+kv('需求等级',levelBadge(p.level))+'</dl></section><section class="card"><h3>本次开发范围</h3><p class="paragraph">'+e(p.scope)+'</p><div class="notice">'+I('Layers')+' 当前工作版本 V'+p.version+' · '+(p.baseline?'已冻结基线 '+e(p.baseline.id):'尚未冻结')+'</div><p class="meta">需求包产品经理负责整体推进；原提报人和条目负责人保留在来源记录中。</p><dl class="kv">'+sourceInfo(p)+'</dl></section></div>'+
+ '<section class="card"><div class="section-head"><div><h3>需求明细 <span class="muted">· '+rs.length+' 条</span></h3><p class="muted">关联原始反馈 '+feedbackCount(rs)+' 条，按来源编号去重</p></div><div class="row">'+btn('录入明细','create','data-package="'+p.id+'"','small','Plus')+btn('纳入已有需求','group','data-package="'+p.id+'"','small','GitMerge')+'</div></div>'+
+ (rs.length?'<div class="table-wrap"><table><thead><tr><th>需求条目</th><th>纳入范围 / 验收要求</th><th>需求来源</th><th class="right">归属操作</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+detailLink(r,'requirement')+'<div class="meta">'+e(r.id)+'</div></td><td><p class="paragraph">'+e(r.scope)+'</p><div class="meta">'+e(r.acceptance||'待明确验收')+'</div></td><td>'+e(sourceLabel(r))+'</td><td class="right">'+link('调整归属','move',attrs(r.id)+' data-package="'+p.id+'"')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">'+I('FolderOpen')+'<h3>先明确这次要解决的需求</h3><p>可以录入新需求，也可以把多条反馈需求归入本需求包。</p></div>')+'</section>';
+}
+function renderMaterials(p,g){
+ const cats=[...new Set(requiredDocs(p,g).concat(g===0?p.professionals:[]).concat(Object.keys(p.bindings[g])))];
+ return '<section class="card"><div class="section-head"><div><h3>本关口送审资料</h3><p class="muted">'+['仅立项报告：用于判断是否准入研发项目','产品规划书与适用设计说明：用于确认关键需求','立项报告、规划、项目说明及适用设计资料：通过时冻结版本'][g]+'</p></div>'+btn('添加补充资料','material',attrs(p.id)+' data-gate="'+g+'" data-category="other"','small','Upload')+'</div>'+
+ '<div class="table-wrap"><table><thead><tr><th>资料类别</th><th>当前引用版本</th><th>提供人 / 上传时间</th><th class="right">操作</th></tr></thead><tbody>'+cats.map(cat=>{const d=boundDoc(p,g,cat);return '<tr><td>'+e(DOC_TYPES[cat])+' '+(requiredDocs(p,g).includes(cat)?badge('必备'):badge('按需'))+'</td><td>'+(d?link(e(d.na?'不适用 · '+d.reason:d.fileName),'preview',attrs(d.id))+'<div class="meta">'+e(d.version)+' · '+(d.na?'保留原因':'模拟资料')+'</div>':badge('待补充','orange'))+'</td><td>'+(d?e(userName(d.provider))+'<div class="meta">'+timeText(d.uploadedAt)+'</div>':'—')+'</td><td class="right">'+link(d?'更新 / 引用':'补充资料','material',attrs(p.id)+' data-gate="'+g+'" data-category="'+cat+'"')+'</td></tr>'}).join('')+'</tbody></table></div><p class="meta">送审时锁定具体版本；后续更新资料不会改变历史评审快照。迭代可引用有效资料并补充差异说明。</p></section>';
+}
+function renderPackageReview(p){
+ const g=view.detail.gate??currentGate(p),round=lastRound(p,g),missing=materialMissing(p,g),blockers=reviewBlockers(p,g),s=p.gates[g].status;
+ let actions='';
+ if(s==='reviewing')actions=btn('记录意见','opinion',attrs(round.id),'','MessageSquare')+btn('撤回评审','withdraw',attrs(round.id))+btn('填写评审结论','conclusion',attrs(round.id),'primary','ClipboardCheck');
+ else if(s==='conditional')actions=btn('跟进放行条件','review-detail',attrs(round.id),'primary');
+ else if(s!=='passed')actions=btn(s==='unstarted'?'发起评审':'发起新一轮评审','start-review',attrs(p.id)+' data-gate="'+g+'"','primary','Send');
+ else actions=badge('本关口已通过','green');
+ const rounds=state.reviews.filter(r=>r.packageId===p.id&&r.gate===g).slice().reverse();
+ const stagePurpose=g===0?'只评审立项报告，确认是否准入研发项目':g===1?'确认关键需求；允许反复评审，本阶段不冻结全部需求':'确认立项并冻结当前需求版本；通过后才进入正式变更控制';
+ return '<div class="gate-track">'+GATES.map((name,i)=>'<button class="gate '+(g===i?'active':'')+'" data-action="gate" data-value="'+i+'"><span class="gate-num '+(p.gates[i].status==='passed'?'done':'')+'">'+(p.gates[i].status==='passed'?I('Check'):i+1)+'</span><span><strong>'+name+'</strong><small>'+e(REVIEW_STATUS[p.gates[i].status])+'</small></span></button>').join('')+'</div>'+
+ '<section class="card"><div class="section-head"><div><h3>'+GATES[g]+' '+badge(REVIEW_STATUS[s],gateColor(s))+'</h3><p class="muted">'+(g===0?'发起前补全产品规划必填字段；通过后同步规划与待立项项目':g===1?'聚焦关键需求，可通过新轮次反复确认':'通过时冻结需求，并更新原待立项项目')+'</p></div><div class="row wrap">'+actions+'</div></div>'+
+  '<div class="notice">'+e(stagePurpose)+'</div>'+
+ (missing.length?'<div class="notice warn">'+I('TriangleAlert')+' 尚缺 '+missing.map(c=>DOC_TYPES[c]).join('、')+'，补齐后可送审。</div>':'<div class="notice success">'+I('Check')+' 必备资料已齐备，发起时将保存送审版本快照。</div>')+
+  (g===1&&s==='passed'?'<div class="notice">关键需求已确认。立项前仍可在产品规格书标注调整，并通过新一轮需求评审确认。</div>':'')+
+  (g===2&&s==='passed'&&p.baseline?'<div class="notice success">立项评审已冻结需求基线 '+e(p.baseline.id)+' · V'+p.baseline.version+'</div>':'')+'</section>'+
+ renderMaterials(p,g)+
+ '<section class="card"><div class="section-head"><h3>评审历史 <span class="muted">· '+rounds.length+' 轮</span></h3><span class="muted">每次复审均建立独立轮次</span></div>'+
+ (rounds.length?rounds.map(r=>'<div class="review-row row"><span class="type-icon">'+I('ClipboardCheck')+'</span><div class="grow">'+link('第 '+r.round+' 轮 · '+e(r.id),'review-detail',attrs(r.id))+'<div class="meta">需求包 V'+r.snapshot.packageVersion+' · '+e(userName(r.organizer))+' · '+timeText(r.startedAt)+'</div><p class="paragraph">'+e(r.summary||'正在收集意见')+'</p></div>'+badge(REVIEW_STATUS[r.status],gateColor(r.status))+btn('查看记录','review-detail',attrs(r.id),'small')+'</div>').join(''):'<p class="muted">尚未发起本关口评审。</p>')+'</section>';
+}
+function syncCard(p,target){
+ const o=p.external[target],label=target==='plan'?'产品规划':'项目管理';
+ if(!o)return '<section class="card"><h3>'+label+'</h3><p class="muted">'+(target==='plan'?'可先关联候选规划；可行性通过后，补全配置、分类和目的再确认准入。':'可行性评审通过并完善规划准入信息后创建待立项项目。')+'</p>'+(target==='plan'?btn('建立候选规划','candidate',attrs(p.id),'small','Link2'):'')+'</section>';
+ return '<section class="card"><div class="section-head"><h3>'+label+'</h3>'+badge(o.syncStatus==='error'?'同步失败':o.syncStatus==='syncing'?'同步中':o.syncStatus==='idle'?'候选关联':'同步成功',o.syncStatus==='error'?'red':o.syncStatus==='success'?'green':'blue')+'</div>'+
+ '<div class="external-id">'+I(target==='plan'?'CalendarDays':'FolderKanban')+'<strong>'+e(o.id)+'</strong></div><dl class="kv">'+kv('业务状态',e(target==='plan'?(o.status==='candidate'?'候选规划':'准入后规划'):PROJECT_STATUS[o.status]))+kv(target==='plan'?'路线图规划时间':'项目计划时间',dateText(o.planned))+(target==='project'?kv('项目经理',e(userName(o.manager))):'')+kv('最近成功同步',timeText(o.lastSuccess))+'</dl>'+
+ (o.syncStatus==='error'?'<div class="notice error">'+e(o.error)+'<br>'+btn('重试同步','retry',attrs(p.id)+' data-op="'+e(o.pendingOp||'admit')+'"','small')+'</div>':'')+
+ (target==='project'&&allPassed(p)&&o.status==='pending'?'<div class="notice warn">立项评审已通过 / 项目立项待同步</div>':'')+
+ (target==='project'&&['initiated','doing','complete'].includes(o.status)?btn('模拟项目状态回传','project-progress',attrs(p.id),'small','RefreshCw'):'')+'</section>';
+}
+function renderLinks(p){
+ const project=p.external.project,logs=state.syncLogs.filter(l=>l.packageId===p.id).slice().reverse();
+ const a=p.planningAdmission||{};
+ return '<div class="notice">'+I('Link2')+' '+e(p.id)+' 串联同一规划项与项目。需求期望 '+dateText(p.desired)+'；规划和项目计划分别维护。</div>'+
+ '<section class="card"><div class="section-head"><div><h3>产品规划必填信息</h3><p class="muted">发起可行性评审前必须补全，并随本轮送审快照保存。</p></div>'+btn(admissionReady(p)?'编辑规划信息':'完善规划信息','planning-admission',attrs(p.id),admissionReady(p)?'small':'small primary','Pencil')+'</div><dl class="kv">'+kv('分类',e(a.classification||'待补充'))+kv('配置',e(a.configuration||'待补充'))+kv('目的',e(a.purpose||'待补充'))+'</dl>'+(!admissionReady(p)?'<div class="notice warn">信息未完整，不能发起可行性评审。</div>':p.gates[0].status==='passed'&&(!p.external.plan||p.external.plan.status!=='admitted')?btn('确认准入并同步','retry',attrs(p.id)+' data-op="admit"','primary','RefreshCw'):'')+'</section><div class="grid2">'+syncCard(p,'plan')+syncCard(p,'project')+'</div>'+
+ '<section class="card"><div class="section-head"><h3>交付与需求验收</h3>'+badge(p.feedbackStatus,p.feedbackStatus==='已回写'?'green':'')+'</div><p class="muted">项目完成后，逐项确认需求实现情况并保留验收证据，再回写反馈处理进展。</p>'+
+ (members(p).length?members(p).map(r=>'<div class="checklist-item"><div class="grow">'+detailLink(r,'requirement')+'<div class="meta">'+e(r.acceptance||'待明确验收要求')+'</div>'+(r.fulfilled?'<div class="meta">验收证据：'+e(r.acceptanceEvidence)+'</div>':'')+'</div>'+badge(r.fulfilled?'已确认实现':'待验收',r.fulfilled?'green':'')+(project&&project.status==='complete'&&!r.fulfilled?btn('确认实现','accept',attrs(r.id),'small'):'')+'</div>').join(''):'<p class="muted">暂无需求明细。</p>')+
+ '<div class="row end" style="margin-top:18px">'+btn('回写反馈进展','feedback',attrs(p.id),'','RefreshCw')+'</div></section>'+
+ '<section class="card"><div class="section-head"><h3>同步记录</h3><label class="check-row"><input type="checkbox" data-fail-next="'+p.id+'" '+(p.failNext?'checked':'')+'>下一次项目同步模拟失败</label></div>'+
+ (logs.length?'<div class="timeline">'+logs.map(l=>'<div class="timeline-item"><div class="row"><strong>'+e(l.target==='plan'?'产品规划系统':'项目管理系统')+'</strong>'+badge(l.status==='success'?'成功':l.status==='error'?'失败':'同步中',l.status==='success'?'green':l.status==='error'?'red':'blue')+'<span class="spacer"></span><span class="muted">'+timeText(l.at)+'</span></div><p>'+e(l.detail||'等待模拟回执')+'</p></div>').join('')+'</div>':'<p class="muted">新增同步及重试将在这里分别记录每个目标系统的结果。</p>')+'</section>';
+}
+function renderChanges(p){
+ const cs=state.changes.filter(c=>c.packageId===p.id||c.targetId===p.id||c.sourceId===p.id).slice().reverse();
+ return '<section class="card"><div class="section-head"><h3>立项冻结基线</h3></div>'+
+ (p.baseline?'<dl class="kv">'+kv('基线编号',e(p.baseline.id))+kv('冻结版本','V'+p.baseline.version)+kv('冻结来源',e(p.baseline.source||'立项评审'))+kv('确认人 / 时间',e(userName(p.baseline.actor))+' · '+timeText(p.baseline.at))+kv('需求数量',p.baseline.snapshot.requirements.length+' 条')+'</dl>'+btn('查看基线快照','baseline',attrs(p.id),'small'):'<p class="muted">立项评审通过时冻结。需求评审阶段只确认关键需求，不提前冻结。</p>')+
+ (p.baselineHistory.length?'<p class="meta">保留 '+p.baselineHistory.length+' 个历史基线，最近原批准版本 V'+p.baselineHistory.at(-1).version+'。'+link('查看历史基线','baseline',attrs(p.id)+' data-history="true"')+'</p>':'')+'</section>'+
+ '<section class="card"><h3>变更控制边界</h3><div class="notice">立项前：在产品规格书备注并通过需求评审反复确认。立项后、转量前：走 ECR，需求池新增追溯记录并同步资料版本。转量后：走 ECN，本需求池不再跟进变更。</div></section>'+
+ '<section class="card"><h3>范围与归属变更</h3>'+(cs.length?cs.map(c=>'<div class="review-row"><div class="row"><strong>'+e(c.ecrId||c.id)+'</strong>'+badge(c.changeType||'立项前调整',c.changeType==='ECR'?'blue':'')+badge(c.status==='pending'?'待确认':c.status==='confirmed'?'已确认':'已取消',c.status==='pending'?'orange':c.status==='confirmed'?'green':'')+'<span class="spacer"></span><span class="muted">'+timeText(c.at)+'</span></div><p class="paragraph">'+e(c.reason)+'</p><p class="meta">'+e(c.ids.join('、'))+' · '+e(c.sourceId||'未归包')+' → '+e(c.targetId||'移出归包')+'</p>'+(c.status==='pending'?'<div class="row">'+btn(c.changeType==='ECR'?'确认 ECR 并同步':'查看并确认变更','confirm-change',attrs(c.id),'small primary')+btn('取消变更','cancel-change',attrs(c.id),'small')+'</div>':'')+'</div>').join(''):'<p class="muted">尚无立项后 ECR 变更。</p>')+'</section><section class="card"><h3>操作记录</h3>'+history('package',p.id)+'</section>';
+}
+function renderReviewDetail(r){
+ const p=pkgById(r.packageId);
+ return '<div class="notice">本轮送审快照：需求包 V'+r.snapshot.packageVersion+'，'+r.snapshot.requirements.length+' 条需求。'+detailLink(p,'package')+'</div>'+
+ (r.gate===0&&r.snapshot.planningAdmission?'<section class="card"><h3>产品规划字段快照</h3><dl class="kv">'+kv('分类',e(r.snapshot.planningAdmission.classification||'—'))+kv('配置',e(r.snapshot.planningAdmission.configuration||'—'))+kv('目的',e(r.snapshot.planningAdmission.purpose||'—'))+'</dl></section>':'')+
+ '<section class="card"><h3>评审信息</h3><dl class="kv">'+kv('组织人',e(userName(r.organizer)))+kv('评审人员',r.participants.map(x=>e(userName(x))).join('、'))+kv('结论确认人',e(r.confirmer?userName(r.confirmer):'待确认'))+kv('发起 / 完成时间',timeText(r.startedAt)+' / '+timeText(r.finishedAt))+'</dl><h4>结论与会议依据</h4><p class="paragraph">'+e(r.summary||'等待评审结论')+'</p>'+badge(r.conclusion||REVIEW_STATUS[r.status],gateColor(r.status))+
+  (r.withdrawReason?'<div class="notice warn">撤回原因：'+e(r.withdrawReason)+'</div>':'')+
+  (r.release?'<div class="notice success">条件放行依据：'+e(r.release.evidence)+'<div class="meta">'+e(userName(r.release.actor))+' · '+timeText(r.release.at)+'</div></div>':'')+
+  (r.corrections||[]).map(c=>'<div class="notice">补充更正：'+e(c.text)+'<div class="meta">'+e(userName(c.actor))+' · '+timeText(c.at)+'</div></div>').join('')+
+ (r.status!=='reviewing'?'<div style="margin-top:12px">'+btn('补充 / 更正记录','correction',attrs(r.id),'small')+'</div>':'')+'</section>'+
+ '<section class="card"><h3>本轮资料快照</h3>'+r.snapshot.materials.map(d=>'<div class="checklist-item"><span class="type-icon">'+I('FileText')+'</span><div class="grow">'+link(e(d.fileName||DOC_TYPES[d.category]),'preview',attrs(d.id)+' data-review="'+r.id+'"')+'<div class="meta">'+e(DOC_TYPES[d.category])+' · '+e(d.version)+(d.na?' · 不适用：'+e(d.reason):'')+'</div></div>'+badge('锁定版本')+'</div>').join('')+
+ '<details><summary>查看 '+r.snapshot.requirements.length+' 条送审需求及验收要求</summary>'+r.snapshot.requirements.map(x=>'<div class="notice"><strong>'+e(x.id)+' · '+e(x.title)+'</strong><p class="paragraph">'+e(x.scope)+'</p><div class="meta">'+e(x.acceptance)+'</div></div>').join('')+'</details></section>'+
+ '<section class="card"><div class="section-head"><h3>评审意见</h3>'+(r.status==='reviewing'?btn('记录意见','opinion',attrs(r.id),'small'):'')+'</div>'+(r.notes.length?r.notes.map(n=>'<div class="timeline-item"><strong>'+e(userName(n.actor))+'</strong><span class="meta"> · '+timeText(n.at)+'</span><p class="paragraph">'+e(n.text)+'</p></div>').join(''):'<p class="muted">尚无评审意见。</p>')+'</section>'+
+ (r.conditions.length?'<section class="card"><h3>整改与放行条件</h3>'+r.conditions.map((c,i)=>'<div class="checklist-item"><div class="grow"><strong>'+e(c.text)+'</strong><div class="meta">'+e(userName(c.owner))+' · '+dateText(c.due)+' · 阻塞：'+e(c.block)+'</div>'+(c.done?'<div class="meta">完成证据：'+e(c.evidence)+'</div>':'')+'</div>'+badge(c.done?'已完成':'待整改',c.done?'green':'orange')+(!c.done?btn('登记完成','condition',attrs(r.id)+' data-index="'+i+'"','small'):'')+'</div>').join('')+'<div class="row end" style="margin-top:16px">'+(r.status==='conditional'?btn('确认条件满足并通过','release',attrs(r.id),'primary'):'')+'</div></section>':'');
+}
+function renderTransactionPackageVersionHistory(p){
+ const versions=p.versions||[],current=p.currentVersion||0;
+ return '<section class="card"><div class="section-head"><div><h3>需求版本记录</h3><p class="muted">每个版本单独展开查看；历史版本只读，保留当时的整包内容及全部需求明细。</p></div>'+badge(versions.length+' 个版本','blue')+'</div>'+(versions.length?versions.slice().reverse().map(v=>'<details><summary>V'+v.version+' · '+e(v.name)+(v.version===current?'（当前版本）':'')+'</summary><div class="notice"><div class="meta">'+timeText(v.at)+' · '+e(userName(v.actor))+' · '+e(v.reason||'整包冻结')+'</div><p class="paragraph">'+e(v.content)+'</p>'+(v.members||[]).map(x=>'<div class="review-row"><strong>'+e(x.id+' · '+x.title)+'</strong><p class="paragraph">'+e(x.scope)+'</p><div class="meta">验收要求：'+e(x.acceptance)+'</div></div>').join('')+'</div></details>').join(''):'<p class="muted">暂无需求版本记录。</p>')+'</section>';
+}
+function renderTransactionPackageDetail(p){
+ const ms=txMembers(p),packageStatus=POM_PROGRESS[p.status]||'开发中',current=p.currentVersion||0;
+ const latest='<section class="card"><div class="section-head"><div><h3>需求明细</h3><p class="muted">当前生效的最新版本内容</p></div><div class="row">'+badge('最新 V'+current,'green')+badge(ms.length+' 条','blue')+'</div></div>'+ms.map(r=>'<div class="review-row"><div class="row"><strong>'+e(r.id)+' · '+e(r.title)+'</strong><span class="spacer"></span>'+levelBadge(r.level)+'</div><p class="paragraph">'+e(r.scope||r.description)+'</p><div class="notice">验收要求：'+e(r.acceptance||r.transaction?.criteria||'待补充')+'</div><div class="row"><span class="meta">POM：'+pomLink(r,false)+' · '+dateText(r.transaction?.due)+'</span><span class="spacer"></span>'+link('查看需求','detail',attrs(r.id,'requirement'))+'</div></div>').join('')+'</section>';
+ return latest+'<div class="notice">事务包按包整体承接、整体管理。包内明细共享承接部门、负责人、期限和处理进度，不存在部分明细已承接、部分未承接。</div>'+
+ '<div class="grid2"><section class="card"><h3>事务包信息</h3><dl class="kv">'+kv('事务包编号',e(p.id))+kv('需求版本',current?'V'+current:'规划草稿')+kv('需求名称',e(p.planningName||p.title))+kv('承接部门',e(p.department))+kv('事务负责人',e(userName(p.owner)))+kv('统一期限',dateText(p.due))+kv('统一处理进度',e(packageStatus))+kv('创建时间',timeText(p.createdAt))+'</dl></section><section class="card"><h3>整包需求内容</h3><p class="paragraph">'+e(p.planningContent||p.reason)+'</p><div class="notice">'+(txPackageFrozen(p)?'当前事务包需求已整包冻结；名称、内容和明细范围只能通过升级需求版本调整。':'规划中可继续编辑，进入待承接后整包冻结。')+'</div></section></div>';
+}
+function renderTransactionPackageProgress(p){
+ const ms=txMembers(p),packageStatus=POM_PROGRESS[p.status]||'开发中';
+ return '<section class="card"><div class="section-head"><h3>整体处理进展</h3>'+badge(packageStatus,packageStatus==='已完成'?'green':'blue')+'</div><div class="notice">承接状态和处理进度在事务包层级统一维护；包内明细不提供单独承接或单独切换进度。</div></section>'+
+ '<section class="card"><div class="table-wrap"><table><thead><tr><th>需求明细</th><th>POM 编号</th><th>统一期限</th><th>随包进度</th><th>处理结果 / 证据</th><th class="right">操作</th></tr></thead><tbody>'+ms.map(r=>'<tr><td>'+e(r.title)+'<div class="meta">'+e(r.id)+'</div></td><td>'+pomLink(r,false)+'</td><td>'+dateText(p.due)+'</td><td>'+badge(packageStatus,packageStatus==='已完成'?'green':'blue')+'</td><td>'+e(r.transaction?.result||p.result||'随包推进')+'</td><td class="right">'+link('查看需求','detail',attrs(r.id,'requirement'))+'</td></tr>').join('')+'</tbody></table></div></section>';
+}
+function renderTransactionPackageHistory(p){return renderTransactionPackageVersionHistory(p)+'<section class="card"><h3>事务包操作记录</h3>'+history('transactionPackage',p.id)+'</section>'}
+function renderDrawer(){
+ const d=ROOT.querySelector('#detail-drawer'),v=view.detail;if(!v)return;
+ const key=v.type+':'+v.id+':'+v.tab;
+ const old=d.dataset.detailKey===key?(d.querySelector('.drawer-body')?.scrollTop??v.scroll??0):(v.scroll||0);d.dataset.detailKey=key;
+ const o=v.type==='requirement'?reqById(v.id):v.type==='package'?pkgById(v.id):v.type==='transactionPackage'?txPkgById(v.id):state.reviews.find(r=>r.id===v.id);if(!o){closeDetail();return}
+ const isPkg=v.type==='package',isReview=v.type==='review',isTxPkg=v.type==='transactionPackage';
+ let title=isReview?GATES[o.gate]+' · 第 '+o.round+' 轮':o.title;
+ let sub=isReview?e(o.id)+' · '+e(REVIEW_STATUS[o.status]):isTxPkg?e(o.id)+' · '+e(o.department)+' · '+e(userName(o.owner)):e(o.id)+' · '+e(isPkg?kindLabel(o):sourceLabel(o))+' · '+e(lineName(o.line));
+ let tabs=isPkg?'<nav class="drawer-nav">'+[['overview','概况与需求明细'],['review','评审与资料'],['links','规划与交付'],['history','变更与记录']].map(([key,label])=>'<button class="'+(v.tab===key?'active':'')+'" data-action="detail-tab" data-value="'+key+'">'+label+'</button>').join('')+'</nav>':isTxPkg?'<nav class="drawer-nav">'+[['overview','概况与需求明细'],['progress','处理进展'],['history','变更与记录']].map(([key,label])=>'<button class="'+(v.tab===key?'active':'')+'" data-action="detail-tab" data-value="'+key+'">'+label+'</button>').join('')+'</nav>':'';
+ let content=isReview?renderReviewDetail(o):isTxPkg?(v.tab==='progress'?renderTransactionPackageProgress(o):v.tab==='history'?renderTransactionPackageHistory(o):renderTransactionPackageDetail(o)):isPkg?(v.tab==='review'?renderPackageReview(o):v.tab==='links'?renderLinks(o):v.tab==='history'?renderChanges(o):renderPackageOverview(o)):renderRequirement(o);
+ let actions=isTxPkg?btn('更新事务包','tx-package-progress',attrs(o.id,'transactionPackage'))+(['待承接','开发中','待验收'].includes(o.status)?btn('升级需求版本','tx-package-version',attrs(o.id,'transactionPackage'),'primary','Layers'):btn('补充需求明细','tx-add-detail',attrs(o.id,'transactionPackage'),'primary','Plus')):isReview?(o.status==='reviewing'?btn('记录意见','opinion',attrs(o.id))+btn('撤回','withdraw',attrs(o.id))+btn('填写评审结论','conclusion',attrs(o.id),'primary'):''):entityActions(o,v.type);
+ if(isPkg&&!['closed','hold'].includes(o.status)&&o.external.project?.status!=='production')actions+=btn('转为 POM 事务','package-to-transaction',attrs(o.id),'','ListChecks');
+ if(!isPkg&&!isReview&&!isTxPkg&&canJoinPackage(o))actions+=btn('转入部门 POM','transaction',attrs(o.id))+btn('归入开发需求包','group','data-ids="'+o.id+'"','primary','GitMerge');
+ if(!isPkg&&!isReview&&!isTxPkg&&isLocalRequirement(o)&&!pendingMembership(o.id)&&!['hold','closed'].includes(o.status))actions+=btn('更新处理进展','local-progress',attrs(o.id),'','ListChecks');
+ d.innerHTML='<div class="drawer-head"><div class="row"><button class="icon-btn" data-action="back-detail" aria-label="返回">'+I('ArrowLeft')+'</button><span class="muted">'+(view.detailStack.length?'返回上一层':'返回列表')+'</span><span class="spacer"></span><button class="icon-btn" data-action="close-detail" aria-label="关闭详情">'+I('X')+'</button></div><h2>'+e(title)+'</h2><div class="row wrap"><span class="muted">'+sub+'</span>'+(isReview||isTxPkg?'':isPkg?flowBadge(packageFlowStatus(o)):taskStateBadge(o,'requirement'))+(isTxPkg?flowBadge(POM_PROGRESS[o.status]||'开发中')+badge(txMembers(o).length+' 条事务','blue'):'')+(isPkg?badge(userName(o.owner),'blue')+badge(allPassed(o)?'三关口已通过':GATES[currentGate(o)])+badge(o.external.project?PROJECT_STATUS[o.external.project.status]:'尚未关联项目'):'')+'</div></div>'+tabs+'<div class="drawer-body">'+content+'</div><div class="drawer-actions">'+actions+'</div>';
+ d.querySelector('.drawer-body').scrollTop=old;
+}
+/* Operations and local service adapter. No network requests are made. */
+const field=(label,name,value,type,extra)=>'<label class="field"><span>'+label+'</span><input name="'+name+'" type="'+(type||'text')+'" value="'+e(value||'')+'" '+(extra||'')+'></label>';
+const area=(label,name,value,extra)=>'<label class="field"><span>'+label+'</span><textarea name="'+name+'" '+(extra||'')+'>'+e(value||'')+'</textarea></label>';
+const sel=(label,name,html,extra)=>'<label class="field"><span>'+label+'</span><select name="'+name+'" '+(extra||'')+'>'+html+'</select></label>';
+const check=(label,name,checked)=>'<label class="check-row"><input type="checkbox" name="'+name+'" '+(checked?'checked':'')+'>'+label+'</label>';
+function readForm(){const f=ROOT.querySelector('#business-form');if(!f)return {};const data={};new FormData(f).forEach((v,k)=>{if(!(v instanceof File))data[k]=v});f.querySelectorAll('input[type="checkbox"][name]').forEach(el=>data[el.name]=el.checked);return data}
+function openModal(kind,data){
+ const m={kind,...(data||{}),values:{...((data||{}).values||{})}};view.modal=m;
+ if(kind==='create'){
+  const parent=m.packageId?pkgById(m.packageId):null;
+   m.values={createScene:parent?'detail':'package',createType:parent?parent.kind:'new',source:'manual',manualCategory:parent&&sourceCode(parent)==='manual'?manualCategoryOf(parent):parent?'other':'brand',line:parent?parent.line:'scale',owner:parent?parent.owner:'pm-1',assignment:parent?parent.assignment:'auto',product:parent?parent.product:'',targetVersion:'V1.0',desired:day(14),level:'L2',optimizationArea:'experience',...(parent?.sourceDetails||{}),...(parent?{customer:parent.customer||parent.sourceDetails?.customer||'',constraints:parent.constraints||'',sourceDetail:parent.sourceDetails?.sourceDetail||'由 '+parent.id+' 录入需求明细'}:{}),...m.values};
+ }
+ if(kind==='group'){m.step=0;m.ids=m.ids||[...view.selected];m.targetId=m.packageId||'';m.targetMode=m.targetId?'existing':'new';m.scopes={};m.values={packageKind:'new',line:'scale',owner:'pm-1',assignment:'auto',targetVersion:'V1.0',level:'L2',...m.values}}
+ if(kind==='tx-package'){m.ids=m.ids||[...view.txSelected];m.values={owner:CONTEXT.currentUser,due:day(7),...m.values}}
+ if(kind==='tx-add-detail'){const tp=txPkgById(m.id),sample=tp&&txMembers(tp)[0];m.values={line:sample?.line||'scale',product:sample?.product||'',level:'L2',due:tp?.due||day(7),...m.values}}
+ if(kind==='planning-admission')m.values=clone(pkgById(m.id).planningAdmission||{});
+ if(kind==='edit-package')m.values=clone(pkgById(m.id));
+ if(kind==='edit-requirement')m.values=clone(reqById(m.id));
+ renderModal();const d=ROOT.querySelector('#business-dialog');if(!d.open)d.showModal();
+}
+function closeModal(){ROOT.querySelector('#business-dialog').close();view.modal=null}
+function formError(message){const el=ROOT.querySelector('#form-error');if(el){el.textContent=message;el.hidden=false;el.scrollIntoView({block:'nearest',behavior:'smooth'})}else toast(message)}
+function ownerFields(v){return sel('主要产品线 *','line',lineOptions(v.line,'请选择产品线'),'data-dynamic="line" required')+sel('负责产品经理','owner',userOptions(v.owner,'待分派'),'data-dynamic="owner"')+'<p class="field-hint span2">'+(v.assignment==='manual'?'已手动指定，产品线变化时保留负责人。当前产品线默认：'+e(userName(lineOwner(v.line))):'按产品线自动分派。未配置默认产品经理时，保存为待分派。')+'</p>'}
+function sourceFields(v){
+ const hints={brand:'品牌在线下完成规划并确认后，由产品线经理填写定位、目标客群或产品系列规划依据',research:'填写技术储备、验证结果或研发能力建设目标',customer:'填写客户交期、定制范围、成本或交付约束',other:'说明提出需求的背景和依据'};
+ return (MANUAL_FIELDS[v.manualCategory]||[]).map(([name,label],i)=>i===0&&v.manualCategory!=='other'?field(label+' *',name,v[name],'text','required'):area(label+' *',name,v[name],'required placeholder="'+hints[v.manualCategory]+'"')).join('');
+}
+function sourcePayload(v){
+ const details=Object.fromEntries((MANUAL_FIELDS[v.manualCategory]||[]).map(([name])=>[name,String(v[name]||'').trim()]));
+ return {source:'manual',manualCategory:v.manualCategory,sourceDetails:details,customer:v.manualCategory==='customer'?details.customer:'',constraints:v.manualCategory==='customer'?details.constraints:'',strategy:''};
+}
+function validateManualSource(v){
+ if(v.source!=='manual')fail('此入口创建的需求来源必须为手动创建');
+ if(!MANUAL_CATEGORY[v.manualCategory])fail('请选择手动创建背景');
+ MANUAL_FIELDS[v.manualCategory].forEach(([name,label])=>requireText(v[name],label));
+}
+function sourceInfo(o){
+ const category=manualCategoryOf(o),details=o.sourceDetails||{},entries=new Map();
+ if(sourceCode(o)==='manual')entries.set('手动创建背景',MANUAL_CATEGORY[category]);
+ (MANUAL_FIELDS[category]||[]).forEach(([name,label])=>{if(details[name])entries.set(label,details[name])});
+ if(o.customer&&!entries.has('客户名称 / 代号'))entries.set('客户名称 / 代号',o.customer);
+ if(o.constraints&&!entries.has('交期与定制约束'))entries.set('交期与定制约束',o.constraints);
+ if(o.strategy)entries.set('战略规划依据',o.strategy);
+ if(o.legacySource==='strategy'||o.source==='strategy')entries.set('历史背景标注','战略规划');
+ if(sourceCode(o)==='feedback'&&o.feedbackFlow){entries.set('反馈系统去向','转产品需求');entries.set('双向同步状态',o.feedbackFlow.syncStatus||'待同步')}
+ return [...entries].map(([label,value])=>kv(label,e(value))).join('');
+}
+const manualSourceField=()=>'<label class="field"><span>需求来源 *</span><select name="source" required><option value="manual" selected>手动创建</option><option value="feedback" disabled>反馈线索（由反馈系统流转）</option><option value="strategy" disabled>战略（由战略 / 规划系统流转）</option><option value="public" disabled>公海需求池（由公海需求池流转）</option></select><span class="source-legend"><em class="source-chip">可选 · 手动创建</em><em class="source-chip off">不可选 · 反馈线索</em><em class="source-chip off">不可选 · 战略</em><em class="source-chip off">不可选 · 公海需求池</em></span><span class="field-hint">灰色来源需在对应系统操作后同步进入。</span></label>';
+const demandLevelField=(v,label)=>'<div class="field"><span class="row">'+(label||'需求等级')+' '+link('查看等级说明','priority-help','')+'</span><select name="level" aria-label="'+e(label||'需求等级')+'">'+options(DEMAND_LEVEL,v.level)+'</select></div>';
+function priorityHelpBody(){return '<div class="notice"><strong>原型仅保留一个“需求等级”字段。</strong> 等级表达需求的业务性质，不替代需求类型，也不能据此跳过评审。</div>'+[
+ ['L1','紧急修复','影响安全、合规、重大交付或核心功能不可用，需要尽快修复。','red'],
+ ['L2','体验优化','改善现有产品体验、易用性或使用流程。','orange'],
+ ['L3','功能升级','在现有产品或版本基础上新增、增强功能。','blue'],
+ ['L4','换代开发','面向产品换代或新一代方案开展开发。','']
+].map(x=>'<section class="card"><div class="section-head"><h3>'+x[0]+' · '+x[1]+'</h3>'+badge(x[0],x[3])+'</div><p class="paragraph">'+x[2]+'</p></section>').join('')}
+function openPriorityHelp(){const d=ROOT.querySelector('#priority-dialog');d.innerHTML='<div><header class="modal-head"><h2>需求等级说明</h2><button type="button" class="icon-btn" data-action="close-priority" aria-label="关闭弹窗">'+I('X')+'</button></header><div class="modal-body">'+priorityHelpBody()+'</div><footer class="modal-actions"><span class="spacer"></span>'+btn('关闭','close-priority')+'</footer></div>';if(!d.open)d.showModal()}
+function packageFields(v,isCreate){
+ const iteration=(v.packageKind||v.createType||v.kind)==='iteration';
+ return field((iteration?'产品迭代开发':'新产品开发')+'需求名称 *','title',v.title,'text','required maxlength="100"')+
+ '<div class="grid2">'+ownerFields(v)+(iteration?sel('现有产品 *','product',productOptions(v.product,'请选择现有产品'),'required')+field('当前版本 *','currentVersion',v.currentVersion,'text','required'):field('目标新品名称 *','product',v.product,'text','required placeholder="无需已有型号或 ASIN"'))+field(iteration?'目标迭代版本 *':'计划首发版本 *','targetVersion',v.targetVersion,'text','required')+field('需求期望时间','desired',v.desired,'date')+demandLevelField(v)+'</div>'+
+ area(iteration?'迭代目标与现状 *':'产品定位与目标用户 *','description',v.description,'required')+area(iteration?'本次改动及影响范围 *':'核心功能与开发范围 *','scope',v.scope,'required')+
+ '<div class="field"><span>涉及专业设计</span><div class="row wrap">'+['hardware','software','structure'].map(c=>check(DOC_TYPES[c],'pro_'+c,(v.professionals||[]).includes(c)||v['pro_'+c])).join('')+'</div><span class="field-hint">需求评审及立项评审时，所选专业需提供设计说明或填写不适用原因。</span></div>';
+}
+function localRequirementFields(v,editing){
+ const optimization=(v.createType||v.kind)==='optimization';
+ return (editing?'':field((optimization?'产品优化':'其他')+'需求名称 *','title',v.title,'text','required maxlength="100"'))+
+ '<div class="grid2">'+ownerFields(v)+sel(optimization?'待优化产品 *':'关联产品（可选）','product',productOptions(v.product,optimization?'请选择现有产品':'不关联具体产品'),optimization?'required':'')+
+ (optimization?sel('优化方向','optimizationArea',options(OPTIMIZATION_AREAS,v.optimizationArea||'experience')):'')+
+  field('承接部门（可后补）','department',v.department??v.localProgress?.department)+field('期望完成时间','desired',v.desired,'date')+demandLevelField(v)+'</div>'+
+ area(optimization?'当前问题与影响 *':'背景与具体诉求 *',editing?'analysis':'description',editing?v.analysis:v.description,'required')+
+ area(optimization?'优化目标与处理范围 *':'处理目标与边界 *','scope',v.scope,'required')+
+ area(optimization?'优化验收标准 *':'完成标准 *','acceptance',v.acceptance,'required')+
+ (editing?area('调整原因 *','reason',v.reason,'required'):area('佐证材料 / 证据说明','evidence',v.evidence));
+}
+function demandDetailFields(v){
+ const optimization=v.createType==='optimization';
+ return field('需求明细名称 *','title',v.title,'text','required maxlength="100"')+'<div class="grid2">'+ownerFields(v)+sel(optimization?'待优化产品 *':'产品 / 型号（可选）','product',productOptions(v.product,optimization?'请选择现有产品':'不关联具体产品'),optimization?'required':'')+field('期望完成时间','desired',v.desired,'date')+demandLevelField(v)+'</div>'+area('需求描述与期望结果 *','description',v.description,'required')+area('需求范围 *','scope',v.scope,'required')+area('验收要求 *','acceptance',v.acceptance,'required')+area('佐证材料 / 证据说明','evidence',v.evidence);
+}
+function renderGroup(m){
+ const v=m.values,steps=['选择需求','选择需求包','范围与验收','预览提交'];
+ let out='<div class="steps">'+steps.map((s,i)=>'<span class="step '+(i===m.step?'active':i<m.step?'done':'')+'"><b>'+(i+1)+'</b>'+s+'</span>').join('')+'</div>';
+ if(m.step===0){
+  out+='<p class="muted">可选择反馈需求、产品优化或其他需求。归包后保留原编号、来源和分配前内容；已归包需求请使用“调整归属”。</p><div class="selection-list">'+state.requirements.filter(r=>r.kind!=='transaction').map(r=>'<label class="select-card '+(m.ids.includes(r.id)?'selected':'')+'"><input type="checkbox" name="pick_'+r.id+'" '+(m.ids.includes(r.id)?'checked ':'')+(!canJoinPackage(r)?'disabled':'')+'><span class="grow"><strong>'+e(r.title)+'</strong><span class="meta">'+e(r.id)+' · '+e(kindLabel(r))+' · '+e(sourceLabel(r))+' · '+e(lineName(r.line))+'</span></span><span>'+(pendingMembership(r.id)?badge('归属变更待确认','orange'):r.packageId?badge('已归属 '+r.packageId):['hold','closed'].includes(r.status)?statusBadge(r.status):badge('可纳入','blue'))+'</span></label>').join('')+'</div>';
+ }else if(m.step===1){
+  out+=sel('归包方式','targetMode',options({new:'新建开发需求包',existing:'归入已有需求包'},m.targetMode),'data-dynamic="targetMode"');
+  if(m.targetMode==='existing')out+=sel('选择目标需求包 *','targetId',options(Object.fromEntries(state.packages.filter(p=>['active','draft'].includes(p.status)).map(p=>[p.id,p.id+' · '+p.title+' · '+kindLabel(p)])),m.targetId,'请选择'),'required')+'<div class="notice">若目标包已有通过的关口，提交后先形成范围变更，确认前保留原批准范围。</div>';
+  else out+=sel('需求类型','packageKind',options({new:KIND.new,iteration:KIND.iteration},v.packageKind),'data-dynamic="packageKind"')+packageFields(v,true);
+ }else if(m.step===2){
+  out+='<div class="notice">逐条确认本次纳入范围与验收要求，避免不同诉求在归包后丢失。</div>';
+  m.ids.forEach(id=>{const r=reqById(id),s=m.scopes[id]||{scope:r.scope,acceptance:r.acceptance};out+='<section class="card"><h3>'+e(r.id)+' · '+e(r.title)+'</h3>'+area('本次纳入范围 *','scope_'+id,s.scope,'required')+area('验收要求 *','acceptance_'+id,s.acceptance,'required')+'</section>'});
+  const reviewed=m.targetMode==='existing'&&pkgById(m.targetId)?.gates.some(g=>g.status==='passed');
+  out+=area(reviewed?'范围变更原因及影响 *':'分配原因 *','reason',v.reason,reviewed?'required placeholder="说明对功能、成本、周期、技术和验收的影响"':'required placeholder="说明为何将这些需求纳入本次开发"');
+  if(reviewed)out+=sel('受影响的评审范围','impact',options({requirements:'需求与立项范围',feasibility:'影响可行性结论，重走三个关口'},v.impact||'requirements'));
+ }else{
+  const p=m.targetMode==='existing'?pkgById(m.targetId):null;
+  out+='<div class="notice success">'+I('GitMerge')+' '+m.ids.length+' 条独立需求将归入一个'+e(KIND[p?p.kind:v.packageKind])+'包。</div><dl class="kv">'+kv('需求包',e(p?p.title:v.title))+kv('产品经理',e(userName(p?p.owner:v.owner)))+kv('目标产品 / 版本',e(p?p.product:v.product)+' / '+e(p?p.targetVersion:v.targetVersion))+kv('原始反馈（去重）',feedbackCount(m.ids.map(reqById))+' 条')+'</dl>'+
+  m.ids.map(id=>'<div class="notice"><strong>'+e(id)+' · '+e(reqById(id).title)+'</strong><p class="paragraph">'+e(m.scopes[id].scope)+'</p><div class="meta">验收：'+e(m.scopes[id].acceptance)+'</div></div>').join('')+
+  (p&&p.gates.some(g=>g.status==='passed')?'<div class="notice warn">本次将提交待确认范围变更，确认前不会改写需求归属或批准基线。</div>':'');
+ }
+ return out;
+}
+function renderModal(){
+ const m=view.modal;if(!m)return;const v=m.values;let title='',body='',submit='保存',footerExtra='';
+ const p=m.id&&pkgById(m.id),r=m.id&&reqById(m.id),tp=m.id&&txPkgById(m.id),review=m.id&&state.reviews.find(x=>x.id===m.id);
+ if(m.kind==='create'){
+  title=m.packageId?'录入需求明细':'新建需求';submit='创建';
+  const createKindOptions=v.createScene==='package'?{new:CREATE_KIND.new,iteration:CREATE_KIND.iteration}:CREATE_KIND;
+  body=(!m.packageId?'<div class="grid2">'+sel('新建类别 *','createScene',options(CREATE_SCENE,v.createScene),'data-dynamic="createScene" required')+sel('具体类型 *','createType',options(createKindOptions,v.createType),'data-dynamic="createType" required')+manualSourceField()+'</div>'+
+   '<div class="notice">'+(v.createScene==='package'?'“新建开发需求包”创建包级对象，填写产品、版本、开发目标与整体范围。':'“新建待办需求”创建一条独立需求明细，填写需求描述、范围和验收要求；后续可归入开发包、转 POM 或池内处理。')+'</div>':
+   '<div class="notice">为 '+e(pkgById(m.packageId).title)+' 录入一条独立需求，随所属开发需求包推进。</div>'+manualSourceField())+sel('手动创建背景 *','manualCategory',options(MANUAL_CATEGORY,v.manualCategory),'data-dynamic="manualCategory" required')+sourceFields(v);
+  if(m.packageId)body+=demandDetailFields(v);
+  else if(v.createScene==='package')body+=packageFields(v,true)+'<div class="notice">可先保存为空草稿；发起可行性评审前须录入需求明细、明确范围，并补全产品规划的分类、配置和目的。</div>';
+  else body+=demandDetailFields(v);
+ }else if(m.kind==='edit-requirement'){
+  title='编辑产品侧需求分析';const x=Object.keys(v).length?v:r;
+  if(isLocalRequirement(r)){title='编辑'+kindLabel(r)+'需求';body='<div class="notice">在需求池内维护处理范围及完成标准，原始来源保持只读。</div>'+localRequirementFields(x,true)}
+  else body='<div class="notice">原始来源保持只读；这里维护产品侧分析、纳入范围和验收要求。</div><div class="grid2">'+ownerFields(x)+field('需求期望时间','desired',x.desired,'date')+demandLevelField(x)+'</div>'+area('产品侧分析','analysis',x.analysis)+area('本次纳入范围 *','scope',x.scope,'required')+area('验收要求','acceptance',x.acceptance)+
+  '<div class="grid2">'+['用户价值','业务影响','可行性','竞争影响','库存影响'].map((s,i)=>field(s+'（0–100）','score_'+i,x['score_'+i]??r.scores[i],'number','min="0" max="100"')).join('')+'</div>'+
+  (r.packageId?area('调整原因 / 影响说明 *','reason',v.reason,'required'):'');
+ }else if(m.kind==='edit-package'){
+  title='编辑需求包概况';const x=Object.keys(v).length?v:p;body=packageFields(x,false)+area('调整原因 *','reason',v.reason,'required');
+ }else if(m.kind==='group'){title='归入开发需求包';body=renderGroup(m);submit=m.step===3?'确认提交':'下一步';if(m.step>0)footerExtra=btn('上一步','wizard-back')}
+ else if(m.kind==='assign'){const o=m.type==='package'?p:r;title='调整负责人';body='<div class="notice">当前：'+e(userName(o.owner))+' · 产品线默认：'+e(userName(lineOwner(o.line)))+'</div>'+sel('新的产品经理 *','owner',userOptions(o.owner,'请选择'),'required')+area('调整原因 *','reason','','required');}
+ else if(m.kind==='material'){
+  const g=Number(m.gate),cat=m.category;title='补充'+DOC_TYPES[cat];submit='保存并引用';
+  body='<div class="notice">'+GATES[g]+' · 送审时会锁定本次引用版本。</div>'+sel('资料提供方式','materialMode',options({demo:'使用内置演示资料',file:'选择本地文件（仅记录元数据）',reuse:'引用已有版本',external:'引用外部版本与送审快照',...(!['report','plan','project'].includes(cat)?{na:'不适用，填写原因'}:{})},v.materialMode||'demo'),'data-dynamic="materialMode"');
+  const mode=v.materialMode||'demo';
+  if(mode==='reuse')body+=sel('已有资料版本 *','docId',options(Object.fromEntries(state.documents.filter(d=>d.packageId===p.id&&d.category===cat).map(d=>[d.id,d.fileName+' · '+d.version+' · '+GATES[d.stage]])),v.docId,'请选择'),'required');
+  else if(mode==='na')body+=area('不适用原因 *','reason',v.reason,'required');
+  else{
+   if(mode==='file')body+='<label class="field"><span>选择文件 *</span><input type="file" name="file" required><span class="field-hint">仅在浏览器保存名称、大小和类型，不读取文件正文，不向服务器上传。</span></label>';
+   else body+=field(mode==='external'?'文档名称 *':'演示资料名称 *','fileName',v.fileName||p.title+'-'+DOC_TYPES[cat]+'.pdf','text','required');
+   body+='<div class="grid2">'+field('版本标识 *','version',v.version||'V'+(state.documents.filter(d=>d.packageId===p.id&&d.category===cat).length+1)+'.0','text','required')+sel('资料提供人 *','provider',userOptions(v.provider||CONTEXT.currentUser),'required')+'</div>';
+   if(mode==='external')body+=field('外部文档地址 *','url',v.url,'url','required placeholder="https://…"')+area('送审快照 / 固定版本说明 *','snapshotNote',v.snapshotNote,'required');
+   body+=area('本次变更 / 迭代差异说明','note',v.note);
+  }
+ }else if(m.kind==='preview'){
+  title='资料预览';submit='';const d=m.reviewId?state.reviews.find(x=>x.id===m.reviewId)?.snapshot.materials.find(x=>x.id===m.id):state.documents.find(x=>x.id===m.id);
+  body=d?'<div class="doc-preview">'+I('FileText')+'<h3>'+e(d.fileName||DOC_TYPES[d.category])+'</h3>'+badge('模拟资料预览','blue')+'<p>此原型只记录资料元数据，未上传或展示文件正文。</p></div><dl class="kv">'+kv('资料类别',e(DOC_TYPES[d.category]))+kv('版本',e(d.version))+kv('提供人 / 上传人',e(userName(d.provider))+' / '+e(userName(d.uploadedBy)))+kv('上传时间',timeText(d.uploadedAt))+kv('大小',d.size?Math.round(d.size/1024)+' KB':'—')+kv('说明',e(d.na?d.reason:d.note||d.snapshotNote||'内置演示资料'))+'</dl>'+(d.url?'<p class="paragraph">外部版本引用：'+e(d.url)+'</p>':''):'<div class="notice error">未找到该版本资料。</div>';
+ }else if(m.kind==='start-review'){
+  title='发起'+GATES[m.gate];submit='确认发起';const errors=reviewBlockers(p,Number(m.gate));
+  body=(errors.length?'<div class="notice warn"><strong>发起前请补齐：</strong><ul>'+errors.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>':'<div class="notice success">资料齐备。本次送审保存 V'+p.version+' 的需求明细与资料快照。</div>')+
+  (Number(m.gate)===0?'<section class="card"><h3>同步产品规划必填字段</h3><p class="muted">填写后才能发起可行性评审。</p>'+sel('分类 *','classification',options({'260尺寸':'260尺寸','280尺寸':'280尺寸','300尺寸':'300尺寸','300尺寸以上':'300尺寸以上'},p.planningAdmission?.classification,'请选择分类'),'required')+field('配置 *','configuration',p.planningAdmission?.configuration,'text','required placeholder="填写产品配置"')+area('目的 *','purpose',p.planningAdmission?.purpose,'required placeholder="说明进入产品规划的业务目的"')+'</section>':'')+
+  sel('评审组织人 *','organizer',userOptions(p.owner),'required')+'<div class="field"><span>评审人员 *</span><div class="row wrap">'+CONTEXT.users.map(u=>check(e(u.name)+' · '+e(u.role),'person_'+u.id,['pm-1','rd-1','pj-1'].includes(u.id))).join('')+'</div></div>';
+ }else if(m.kind==='opinion'){title='记录评审意见';body=sel('意见提供人 *','actor',userOptions(CONTEXT.currentUser),'required')+area('评审意见 *','text','','required');}
+ else if(m.kind==='conclusion'){
+  title='记录'+GATES[review.gate]+'结论';submit='确认结论';
+  body='<div class="notice">第 '+review.round+' 轮 · 依据需求包 V'+review.snapshot.packageVersion+' 和本轮锁定资料。</div>'+sel('评审结论 *','conclusion',options({passed:'通过',conditional:'有条件通过',rework:'补充后复审',rejected:'不通过'},v.conclusion||'passed'),'data-dynamic="conclusion" required')+sel('结论确认人 *','confirmer',userOptions(v.confirmer||'rd-1'),'required')+area('结论说明 / 会议纪要依据 *','summary',v.summary,'required');
+  if(v.conclusion==='conditional'||v.conclusion==='rework')body+=area('整改事项 *','condition',v.condition,'required')+'<div class="grid2">'+sel('整改责任人 *','conditionOwner',userOptions(v.conditionOwner||pkgById(review.packageId).owner),'required')+field('完成期限 *','due',v.due||day(3),'date','required')+'</div>'+field('阻塞范围 *','block',v.block||'阻塞本关口放行及后续同步','text','required');
+ }else if(m.kind==='condition'){title='登记整改完成';body=area('完成证据 / 验证结果 *','evidence','','required');}
+ else if(m.kind==='release'){title='确认放行条件满足';submit='确认通过';body='<div class="notice">只有全部整改完成且经确认后，本关口才变为通过并触发相应同步。</div>'+sel('确认人 *','confirmer',userOptions('rd-1'),'required')+area('确认依据 *','evidence','','required');}
+ else if(m.kind==='withdraw'){title='撤回当前轮次';submit='确认撤回';body='<div class="notice">本轮资料、意见和撤回原因全部保留。下次发起将新增轮次。</div>'+area('撤回原因 *','reason','','required');}
+ else if(m.kind==='correction'){title='补充 / 更正评审记录';body='<div class="notice">新增补充记录，保留原定稿结论。如影响批准范围，请走范围变更及复审。</div>'+area('补充内容与原因 *','text','','required');}
+ else if(m.kind==='freeze'){title='补建立项冻结基线';submit='确认冻结';body='<div class="notice">仅用于修复立项评审通过但基线缺失的演示数据。正常流程在立项评审通过时自动冻结。</div>'+check('已确认本次立项评审版本完整 *','coreConfirmed',false);}
+ else if(m.kind==='baseline'){
+  title=m.history?'历史批准基线':'当前冻结基线';submit='';const b=m.history?p.baselineHistory.at(-1):p.baseline;
+  body=b?'<div class="notice">'+e(b.id)+' · V'+b.version+' · '+timeText(b.at)+'</div>'+b.snapshot.requirements.map(x=>'<section class="card"><h3>'+e(x.id)+' · '+e(x.title)+'</h3><p class="paragraph">'+e(x.scope)+'</p><div class="notice">'+e(x.acceptance)+'</div></section>').join('')+'<h3>引用资料</h3>'+b.snapshot.materials.map(d=>'<p>'+e(DOC_TYPES[d.category])+' · '+e(d.version)+'</p>').join(''):'暂无基线';
+ }else if(m.kind==='move'){
+  title='调整需求归属';body='<div class="notice">'+e(r.id)+' 当前归属 '+e(r.packageId)+'。已通过评审的包会先形成待确认变更。</div>'+sel('调整方式','operation',options({remove:'移出需求包，回到待分析',transfer:'转移到另一个开发需求包'},v.operation||'remove'),'data-dynamic="operation"')+
+  (v.operation==='transfer'?sel('目标需求包 *','targetId',options(Object.fromEntries(state.packages.filter(x=>x.id!==r.packageId&&['active','draft'].includes(x.status)).map(x=>[x.id,x.title])),v.targetId,'请选择'),'required'):'')+
+  area('调整原因与影响 *','reason',v.reason,'required placeholder="说明功能、成本、周期、技术、验收的变化"')+sel('评审影响','impact',options({requirements:'需求范围变化',feasibility:'改变可行性结论'},v.impact||'requirements'));
+ }else if(m.kind==='confirm-change'){
+  const c=state.changes.find(x=>x.id===m.id);title='确认范围变更';submit='确认变更并开启复审';
+  body='<div class="notice warn">确认后生成新工作版本；原批准基线及评审记录继续保留，关联系统仍保留原批准范围，待复审后更新。</div><dl class="kv">'+kv('变更编号',e(c.id))+kv('涉及条目',e(c.ids.join('、')))+kv('变更原因',e(c.reason))+kv('评审范围',c.impact==='feasibility'?'重新完成三个关口':'重新确认需求与立项范围')+'</dl>'+area('变更确认依据 *','evidence','','required');
+ }else if(m.kind==='lifecycle'){
+  const o=m.type==='package'?p:r;const labels={hold:'挂起',resume:'恢复推进',close:'关闭',reopen:'重新开启'};title=labels[m.mode]+(m.type==='package'?'需求包':'需求');submit='确认'+labels[m.mode];
+  body=area('操作原因 *','reason','','required');
+  if(m.mode==='hold')body+=area('恢复条件 *','resumeCondition','','required')+field('复查时间 *','reviewDate',day(7),'date','required');
+  if(m.mode==='close')body+=sel('关闭结果 *','result',options({'已实现':'已实现','不采纳':'不采纳','取消':'取消','转其他平台':'转其他平台'},'不采纳'),'required')+area('结果依据 / 交接信息 *','evidence','','required');
+  if(m.type==='package'&&o.external.project)body+='<div class="notice">关联项目 '+e(o.external.project.id)+' 将同步对应暂停、恢复或取消状态。</div>';
+ }else if(m.kind==='local-progress'){
+  title='更新'+kindLabel(r)+'进展';const t=r.localProgress||{};
+  body='<div class="notice">完成后在需求池内闭环，不创建规划项或项目。</div>'+field('承接部门 *','department',v.department??t.department,'text','required')+
+   '<div class="grid2">'+sel('处理负责人 *','owner',userOptions(v.owner||r.owner,'请选择'),'required')+field('完成期限 *','due',v.due||r.desired,'date','required')+'</div>'+
+   '<div class="notice">完成标准：'+e(r.acceptance)+'</div>'+sel('池内处理进度','localStatus',options(LOCAL_PROGRESS,v.localStatus||t.status||'待处理'),'data-dynamic="localStatus"')+
+   area(v.localStatus==='已完成'?'验收结果与完成证据 *':'进展说明 / 完成证据','result',v.result??t.result,v.localStatus==='已完成'?'required':'');
+ }else if(m.kind==='transaction'){
+  title=r.kind==='transaction'?'更新 POM 事务':'转入部门 POM';const t=r.transaction||{},isNew=r.kind!=='transaction',txStatus=isNew?(v.transactionStatus||'规划中'):(v.transactionStatus||t.status||'规划中'),needsAcceptance=['待承接','开发中','待验收','已完成','挂起'].includes(txStatus),needsDevelopment=['开发中','待验收','已完成'].includes(txStatus),contentFrozen=!isNew&&['待承接','开发中','待验收','已完成','挂起','需求终止'].includes(t.status),planningName=v.planningName??t.planningName??r.title,planningContent=v.planningContent??t.planningContent??r.description??r.scope??'';
+  body='<div class="notice">'+(isNew?'初始状态默认“规划中”，也可直接选择“待承接”。规划中只需确认需求名称、需求内容和转入原因；进入待承接后再填写承接信息。':'按当前状态维护需求和承接信息；更新操作由系统自动记录操作人、时间及前后状态，不要求填写调整原因。')+'</div>'+ 
+   (isNew?sel('初始状态 *','transactionStatus',options({规划中:'规划中',待承接:'待承接'},txStatus),'data-dynamic="transactionStatus" required'):sel('POM 事务状态 *','transactionStatus',options(Object.fromEntries(pomNextStatuses(t.status||'规划中').map(x=>[x,x])),txStatus),'data-dynamic="transactionStatus" required'))+
+   field('需求名称 *','planningName',planningName,'text','required maxlength="100" '+(contentFrozen?'readonly':''))+area('需求内容 *','planningContent',planningContent,'required '+(contentFrozen?'readonly':''))+
+   (contentFrozen?'<div class="notice">需求内容已冻结为 V'+(t.currentVersion||1)+'。如需修改，请返回详情点击“升级需求版本”；旧版本将继续保留并可查询。</div>':'')+
+   (needsAcceptance?area('完成标准 *','criteria',v.criteria??t.criteria??r.acceptance,'required'):'')+
+   (needsAcceptance?field('承接部门 *','department',v.department??t.department??r.localProgress?.department,'text','required')+'<div class="grid2">'+sel('承接负责人 *','owner',userOptions(v.owner||t.owner||r.owner,'请选择'),'required')+field('完成期限 *','due',v.due||t.due||r.desired,'date','required')+'</div>':'')+
+   (needsDevelopment?sel('具体处理人 *','handler',userOptions(v.handler||t.handler||t.owner||r.owner,'请选择'),'required')+'<div class="notice"><strong>POM 事务：</strong>'+(t.pomId?e(t.pomId)+' · '+e(t.transactionName||r.title+'处理事务'):'状态保存为“开发中”后由系统自动创建并回写编号和事务名称')+'</div>':'')+
+   (!isNew?(txStatus==='已完成'?area('处理结果 / 完成证据 *','result',v.result??t.result,'required'):area('进展说明','result',v.result??t.result)):'')+
+   (isNew?area('转入原因 *','reason',v.reason,'required'):'');
+ }else if(m.kind==='tx-version'){
+  const t=r.transaction||{},current=t.currentVersion||1;title='升级需求版本';submit='生成 V'+(current+1);body='<div class="notice">当前 V'+current+' 已冻结。本次将生成新的需求版本，旧版本内容继续保留并可在详情中查询；POM 关联编号保持不变。</div>'+field('新版本需求名称 *','planningName',t.planningName||r.title,'text','required maxlength="100"')+area('新版本需求内容 *','planningContent',t.planningContent||r.description||r.scope,'required')+area('版本升级原因 *','reason','','required');
+ }else if(m.kind==='planning-admission'){
+  title='完善产品规划必填信息';submit='保存';body='<div class="notice">发起可行性评审前，必须填写分类、配置和目的；评审通过后系统据此同步产品规划。</div>'+sel('分类 *','classification',options({'260尺寸':'260尺寸','280尺寸':'280尺寸','300尺寸':'300尺寸','300尺寸以上':'300尺寸以上'},v.classification,'请选择分类'),'required')+field('配置 *','configuration',v.configuration,'text','required placeholder="填写产品配置"')+area('目的 *','purpose',v.purpose,'required placeholder="说明进入产品规划的业务目的"');
+ }else if(m.kind==='tx-package'){
+  title='合并为事务包';submit='创建事务包';const ids=m.ids.filter(id=>canJoinTransactionPackage(reqById(id)));body='<div class="notice">事务需求可以单条处理；仅将同一承接方向、适合统一推进的事务合并。已选 '+ids.length+' 条。</div>'+field('事务包名称 *','title',v.title,'text','required')+field('承接部门 *','department',v.department||reqById(ids[0])?.transaction?.department,'text','required')+'<div class="grid2">'+sel('事务负责人 *','owner',userOptions(v.owner||CONTEXT.currentUser,'请选择'),'required')+field('统一期限 *','due',v.due,'date','required')+'</div>'+area('合并原因 *','reason',v.reason,'required')+ids.map(id=>'<div class="notice"><strong>'+e(id)+' · '+e(reqById(id).title)+'</strong></div>').join('');
+ }else if(m.kind==='tx-package-version'){
+  const current=tp.currentVersion||1,ms=txMembers(tp);title='升级事务包需求版本';submit='整包生成 V'+(current+1);body='<div class="notice">当前 V'+current+' 已整包冻结。本次将同时更新事务包需求名称、需求内容及全部明细快照；旧版本继续保留，包内明细不单独升级。</div>'+field('新版本需求名称 *','planningName',tp.planningName||tp.title,'text','required maxlength="100"')+area('新版本需求内容 *','planningContent',tp.planningContent||tp.reason,'required')+'<h3>本版本需求明细（'+ms.length+' 条）</h3>'+ms.map(item=>'<section class="card"><strong>'+e(item.id)+'</strong>'+field('需求明细名称 *','memberTitle_'+item.id,item.title,'text','required maxlength="100"')+area('需求内容 *','memberScope_'+item.id,item.scope||item.description,'required')+area('验收要求 *','memberAcceptance_'+item.id,item.acceptance||item.transaction?.criteria,'required')+'</section>').join('')+area('版本升级原因 *','reason','','required');
+ }else if(m.kind==='tx-package-progress'){
+  title='更新事务包';submit='保存包级进展';body='<div class="notice">事务包整体承接、整体管理。本次修改将同步到包内全部需求明细，不允许部分明细单独承接或切换进度。</div>'+field('需求名称','planningName',tp.planningName||tp.title,'text',txPackageFrozen(tp)?'readonly':'')+area('需求内容','planningContent',tp.planningContent||tp.reason,txPackageFrozen(tp)?'readonly':'')+(txPackageFrozen(tp)?'<div class="notice">事务包需求已冻结为 V'+(tp.currentVersion||1)+'。如需调整名称、内容或明细，请使用“升级需求版本”。</div>':'')+field('承接部门 *','department',tp.department,'text','required')+'<div class="grid2">'+sel('事务负责人 *','owner',userOptions(tp.owner,'请选择'),'required')+field('统一期限 *','due',tp.due,'date','required')+'</div>'+sel('统一处理进度 *','transactionStatus',options(POM_PROGRESS,tp.status||'开发中'),'required')+area('包级进展 / 完成结果','result',tp.result)+area('调整原因 *','reason','','required');
+ }else if(m.kind==='tx-add-detail'){
+  title='补充事务包需求明细';submit='创建明细';body='<div class="notice">为 '+e(tp.title)+' 补充一条独立需求明细。明细继承事务包的承接部门、负责人、统一期限和处理状态；状态为开发中时，由系统自动创建 POM 事务并回写编号和事务名称。</div>'+field('需求明细名称 *','title',v.title,'text','required maxlength="100"')+'<div class="grid2">'+sel('产品线 *','line',lineOptions(v.line,'请选择产品线'),'required')+sel('产品 / 型号（可选）','product',productOptions(v.product,'不关联具体产品'))+demandLevelField(v)+'</div>'+area('需求描述与处理范围 *','description',v.description,'required')+area('验收要求 / 完成标准 *','acceptance',v.acceptance,'required')+area('补充原因 *','reason',v.reason,'required');
+ }else if(m.kind==='package-to-transaction'){
+  title='开发需求包转为 POM 事务';submit='确认转事务';const packageTxStatus=v.transactionStatus||'规划中',packageNeedsAcceptance=packageTxStatus==='待承接';body='<div class="notice warn">用于资源或规划原因改走事务处理。初始状态默认“规划中”，也可直接选择“待承接”。POM 编号和事务名称将在状态转为“开发中”时自动创建并回写。</div>'+sel('初始状态 *','transactionStatus',options({规划中:'规划中',待承接:'待承接'},packageTxStatus),'data-dynamic="transactionStatus" required')+area(packageTxStatus==='规划中'?'规划说明 / 处理目标':'完成标准 *','criteria',v.criteria||p.scope,packageTxStatus==='待承接'?'required':'')+(packageNeedsAcceptance?field('承接部门 *','department',v.department,'text','required')+'<div class="grid2">'+sel('承接负责人 *','owner',userOptions(v.owner||p.owner,'请选择'),'required')+field('完成期限 *','due',v.due||p.desired,'date','required')+'</div>':'')+area('转换原因 *','reason',v.reason,'required placeholder="说明资源、规划或执行原因"');
+ }else if(m.kind==='project-progress'){title='模拟项目状态回传';body='<div class="notice">模拟项目管理系统回传实际进度；项目编号保持不变。标记“已转量”后，后续变更应走 ECN，本需求池不再跟进。</div>'+sel('项目执行状态','projectStatus',options({initiated:'已立项',doing:'开发中',complete:'已完成',production:'已转量'},p.external.project.status))+field('项目计划完成时间','planned',p.external.project.planned,'date')+area('回传进展 / 里程碑 *','note','','required');}
+ else if(m.kind==='accept'){title='确认需求实现';body='<div class="notice">'+e(r.title)+'<br>验收要求：'+e(r.acceptance)+'</div>'+area('验收证据与结果 *','evidence','','required');submit='确认实现';}
+ else if(m.kind==='reset'){title='重置演示数据';submit='确认重置';body='<div class="notice warn">仅清除本原型在当前浏览器的演示操作，恢复初始案例。其他页面、文件和系统数据不受影响。</div>'+check('我确认恢复初始演示数据','confirmed',false);}
+ const d=ROOT.querySelector('#business-dialog');const oldScroll=d.querySelector('.modal-body')?.scrollTop||0;
+ d.innerHTML='<form id="business-form"><header class="modal-head"><h2>'+title+'</h2><button type="button" class="icon-btn" data-action="close-modal" aria-label="关闭弹窗">'+I('X')+'</button></header><div class="modal-body"><div id="form-error" class="form-error" role="alert" hidden></div>'+body+'</div><footer class="modal-actions">'+footerExtra+'<span class="spacer"></span>'+btn(submit?'取消':'关闭','close-modal')+(submit?'<button type="submit" class="btn primary">'+submit+'</button>':'')+'</footer></form>';
+ d.querySelector('.modal-body').scrollTop=oldScroll;
+}
+function requireText(value,label){if(!String(value||'').trim())fail('请填写'+label);return String(value).trim()}
+function selectedProfessionals(v){return ['hardware','software','structure'].filter(c=>v['pro_'+c])}
+function validatePackage(v,kind){
+ if(!isDevelopmentKind(kind))fail('只有新产品开发和产品迭代开发可以创建开发需求包');
+ ['title','product','targetVersion','description','scope'].forEach(k=>requireText(v[k],{title:'需求包名称',product:'目标产品',targetVersion:'目标版本',description:'开发目标',scope:'开发范围'}[k]));
+ if(kind==='iteration'){if(!CONTEXT.products.some(x=>x.id===v.product))fail('迭代必须选择已有产品');requireText(v.currentVersion,'当前版本');if(v.currentVersion.trim()===v.targetVersion.trim())fail('目标版本应区别于当前版本');const product=CONTEXT.products.find(x=>x.id===v.product);if(product.line!==v.line)fail('所选现有产品与产品线不一致，请调整产品线')}
+}
+function newPackageFrom(v,kind,status){
+ validatePackage(v,kind);const p=makePkg(uid('PKG'),v.title.trim(),{kind,line:v.line,owner:v.owner||'',assignment:v.assignment||'auto',product:v.product.trim(),currentVersion:v.currentVersion||'',targetVersion:v.targetVersion.trim(),description:v.description.trim(),scope:v.scope.trim(),level:v.level||'L2',desired:v.desired||'',source:v.source||'manual',strategy:v.strategy||'',customer:v.customer||'',constraints:v.constraints||'',professionals:selectedProfessionals(v),status:status||'draft'});
+ if(v.source==='manual'&&MANUAL_CATEGORY[v.manualCategory])Object.assign(p,sourcePayload(v));
+ state.packages.push(p);audit('package',p.id,'创建'+KIND[kind],p.assignment==='manual'?'手动指定负责人 '+userName(p.owner):'按产品线自动分派 '+userName(p.owner));return p;
+}
+function validateLocalRequirement(v,kind){
+ if(kind!=='optimization'&&kind!=='other')fail('请选择有效的需求类型');
+ requireText(v.scope,'处理目标与范围');requireText(v.acceptance,'完成标准');
+ if(kind==='optimization'&&!CONTEXT.products.some(x=>x.id===v.product))fail('产品优化需要选择现有产品');
+ if(v.product){const product=CONTEXT.products.find(x=>x.id===v.product);if(!product||product.line!==v.line)fail('所选产品与产品线不一致，请调整产品线')}
+}
+function validateDemandDetail(v,kind){
+ if(!CREATE_KIND[kind])fail('请选择有效的具体类型');requireText(v.description,'需求描述与期望结果');requireText(v.scope,'需求范围');requireText(v.acceptance,'验收要求');
+ if(kind==='optimization'&&!CONTEXT.products.some(x=>x.id===v.product))fail('产品优化需要选择现有产品');
+ if(v.product){const product=CONTEXT.products.find(x=>x.id===v.product);if(product&&product.line!==v.line)fail('所选产品与产品线不一致，请调整产品线')}
+}
+function proposeContentChange(p,type,obj,patch,reason){
+ assertPackageEditable(p);
+ if(p.external.project?.status==='production')fail('项目已转量，后续需求变更走 ECN，本需求池不再跟进');
+ if(p.gates[2].status==='passed'){
+  const c={id:uid('CHG'),ecrId:uid('ECR'),changeType:'ECR',packageId:p.id,targetId:p.id,sourceId:p.id,ids:type==='requirement'?[obj.id]:members(p).map(r=>r.id),scopes:{},operation:'content',patchType:type,patch:clone(patch),reason:requireText(reason,'ECR 变更原因与影响'),impact:'requirements',status:'pending',at:stamp(),actor:CONTEXT.currentUser,before:clone([{id:p.id,version:p.version,requirements:members(p),scope:p.scope}])};
+  state.changes.push(c);audit('package',p.id,'提出 ECR 设计变更',c.ecrId+' · '+reason);return 'pending';
+ }
+ Object.assign(obj,patch);
+ if(p.gates[1].status==='passed'){p.version+=1;p.gates[1].status='unstarted';p.gates[2].status='unstarted';audit('package',p.id,'立项前调整需求','产品规格书标注变更；工作版本 V'+p.version+'，重新发起需求评审')}
+ audit(type,obj.id,'更新产品侧内容',reason||'更新分析、范围及验收要求');return 'applied';
+}
+function updateAssignmentFields(obj,v,reason){
+ const oldLine=obj.line,oldOwner=obj.owner;
+ changeLine(obj,v.line);
+ if(v.assignment==='manual'&&(obj.assignment!=='manual'||v.owner!==oldOwner)){assign(obj,v.owner||'',reason||'编辑时手动指定负责人')}
+ else if(obj.assignment==='manual')obj.owner=v.owner||oldOwner;
+ if(oldLine!==obj.line)audit(obj.id.startsWith('PKG')?'package':'requirement',obj.id,'调整产品线',lineName(oldLine)+' → '+lineName(obj.line)+'；'+(obj.assignment==='manual'?'保留手动指定负责人':'同步默认负责人 '+userName(obj.owner)));
+}
+function submitGroup(m){
+ const data=readForm();m.values={...m.values,...data};
+ if(m.step===0){
+  m.ids=state.requirements.filter(r=>data['pick_'+r.id]&&canJoinPackage(r)).map(r=>r.id);if(!m.ids.length)fail('请选择至少一条可纳入的需求');
+ }else if(m.step===1){
+  m.targetMode=data.targetMode;m.targetId=data.targetId||'';
+  if(m.targetMode==='existing'){const p=pkgById(m.targetId);if(!p)fail('请选择目标需求包');assertPackageEditable(p)}
+  else validatePackage(m.values,m.values.packageKind);
+ }else if(m.step===2){
+  requireText(data.reason,'分配原因');
+  m.ids.forEach(id=>m.scopes[id]={scope:requireText(data['scope_'+id],'纳入范围'),acceptance:requireText(data['acceptance_'+id],'验收要求')});
+ }else{
+  m.ids.forEach(id=>{if(!canJoinPackage(reqById(id)))fail(id+' 当前不可归入开发需求包，请重新选择')});
+  let p=m.targetMode==='existing'?pkgById(m.targetId):null;if(p)assertPackageEditable(p);
+  if(!p)p=newPackageFrom({...m.values,source:'manual',manualCategory:'other',sourceDetail:'由 '+m.ids.join('、')+' 归并创建开发需求包'},m.values.packageKind,'active');
+  const result=requestMembership(p.id,m.ids,m.scopes,'add','',m.values.reason,m.values.impact);
+  if(p.status==='draft'&&result==='applied')p.status='active';view.selected.clear();closeModal();view.detailStack=[];view.detail=null;openDetail('package',p.id,result==='pending'?'history':'overview');commit();toast(result==='pending'?'范围变更已提出，确认前保留原范围':'需求已归入同一个开发需求包');return;
+ }
+ m.step++;renderModal();ROOT.querySelector('.modal-body').scrollTop=0;
+}
+function saveMaterial(m,data){
+ const p=pkgById(m.id),g=Number(m.gate),cat=m.category,mode=data.materialMode;
+ if(mode==='reuse'){const d=state.documents.find(x=>x.id===data.docId&&x.packageId===p.id&&x.category===cat);if(!d)fail('请选择有效资料版本');p.bindings[g][cat]=d.id;audit('package',p.id,'引用已有资料',GATES[g]+' · '+DOC_TYPES[cat]+' '+d.version);return}
+ const file=ROOT.querySelector('input[name="file"]')?.files[0];
+ if(mode==='file'&&!file)fail('请选择一个文件');
+ if(mode==='external'){const url=new URL(data.url);if(!['http:','https:'].includes(url.protocol))fail('文档地址需使用 HTTP 或 HTTPS');requireText(data.snapshotNote,'可追溯的送审快照说明')}
+ const d={id:uid('DOC'),packageId:p.id,category:cat,version:mode==='na'?'不适用 / V'+p.version:requireText(data.version,'资料版本'),fileName:mode==='na'?DOC_TYPES[cat]+'（不适用）':mode==='file'?file.name:requireText(data.fileName,'资料名称'),provider:data.provider||CONTEXT.currentUser,uploadedBy:CONTEXT.currentUser,uploadedAt:stamp(),stage:g,na:mode==='na',reason:mode==='na'?requireText(data.reason,'不适用原因'):'',size:file?file.size:mode==='demo'?245760:0,mime:file?.type||'',simulated:true,note:data.note||'',url:data.url||'',snapshotNote:data.snapshotNote||''};
+ state.documents.push(d);p.bindings[g][cat]=d.id;audit('package',p.id,'保存资料版本',GATES[g]+' · '+DOC_TYPES[cat]+' '+d.version+'；保留历史引用');
+}
+function saveLifecycle(m,data){
+ const o=m.type==='package'?pkgById(m.id):reqById(m.id);requireText(data.reason,'操作原因');
+ if(m.type==='requirement'&&o.packageId)fail('需求已归包，请在需求包内调整归属或处理整个需求包的状态');
+ if(m.type==='requirement'&&pendingMembership(o.id))fail('请先确认或取消待处理的归属变更');
+ if(m.type==='package'&&o.gates.some(g=>g.status==='reviewing'))fail('当前仍在评审，请先撤回当前轮次');
+ const old=o.status;
+ if(m.mode==='hold'){o.beforeHold=o.status;o.status='hold';o.holdReason=data.reason;o.resumeCondition=requireText(data.resumeCondition,'恢复条件');o.reviewDate=requireText(data.reviewDate,'复查时间')}
+ if(m.mode==='resume'){o.status=o.beforeHold||'active';o.resumeNote=data.reason}
+ if(m.mode==='close'){
+  if(data.result==='已实现'&&(m.type==='package'?members(o).some(r=>!r.fulfilled)||!members(o).length:!o.fulfilled))fail('请先完成需求明细验收或事务结果确认，再以已实现关闭');
+  const evidence=requireText(data.evidence,'关闭依据');o.beforeClose=o.status;o.status='closed';o.closeReason=data.result;o.closeNote=evidence;
+ }
+ if(m.mode==='reopen'){
+  o.status=m.type==='package'||o.kind==='transaction'||isLocalRequirement(o)?'active':'pending';o.reopenNote=data.reason;
+  if(isLocalRequirement(o)){o.fulfilled=false;o.localProgress={...(o.localProgress||{}),status:'待处理',result:''};o.acceptanceEvidence='';o.acceptedBy='';o.acceptedAt=''}
+ }
+ audit(m.type,o.id,{hold:'挂起',resume:'恢复',close:'关闭',reopen:'重新开启'}[m.mode],data.reason+(data.result?'；'+data.result+'：'+data.evidence:''));
+ if(m.type==='package'&&o.external.project){
+  const pr=o.external.project;const target=m.mode==='hold'?'paused':m.mode==='close'&&data.result!=='已实现'?'cancelled':null;
+  if(target){pr.beforePause=pr.status;pr.status=target}else if(m.mode==='resume'||m.mode==='reopen')pr.status=pr.beforePause||'pending';
+  pr.syncStatus='success';pr.lastSuccess=stamp();
+  state.syncLogs.push({id:uid('SYNC'),packageId:o.id,target:'project',op:'lifecycle',status:'success',at:stamp(),detail:'模拟回执：同一项目 '+pr.id+' 状态更新为 '+PROJECT_STATUS[pr.status]});
+  o.external.plan.managementStatus=o.status;
+ }
+}
+function saveTransaction(r,data){
+ if(!r)fail('需求不存在');
+ if(r.transactionPackageId)fail('该明细属于事务包，请在事务包层级统一更新承接与进度');
+ if(r.packageId)fail('已归包需求请先通过归属调整移出，再转入部门 POM');
+ if(pendingMembership(r.id))fail('已有待确认归属变更，请先确认或取消，不能重复分配到 POM');
+ if(['hold','closed'].includes(r.status))fail('请先恢复或重新开启需求');
+ const wasTransaction=r.kind==='transaction',previous=r.transaction||{},transactionStatus=requireText(data.transactionStatus,'POM 事务状态'),reason=wasTransaction?'更新 POM 事务':requireText(data.reason,'转入原因'),planningName=requireText(data.planningName??previous.planningName??r.title,'需求名称'),planningContent=requireText(data.planningContent??previous.planningContent??r.description??r.scope,'需求内容');
+ if(!POM_PROGRESS[transactionStatus])fail('请选择有效的 POM 事务状态');
+ const contentFrozen=wasTransaction&&['待承接','开发中','待验收','已完成','挂起','需求终止'].includes(previous.status);if(contentFrozen&&(planningName!==(previous.planningName||r.title)||planningContent!==(previous.planningContent||r.description||r.scope||'')))fail('需求名称和内容已冻结，请通过升级需求版本进行修改');
+ const needsAcceptance=['待承接','开发中','待验收','已完成','挂起'].includes(transactionStatus),needsDevelopment=['开发中','待验收','已完成'].includes(transactionStatus),completed=transactionStatus==='已完成',terminated=transactionStatus==='需求终止',paused=transactionStatus==='挂起';
+ const criteria=String(data.criteria??previous.criteria??'').trim();if(needsAcceptance&&!criteria)fail('状态为'+transactionStatus+'时必须填写完成标准');
+ const department=needsAcceptance?requireText(data.department??previous.department,'承接部门'):'';
+ const owner=needsAcceptance?requireText(data.owner??previous.owner,'承接负责人'):'';
+ const due=needsAcceptance?requireText(data.due??previous.due,'完成期限'):'';
+ const handler=needsDevelopment?requireText(data.handler??previous.handler,'具体处理人'):'';
+ if(needsAcceptance&&!CONTEXT.users.some(u=>u.id===owner))fail('请选择有效的承接负责人');
+ if(needsDevelopment&&!CONTEXT.users.some(u=>u.id===handler))fail('请选择有效的具体处理人');
+ if(completed)requireText(data.result,'完成结果与证据');
+ const before=routingSnapshot(r);r.requirementKind=requirementKind(r);
+ r.kind='transaction';r.status=completed||terminated?'closed':paused?'hold':'active';r.fulfilled=completed;
+ let pomId=previous.pomId||'',transactionName=previous.transactionName||'',startedAt=previous.startedAt||'',currentVersion=previous.currentVersion||0,versions=clone(previous.versions||[]);
+ if(needsAcceptance&&!currentVersion){currentVersion=1;versions.push({version:1,name:planningName,content:planningContent,at:stamp(),actor:CONTEXT.currentUser,reason:'进入待承接后冻结'})}
+ if(needsDevelopment&&!pomId){pomId=uid('POM');transactionName=planningName;startedAt=stamp();state.syncLogs.push({id:uid('SYNC'),requirementId:r.id,target:'pom',op:'create',status:'success',at:startedAt,detail:'POM 自动创建成功：'+pomId+' · '+transactionName})}
+ r.transaction={department,owner,handler,due,pomId,transactionName,startedAt,actualEnd:completed?(previous.actualEnd||stamp()):previous.actualEnd||'',planningName,planningContent,currentVersion,versions,criteria,status:transactionStatus,result:data.result||previous.result||'',pomSyncStatus:pomId?'同步成功':'未创建'};if(criteria)r.acceptance=criteria;
+ if(needsAcceptance&&r.owner!==owner)assign(r,owner,'POM 承接负责人调整：'+reason);
+ if(completed){r.closeReason='已实现';r.closeNote=data.result;r.acceptanceEvidence=data.result;r.acceptedBy=CONTEXT.currentUser;r.acceptedAt=stamp()}
+ recordRouting(r,before,reason);
+ audit('requirement',r.id,wasTransaction?'更新 POM 事务':'转入部门 POM',transactionStatus+'；'+(department||'待规划承接')+'；'+(pomId||'POM尚未创建')+'；'+reason+'；'+(data.result||'等待执行'));
+ return completed?'事务已完成':terminated?'事务需求已终止':paused?'事务已挂起':transactionStatus==='待验收'?'事务已进入待验收':transactionStatus==='开发中'?'已自动创建 POM 事务并进入开发中':transactionStatus==='待承接'?'已流转给承接负责人，等待接单':'已转入 POM 规划中';
+}
+function createTransactionPackage(data,ids){
+ const valid=ids.filter(id=>canJoinTransactionPackage(reqById(id)));if(valid.length<2)fail('请至少选择两条尚未归包的事务需求');
+ const p={id:uid('TPK'),title:requireText(data.title,'事务包名称'),department:requireText(data.department,'承接部门'),owner:requireText(data.owner,'事务负责人'),due:requireText(data.due,'统一期限'),status:'开发中',reason:requireText(data.reason,'合并原因'),createdAt:stamp(),currentVersion:0,versions:[]};
+ state.transactionPackages.push(p);valid.forEach(id=>{const r=reqById(id);r.transactionPackageId=p.id;r.status='active';r.fulfilled=false;r.transaction={...(r.transaction||{}),department:p.department,owner:p.owner,due:p.due,status:p.status};audit('requirement',id,'纳入事务包',p.id+' · '+p.title+'；统一承接状态 '+p.status)});p.planningName=p.title;p.planningContent=p.reason;p.currentVersion=1;p.versions=[{...txPackageSnapshot(p),version:1,reason:'创建事务包并整包冻结'}];view.txSelected.clear();audit('transactionPackage',p.id,'创建事务包',valid.join('、')+'；'+p.reason+'；整包需求冻结为 V1');return p;
+}
+function convertPackageToTransaction(p,data){
+ if(!p||!isDevelopmentKind(p.kind))fail('仅开发需求包可转为 POM 事务');if(p.external.project?.status==='production')fail('项目已转量，后续变更走 ECN');if(['closed','hold'].includes(p.status))fail('请先恢复需求包');
+ const status=data.transactionStatus||'规划中',needsAcceptance=status==='待承接',owner=needsAcceptance?requireText(data.owner,'承接负责人'):p.owner,department=needsAcceptance?requireText(data.department,'承接部门'):'',due=needsAcceptance?requireText(data.due,'完成期限'):'';if(needsAcceptance&&!CONTEXT.users.some(u=>u.id===owner))fail('请选择有效的承接负责人');
+ const nr=makeReq(uid('REQ'),p.title+'（POM事务）',{source:'manual',manualCategory:'other',sourceDetails:{sourceDetail:'由 '+p.id+' 转入事务处理'},sourceId:'CONVERT-'+p.id,line:p.line,product:p.product,owner,assignment:'manual',kind:'transaction',status:'active',description:p.description,original:p.scope,analysis:'开发需求包因资源或规划原因转为 POM 事务处理。',scope:p.scope,acceptance:data.criteria||'',desired:due,createdAt:stamp(),feedbackIds:[],feedbackFlow:null,convertedFromPackage:p.id,transaction:{department,owner:needsAcceptance?owner:'',handler:'',due,pomId:'',transactionName:'',criteria:data.criteria||'',status,result:'',pomSyncStatus:'未创建'}});
+ state.requirements.push(nr);p.status='closed';p.closeReason='转事务处理';p.closeNote=data.reason;p.convertedTransactionId=nr.id;audit('package',p.id,'转为 POM 事务',nr.id+' · '+status+' · '+data.reason);audit('requirement',nr.id,'由开发需求包转入',p.id+' · '+status+' · 保留原评审和需求记录');return nr;
+}
+function submitModal(event){
+ event.preventDefault();const m=view.modal;if(!m)return;
+ try{
+  if(m.kind==='group'){submitGroup(m);return}
+  const data=readForm(),v={...m.values,...data},p=pkgById(m.id),r=reqById(m.id),tp=txPkgById(m.id),review=state.reviews.find(x=>x.id===m.id);
+  let next=null,message='已保存';
+  if(m.kind==='create'){
+   requireText(v.title,'名称');validateManualSource(v);
+    if(!m.packageId){if(!CREATE_SCENE[v.createScene])fail('请选择新建类别');if(v.createScene==='package'&&!isDevelopmentKind(v.createType))fail('开发需求包请选择新产品开发或产品迭代开发')}
+   if(!CREATE_KIND[v.createType])fail('请选择有效的需求类型');
+   if(!CONTEXT.lines.some(x=>x.id===v.line))fail('请选择产品线');
+    if(!m.packageId&&v.createScene==='package'){const np=newPackageFrom(v,v.createType,'draft');next={type:'package',id:np.id};message='开发需求包草稿已创建，请录入需求明细'}
+   else{
+    const parent=m.packageId?pkgById(m.packageId):null;if(parent)assertPackageEditable(parent);
+     validateDemandDetail(v,v.createType);
+    if(m.packageId&&!parent)fail('未找到所属开发需求包');
+    if(parent&&!isDevelopmentKind(parent.kind))fail('只能为新产品或产品迭代录入开发明细');
+     const nr=makeReq(uid('REQ'),v.title.trim(),{...sourcePayload(v),sourceId:'MANUAL-'+state.counters.REQ,line:v.line,product:v.product||'',owner:v.owner||'',assignment:v.assignment||'auto',description:v.description.trim(),original:v.description.trim(),analysis:v.description.trim(),scope:v.scope.trim(),acceptance:v.acceptance.trim(),evidence:v.evidence||'未补充证据',sourceNote:'当前用户 '+userName(CONTEXT.currentUser)+' 手动创建',level:v.level||'L2',desired:v.desired||'',createdAt:stamp(),...(!parent?{kind:v.createType,status:'pending',optimizationArea:v.createType==='optimization'?v.optimizationArea||'experience':'',...(['optimization','other'].includes(v.createType)?{localProgress:{department:v.department||'',status:'待处理',result:''}}:{})}:{})});
+    state.requirements.push(nr);audit('requirement',nr.id,'创建'+(parent?'需求明细':KIND[nr.kind]+'需求'),(nr.assignment==='manual'?'手动指定负责人 ':'按产品线自动分派至 ')+userName(nr.owner)+(!parent?'；保存在产品需求池，后续可归包、转入部门 POM 或池内处理':''));
+    if(parent){requestMembership(parent.id,[nr.id],{[nr.id]:{scope:nr.scope,acceptance:nr.acceptance}},'add','','新增需求明细：'+nr.title,'requirements');if(parent.status==='draft'&&members(parent).length)parent.status='active';next={type:'package',id:parent.id}}
+    else next={type:'requirement',id:nr.id};
+    message=nr.owner?'需求已创建并指定负责人':'需求已保存，等待指定产品经理';
+   }
+  }else if(m.kind==='edit-requirement'){
+   if(r.packageId)assertPackageEditable(pkgById(r.packageId));
+   if(pendingMembership(r.id))fail('请先确认或取消待处理的归属变更');
+   if(isLocalRequirement(r)){if(['hold','closed'].includes(r.status))fail('请先恢复或重新开启需求');requireText(v.analysis,'问题与背景');validateLocalRequirement(v,r.kind)}
+   const patch={analysis:v.analysis||'',scope:requireText(v.scope,'纳入范围'),acceptance:v.acceptance||'',level:v.level,desired:v.desired||'',scores:isLocalRequirement(r)?r.scores:[0,1,2,3,4].map(i=>v['score_'+i]??'')};
+   if(isLocalRequirement(r))Object.assign(patch,{product:v.product||'',optimizationArea:r.kind==='optimization'?v.optimizationArea:'',localProgress:{...(r.localProgress||{}),department:v.department||''}});
+   patch.scores.forEach(s=>{if(s!==''&&(!Number.isFinite(Number(s))||Number(s)<0||Number(s)>100))fail('五维评分需在 0–100 之间')});
+   const needsChange=r.packageId&&(r.scope!==patch.scope||r.acceptance!==patch.acceptance);
+   if(needsChange){const result=proposeContentChange(pkgById(r.packageId),'requirement',r,patch,v.reason);message=result==='pending'?'已提出内容变更，原批准范围未改变':'产品侧分析已更新'}
+   else{Object.assign(r,patch);audit('requirement',r.id,'更新产品侧分析',v.reason||'保留原始来源')}
+   updateAssignmentFields(r,v,v.reason);
+  }else if(m.kind==='edit-package'){
+   assertPackageEditable(p);validatePackage(v,p.kind);
+   const patch={title:v.title,product:v.product,currentVersion:v.currentVersion||'',targetVersion:v.targetVersion,description:v.description,scope:v.scope,level:v.level,desired:v.desired||'',professionals:selectedProfessionals(v)};
+   const result=proposeContentChange(p,'package',p,patch,v.reason);updateAssignmentFields(p,v,v.reason);message=result==='pending'?'已提出范围变更，待确认后开启复审':'需求包已更新';
+  }else if(m.kind==='planning-admission'){
+   p.planningAdmission={configuration:requireText(data.configuration,'配置'),classification:requireText(data.classification,'分类'),purpose:requireText(data.purpose,'规划目的')};audit('package',p.id,'完善产品规划准入信息',p.planningAdmission.classification+' · '+p.planningAdmission.purpose);message=p.gates[0].status==='passed'?'准入信息已保存，正在同步产品规划与待立项项目':'准入信息已保存';if(p.gates[0].status==='passed')syncPackage(p.id,'admit');
+  }else if(m.kind==='tx-package'){const tp=createTransactionPackage(data,m.ids);view.page=1;next={type:'transactionPackage',id:tp.id};message='事务包 '+tp.id+' 已创建，可在事务需求页查看';}
+  else if(m.kind==='tx-package-progress'){
+   if(!tp)fail('未找到事务包');const frozenBefore=txPackageFrozen(tp),planningName=requireText(data.planningName??tp.planningName??tp.title,'需求名称'),planningContent=requireText(data.planningContent??tp.planningContent??tp.reason,'需求内容');if(frozenBefore&&(planningName!==(tp.planningName||tp.title)||planningContent!==(tp.planningContent||tp.reason)))fail('事务包需求已冻结，请通过升级需求版本整包修改');const department=requireText(data.department,'承接部门'),owner=requireText(data.owner,'事务负责人'),due=requireText(data.due,'统一期限'),status=requireText(data.transactionStatus,'统一处理进度'),reason=requireText(data.reason,'调整原因');if(!POM_PROGRESS[status])fail('请选择有效的统一处理进度');if(status==='已完成')requireText(data.result,'包级完成结果');
+   Object.assign(tp,{planningName,title:planningName,planningContent,department,owner,due,status,result:data.result||''});txMembers(tp).forEach(item=>{item.status=['已完成','需求终止'].includes(status)?'closed':status==='挂起'?'hold':'active';item.fulfilled=status==='已完成';const tx={...(item.transaction||{}),department,owner,due,status};if(['开发中','待验收','已完成'].includes(status)){tx.handler=tx.handler||owner;if(!tx.pomId){tx.pomId=uid('POM');tx.transactionName=item.title+'处理事务';tx.startedAt=stamp();tx.pomSyncStatus='同步成功'}}if(status==='已完成')tx.actualEnd=tx.actualEnd||stamp();item.transaction=tx;if(status==='已完成'&&!item.transaction.result)item.transaction.result=data.result;audit('requirement',item.id,'随事务包统一更新',tp.id+' · '+status+'；'+reason)});if(txPackageFrozen(tp)&&!tp.currentVersion){tp.currentVersion=1;tp.versions=[{...txPackageSnapshot(tp),version:1,reason:'事务包进入待承接后整包冻结'}]}audit('transactionPackage',tp.id,'更新事务包统一进展',status+'；'+reason);message='事务包及全部明细已统一更新';next={type:'transactionPackage',id:tp.id};
+  }
+  else if(m.kind==='tx-package-version'){
+   if(!tp)fail('未找到事务包');if(!['待承接','开发中','待验收'].includes(tp.status))fail('只有待承接、开发中或待验收的事务包可以升级需求版本');const name=requireText(v.planningName,'新版本需求名称'),content=requireText(v.planningContent,'新版本需求内容'),reason=requireText(v.reason,'版本升级原因'),ms=txMembers(tp);let changed=name!==(tp.planningName||tp.title)||content!==(tp.planningContent||tp.reason);
+   ms.forEach(item=>{const nextTitle=requireText(v['memberTitle_'+item.id],'需求明细名称'),nextScope=requireText(v['memberScope_'+item.id],'需求内容'),nextAcceptance=requireText(v['memberAcceptance_'+item.id],'验收要求');if(nextTitle!==item.title||nextScope!==(item.scope||item.description)||nextAcceptance!==(item.acceptance||item.transaction?.criteria||''))changed=true;item.title=nextTitle;item.scope=nextScope;item.description=nextScope;item.acceptance=nextAcceptance;item.transaction={...(item.transaction||{}),criteria:nextAcceptance};if(item.transaction.pomId)item.transaction.transactionName=nextTitle+'处理事务'});if(!changed)fail('整包需求内容未发生变化，无需升级版本');
+   const current=tp.currentVersion||1;tp.versions=tp.versions||[];if(!tp.versions.some(x=>x.version===current))tp.versions.push({...txPackageSnapshot(tp),version:current});tp.currentVersion=current+1;tp.planningName=name;tp.title=name;tp.planningContent=content;tp.versions.push({...txPackageSnapshot(tp),version:tp.currentVersion,reason});audit('transactionPackage',tp.id,'升级事务包需求版本','V'+current+' → V'+tp.currentVersion+'；'+reason+'；'+ms.length+' 条明细整包更新');ms.forEach(item=>audit('requirement',item.id,'随事务包升级需求版本',tp.id+' · V'+tp.currentVersion));message='事务包已整包生成 V'+tp.currentVersion+'，旧版本继续保留';next={type:'transactionPackage',id:tp.id};
+  }
+  else if(m.kind==='tx-add-detail'){
+   const tp=txPkgById(m.id);if(!tp)fail('未找到事务包');if(txPackageFrozen(tp))fail('事务包需求已冻结，请通过升级需求版本整包调整需求范围');const title=requireText(v.title,'需求明细名称'),description=requireText(v.description,'需求描述与处理范围'),acceptance=requireText(v.acceptance,'验收要求 / 完成标准'),reason=requireText(v.reason,'补充原因');
+   const autoPom=['开发中','待验收','已完成'].includes(tp.status)?uid('POM'):'';
+   const createdAt=stamp(),nr=makeReq(uid('REQ'),title,{source:'manual',manualCategory:'other',sourceDetails:{sourceDetail:'在事务包 '+tp.id+' 中补充'},sourceId:'MANUAL-'+state.counters.REQ,line:v.line,product:v.product||'',owner:tp.owner,assignment:'manual',kind:'transaction',status:tp.status==='已完成'?'closed':'active',fulfilled:tp.status==='已完成',level:v.level||'L2',description,original:description,analysis:description,scope:description,acceptance,evidence:'事务包内补充需求明细',desired:tp.due,createdAt,transactionPackageId:tp.id,feedbackIds:[],feedbackFlow:null,transaction:{department:tp.department,owner:tp.owner,handler:tp.owner,due:tp.due,pomId:autoPom,transactionName:autoPom?title+'处理事务':'',startedAt:autoPom?createdAt:'',actualEnd:tp.status==='已完成'?createdAt:'',criteria:acceptance,status:tp.status||'开发中',result:tp.status==='已完成'?(tp.result||'随事务包完成'):'',pomSyncStatus:autoPom?'同步成功':'未创建'}});
+   state.requirements.push(nr);audit('requirement',nr.id,'补充事务包需求明细',tp.id+' · '+reason);audit('transactionPackage',tp.id,'补充需求明细',nr.id+' · '+title+'；'+reason);next={type:'transactionPackage',id:tp.id};message='事务包需求明细已补充';
+  }
+  else if(m.kind==='package-to-transaction'){const nr=convertPackageToTransaction(p,{transactionStatus:v.transactionStatus||'规划中',department:v.department||'',owner:v.owner||'',due:v.due||'',criteria:v.criteria||'',reason:requireText(v.reason,'转换原因')});next={type:'requirement',id:nr.id};message='开发需求包已转为 POM 事务并保留原记录';}
+  else if(m.kind==='assign'){assign(m.type==='package'?p:r,requireText(data.owner,'负责人'),data.reason)}
+  else if(m.kind==='material'){saveMaterial(m,data);message='资料已保存并引用，历史送审版本保持不变'}
+  else if(m.kind==='start-review'){
+   const participants=CONTEXT.users.filter(u=>data['person_'+u.id]).map(u=>u.id);if(!participants.length)fail('请选择至少一位评审人员');
+   if(Number(m.gate)===0)p.planningAdmission={classification:requireText(data.classification,'分类'),configuration:requireText(data.configuration,'配置'),purpose:requireText(data.purpose,'目的')};
+   const round=startReview(p,Number(m.gate),{organizer:data.organizer,participants});next={type:'review',id:round.id};message='评审已发起，送审快照已锁定';
+  }else if(m.kind==='opinion'){
+   if(review.status!=='reviewing')fail('本轮已结束，请使用补充 / 更正记录');
+   review.notes.push({actor:data.actor,text:requireText(data.text,'评审意见'),at:stamp()});audit('package',review.packageId,'记录评审意见',review.id+' · '+userName(data.actor));
+  }else if(m.kind==='conclusion'){
+   if(review.status!=='reviewing')fail('本轮已定稿，不能覆盖原结论');
+   requireText(data.summary,'结论依据');const outcome=data.conclusion;
+   if(['conditional','rework'].includes(outcome)){requireText(data.condition,'整改事项');requireText(data.due,'整改期限');requireText(data.block,'阻塞范围')}
+   review.conclusion={passed:'通过',conditional:'有条件通过',rework:'补充后复审',rejected:'不通过'}[outcome];review.summary=data.summary;review.confirmer=data.confirmer;review.finishedAt=stamp();
+   if(['conditional','rework'].includes(outcome))review.conditions.push({text:data.condition,owner:data.conditionOwner,due:data.due,block:data.block,done:false,evidence:''});
+   const pack=pkgById(review.packageId);
+   if(outcome==='passed')confirmPass(pack,review);
+   else{review.status=outcome;pack.gates[review.gate].status=outcome;audit('package',pack.id,'记录'+GATES[review.gate]+'结论',review.conclusion+' · '+data.summary)}
+   message=outcome==='conditional'?'有条件通过已记录，完成条件前不会放行或同步':'评审结论已保存';
+  }else if(m.kind==='condition'){
+   const c=review.conditions[Number(m.index)];c.evidence=requireText(data.evidence,'完成证据');c.done=true;c.completedAt=stamp();audit('package',review.packageId,'登记整改完成',review.id+' · '+c.text);
+  }else if(m.kind==='release'){
+   if(review.status!=='conditional')fail('当前轮次不是有条件通过');if(review.conditions.some(c=>!c.done))fail('仍有未完成的整改条件，暂不能放行');
+   review.release={actor:data.confirmer,evidence:requireText(data.evidence,'确认依据'),at:stamp()};review.confirmer=data.confirmer;confirmPass(pkgById(review.packageId),review);message='放行条件已确认，评审通过';
+  }else if(m.kind==='withdraw'){
+   if(!['reviewing','conditional'].includes(review.status))fail('当前轮次已结束');review.withdrawReason=requireText(data.reason,'撤回原因');review.status='withdrawn';review.finishedAt=stamp();pkgById(review.packageId).gates[review.gate].status='withdrawn';audit('package',review.packageId,'撤回评审',review.id+' · '+data.reason);
+  }else if(m.kind==='correction'){review.corrections=review.corrections||[];review.corrections.push({text:requireText(data.text,'补充内容'),actor:CONTEXT.currentUser,at:stamp()});audit('package',review.packageId,'补充更正评审记录',review.id+'；保留原结论')}
+  else if(m.kind==='freeze'){
+   if(p.gates[2].status!=='passed')fail('立项评审通过后才能冻结');if(p.status!=='active')fail('请先恢复需求包');
+   if(!data.coreConfirmed)fail('请确认所有核心需求已经明确');if(!members(p).length||members(p).some(x=>!x.acceptance.trim()||!x.scope.trim()))fail('存在未明确的需求范围或验收要求，请先补充');
+   if(state.changes.some(c=>c.status==='pending'&&(c.packageId===p.id||c.targetId===p.id)))fail('请先处理待确认范围变更');
+   if(data.deferred){requireText(data.deferredDue,'后移事项完成日期');requireText(data.deferredImpact,'后移边界与受影响动作')}
+   if(p.baseline)p.baselineHistory.push(clone(p.baseline));
+   const passedReview=state.reviews.filter(x=>x.packageId===p.id&&x.gate===2&&x.status==='passed').at(-1);if(!passedReview)fail('未找到已通过的立项评审');
+   p.baseline={id:uid('BASE'),version:p.version,at:stamp(),actor:CONTEXT.currentUser,snapshot:clone(passedReview.snapshot),deferred:[],source:'立项评审'};
+   audit('package',p.id,'补建立项冻结基线',p.baseline.id+' · V'+p.version);syncPackage(p.id,'baseline');message='立项冻结基线已补建';
+  }else if(m.kind==='move'){
+   requestMembership(data.operation==='transfer'?data.targetId:'',[r.id],{},data.operation,r.packageId,requireText(data.reason,'调整原因'),data.impact);message='归属调整已记录；已批准的范围需确认变更';
+  }else if(m.kind==='confirm-change'){
+   const c=state.changes.find(x=>x.id===m.id);const evidence=requireText(data.evidence,'变更确认依据');confirmChange(m.id);c.confirmationEvidence=evidence;message='新版本已生成，请完成受影响关口复审';
+  }else if(m.kind==='lifecycle'){saveLifecycle(m,data);message='状态已更新，原因与历史已保留'}
+  else if(m.kind==='local-progress'){
+   if(!isLocalRequirement(r)||r.packageId)fail('此操作仅适用于独立的产品优化和其他需求');
+   if(pendingMembership(r.id))fail('请先确认或取消待处理的归属变更');
+   if(['hold','closed'].includes(r.status))fail('请先恢复或重新开启需求');
+   const department=requireText(data.department,'承接部门'),owner=requireText(data.owner,'处理负责人'),due=requireText(data.due,'完成期限');
+   if(!LOCAL_PROGRESS[data.localStatus])fail('请选择有效的池内处理进度');
+   const completed=data.localStatus==='已完成';if(completed){requireText(data.result,'验收结果与完成证据');requireText(r.acceptance,'完成标准')}
+   r.localProgress={department,status:data.localStatus,result:data.result||'',updatedAt:stamp()};r.desired=due;r.fulfilled=completed;r.status=completed?'closed':'active';
+   if(r.owner!==owner)assign(r,owner,'需求池内处理负责人调整');
+   if(completed){r.closeReason='已实现';r.closeNote=data.result;r.acceptanceEvidence=data.result;r.acceptedBy=CONTEXT.currentUser;r.acceptedAt=stamp()}
+   audit('requirement',r.id,completed?'验收完成并关闭':'更新处理进展',department+' · '+data.localStatus+' · '+(data.result||'等待处理'));
+   message=completed?'需求已验收闭环，完成证据已保存':'需求处理进展已更新';
+  }
+  else if(m.kind==='transaction'){
+   message=saveTransaction(r,v);
+  }else if(m.kind==='tx-version'){
+   if(!r||r.kind!=='transaction'||r.transactionPackageId)fail('仅单条 POM 事务可以升级需求版本');const t=r.transaction||{};if(!['待承接','开发中','待验收'].includes(t.status))fail('只有待承接、开发中或待验收的事务可以升级需求版本');
+   const name=requireText(v.planningName,'新版本需求名称'),content=requireText(v.planningContent,'新版本需求内容'),reason=requireText(v.reason,'版本升级原因');if(name===(t.planningName||r.title)&&content===(t.planningContent||r.description||r.scope||''))fail('需求名称和内容未发生变化，无需升级版本');
+   const current=t.currentVersion||1;t.versions=t.versions||[];if(!t.versions.some(x=>x.version===current))t.versions.push({version:current,name:t.planningName||r.title,content:t.planningContent||r.description||r.scope||'',at:stamp(),actor:CONTEXT.currentUser,reason:'历史版本补录'});
+   const nextVersion=current+1;t.currentVersion=nextVersion;t.planningName=name;t.planningContent=content;t.versions.push({version:nextVersion,name,content,at:stamp(),actor:CONTEXT.currentUser,reason});if(t.pomId){t.transactionName=name;t.pomSyncStatus='同步成功';state.syncLogs.push({id:uid('SYNC'),requirementId:r.id,target:'pom',op:'update-version',status:'success',at:stamp(),detail:'POM 需求版本更新为 V'+nextVersion+'：'+name})}audit('requirement',r.id,'升级 POM 需求版本','V'+current+' → V'+nextVersion+'；'+reason);message='已生成 POM 需求版本 V'+nextVersion+'，旧版本继续保留';next={type:'requirement',id:r.id};
+   }else if(m.kind==='project-progress'){
+    const pr=p.external.project;if(!['initiated','doing','complete','production'].includes(pr.status))fail('项目成功立项后才能回传开发状态');
+    if(pr.status==='production'&&data.projectStatus!=='production')fail('项目已转量，不能在需求池回退状态');
+    if(pr.status==='complete'&&!['complete','production'].includes(data.projectStatus))fail('已完成项目的重新执行应通过范围变更及重新立项确认');
+   pr.status=data.projectStatus;pr.planned=data.planned||pr.planned;pr.progressNote=requireText(data.note,'回传进展');pr.lastSuccess=stamp();p.external.plan.projectStatus=pr.status;
+   state.syncLogs.push({id:uid('SYNC'),packageId:p.id,target:'project',op:'progress',status:'success',at:stamp(),detail:'回传 '+PROJECT_STATUS[pr.status]+'：'+data.note});audit('package',p.id,'项目状态回传',PROJECT_STATUS[pr.status]+' · '+data.note);message=pr.status==='complete'?'项目已完成，请逐项验收需求':'项目进展已更新';
+  }else if(m.kind==='accept'){
+   const pp=pkgById(r.packageId);if(!pp||pp.external.project?.status!=='complete')fail('等待项目完成后再确认实现');if(pp.status!=='active')fail('请先恢复需求包');
+   r.acceptanceEvidence=requireText(data.evidence,'验收证据');r.fulfilled=true;r.acceptedBy=CONTEXT.currentUser;r.acceptedAt=stamp();audit('requirement',r.id,'确认需求实现',data.evidence);audit('package',pp.id,'需求明细验收',r.id+' · '+data.evidence);message='已确认该条需求实现';
+  }else if(m.kind==='reset'){
+   if(!data.confirmed)fail('请勾选确认重置');state=seed();storageIssue=false;view.selected.clear();view.txSelected.clear();view.search='';view.line='';view.owner='';view.source='';view.status='';view.kind='';view.gate='';view.taskFilter='';view.tab='todo';view.page=1;closeDetail();message='演示数据已恢复';
+  }
+  closeModal();commit();if(next)openDetail(next.type,next.id,next.tab);toast(message);
+ }catch(err){formError(err.message)}
+}
+function dynamicForm(el){
+ const m=view.modal;if(!m)return;const values=readForm();m.values={...m.values,...values};
+ if(el.dataset.dynamic==='line'){if(m.values.assignment!=='manual')m.values.owner=lineOwner(values.line)}
+ if(el.dataset.dynamic==='owner')m.values.assignment='manual';
+ if(el.dataset.dynamic==='targetMode')m.targetMode=values.targetMode;
+ if(el.dataset.dynamic==='createScene'){m.values.createType='new';m.values.product='';m.values.currentVersion='';m.values.targetVersion=values.createScene==='package'?'V1.0':''}
+ if(el.dataset.dynamic==='createType'&&values.createType==='new'){m.values.currentVersion='';m.values.product='';m.values.targetVersion='V1.0'}
+ if(el.dataset.dynamic==='createType'&&values.createType==='iteration'){m.values.product='';m.values.currentVersion='';m.values.targetVersion=''}
+ if(el.dataset.dynamic==='createType'&&['optimization','other'].includes(values.createType)){
+  if(!CONTEXT.products.some(p=>p.id===m.values.product))m.values.product='';
+  m.values.currentVersion='';m.values.targetVersion='';
+ }
+ renderModal();
+}
+function handleAction(el){
+ const a=el.dataset.action,id=el.dataset.id,type=el.dataset.type||'requirement';
+ if(a==='tab'){view.tab=el.dataset.value;view.page=1;view.source='';view.taskFilter='';view.status='';view.kind='';view.gate='';if(view.tab==='requirements'){view.search='';view.line='';view.owner=''}render();const list=ROOT.querySelector('#main-list');list.scrollTop=0;list.scrollLeft=0}
+ else if(a==='stat'){const target=['review','materials'].includes(el.dataset.value)?'packages':'todo';const taskFilter=view.tab===target&&view.taskFilter===el.dataset.value?'':el.dataset.value;Object.assign(view,{tab:target,taskFilter,search:'',line:'',owner:'',source:'',status:'',kind:'',gate:'',page:1});render()}
+ else if(a==='clear-filter'){Object.assign(view,{search:'',line:'',owner:'',source:'',status:'',kind:'',gate:'',taskFilter:'',page:1});render()}
+ else if(a==='page'){view.page+=Number(el.dataset.value);render()}
+ else if(a==='detail')openDetail(type,id);
+ else if(a==='task'){const category=el.dataset.category;openDetail(type,id,type==='package'?(category==='sync'||category==='accept'?'links':'review'):'overview');if(category==='transaction')openModal('transaction',{id})}
+ else if(a==='close-detail')closeDetail();
+ else if(a==='back-detail')backDetail();
+ else if(a==='detail-tab'){view.detail.tab=el.dataset.value;view.detail.scroll=0;renderDrawer();ROOT.querySelector('.drawer-body').scrollTop=0}
+ else if(a==='gate'){view.detail.gate=Number(el.dataset.value);renderDrawer()}
+ else if(a==='create')openModal('create',{packageId:el.dataset.package||''});
+ else if(a==='close-modal')closeModal();
+ else if(a==='priority-help')openPriorityHelp();
+ else if(a==='close-priority')ROOT.querySelector('#priority-dialog').close();
+ else if(a==='group')openModal('group',{ids:el.dataset.ids?el.dataset.ids.split(','):undefined,packageId:el.dataset.package||''});
+ else if(a==='tx-package')openModal('tx-package',{ids:[...view.txSelected]});
+ else if(a==='tx-add-detail')openModal('tx-add-detail',{id});
+ else if(a==='wizard-back'){const m=view.modal;m.values={...m.values,...readForm()};if(m.step===2)m.ids.forEach(id=>m.scopes[id]={scope:m.values['scope_'+id]||'',acceptance:m.values['acceptance_'+id]||''});m.step=Math.max(0,m.step-1);renderModal()}
+ else if(a==='review-detail')openDetail('review',id);
+ else if(a==='preview')openModal('preview',{id,reviewId:el.dataset.review});
+ else if(['edit-requirement','edit-package','assign','opinion','conclusion','release','withdraw','correction','freeze','move','confirm-change','transaction','tx-version','tx-package-version','local-progress','project-progress','accept','planning-admission','package-to-transaction','tx-package-progress'].includes(a))openModal(a,{id,type});
+ else if(a==='material')openModal(a,{id,gate:Number(el.dataset.gate),category:el.dataset.category});
+ else if(a==='start-review')openModal(a,{id,gate:Number(el.dataset.gate)});
+ else if(a==='condition')openModal(a,{id,index:Number(el.dataset.index)});
+ else if(a==='baseline')openModal(a,{id,history:el.dataset.history==='true'});
+ else if(a==='lifecycle')openModal(a,{id,type,mode:el.dataset.mode});
+ else if(a==='candidate'){const p=pkgById(id);if(!p||!isDevelopmentKind(p.kind))fail('此类型不纳入产品规划');if(!p.external.plan){p.external.plan={id:'PLAN-'+p.id.slice(4),status:'candidate',syncStatus:'idle',planned:day(65)};audit('package',id,'关联候选规划',p.external.plan.id);commit();toast('已建立候选规划关联，尚未创建项目')}}
+ else if(a==='retry')syncPackage(id,el.dataset.op||'admit');
+ else if(a==='cancel-change'){cancelChange(id);toast('待确认变更已取消')}
+ else if(a==='feedback'){
+  const p=pkgById(id);if(p.external.project?.status!=='complete')fail('请等待项目完成并按明细确认实现情况');
+  if(!members(p).length||members(p).some(r=>!r.fulfilled))fail('仍有需求未验收，请逐项确认实现情况');
+  p.feedbackStatus='已回写';members(p).forEach(r=>r.feedbackProgress='已实现，等待反馈系统判断原始反馈闭环');
+  audit('package',p.id,'回写反馈处理进展',members(p).length+' 条需求已确认实现；原始反馈是否关闭由反馈系统判断');commit();toast('已模拟回写需求归属与实现进展');
+ }else if(a==='reset')openModal('reset');
+ else if(a==='select-all'){
+  ROOT.querySelectorAll('#main-list input[data-select]:not(:disabled)').forEach(c=>{if(el.checked)view.selected.add(c.dataset.select);else view.selected.delete(c.dataset.select)});render();
+ }else if(a==='tx-select-all'){
+  ROOT.querySelectorAll('#main-list input[data-tx-select]:not(:disabled)').forEach(c=>{if(el.checked)view.txSelected.add(c.dataset.txSelect);else view.txSelected.delete(c.dataset.txSelect)});render();
+ }
+}
+ROOT.addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el||el.disabled)return;try{handleAction(el)}catch(err){toast(err.message)}});
+ROOT.addEventListener('input',event=>{if(event.target.id==='search-input'){view.search=event.target.value;view.page=1;render()}});
+ROOT.addEventListener('change',event=>{
+ const el=event.target;
+ if(el.dataset.filter){view[el.dataset.filter]=el.value;view.page=1;render()}
+ if(el.dataset.select){if(el.checked)view.selected.add(el.dataset.select);else view.selected.delete(el.dataset.select);render()}
+ if(el.dataset.txSelect){if(el.checked)view.txSelected.add(el.dataset.txSelect);else view.txSelected.delete(el.dataset.txSelect);render()}
+ if(el.dataset.dynamic)dynamicForm(el);
+ if(el.dataset.failNext){pkgById(el.dataset.failNext).failNext=el.checked;persist()}
+});
+ROOT.addEventListener('submit',event=>{if(event.target.id==='business-form')submitModal(event)});
+ROOT.querySelector('#detail-drawer').addEventListener('cancel',()=>{view.detail=null;view.detailStack=[]});
+ROOT.querySelector('#business-dialog').addEventListener('cancel',()=>{view.modal=null});
+ROOT.querySelector('#priority-dialog').addEventListener('cancel',event=>event.currentTarget.close());
+ROOT.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=I(el.dataset.icon));
+window.TerminalRequirementsPrototype=Object.freeze({snapshot:()=>clone(state),context:()=>clone(CONTEXT)});
+render();
+if(storageIssue)toast('原演示存储无法读取，已加载临时案例；确认重置后可恢复保存。');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>POM 事务详情</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#16233b;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}.page{max-width:1040px;margin:0 auto;padding:36px 24px}.back{display:inline-flex;align-items:center;gap:6px;color:#356ae6;text-decoration:none;margin-bottom:20px}.head,.card{background:#fff;border:1px solid #e2e8f2;border-radius:14px;box-shadow:0 8px 26px rgba(34,58,105,.06)}.head{padding:26px 30px;margin-bottom:18px}.eyebrow{color:#74839d;font-size:13px}.title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}.title h1{font-size:26px;margin:0}.badge{display:inline-flex;padding:4px 10px;border-radius:6px;background:#eaf1ff;color:#356ae6;font-weight:600}.badge.closed{background:#eef1f5;color:#596780}.card{padding:26px 30px}.card h2{margin:0 0 22px;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 48px}.item dt{color:#7d8ba3;margin-bottom:6px}.item dd{margin:0;font-size:16px;color:#233451}.notice{margin-top:26px;padding:14px 16px;border-radius:9px;background:#eef4ff;color:#4f6f9e}.muted{color:#8a98ad}@media(max-width:680px){.page{padding:18px 14px}.head,.card{padding:20px}.grid{grid-template-columns:1fr;gap:18px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="back" href="terminal-product-requirements-prototype-v2.html?v=20261102-8">← 返回终端产品需求管理</a>
+    <section class="head">
+      <div class="eyebrow">POM 事务管理系统 · 模拟详情页</div>
+      <div class="title"><h1 id="name">POM 事务详情</h1><span id="closedBadge" class="badge">未关闭</span></div>
+      <div id="requirement" class="muted"></div>
+    </section>
+    <section class="card">
+      <h2>基本信息</h2>
+      <dl class="grid">
+        <div class="item"><dt>POM 编号</dt><dd id="pomId">—</dd></div>
+        <div class="item"><dt>负责人</dt><dd id="owner">—</dd></div>
+        <div class="item"><dt>开始时间</dt><dd id="startAt">—</dd></div>
+        <div class="item"><dt>计划结束时间</dt><dd id="plannedEnd">—</dd></div>
+        <div class="item"><dt>实际结束时间</dt><dd id="actualEnd">—</dd></div>
+        <div class="item"><dt>状态</dt><dd id="closed">未关闭</dd></div>
+      </dl>
+      <div class="notice">当前业务阶段：<strong id="businessStatus">开发中</strong>。本页面用于演示从需求管理系统跳转并查看关联 POM 事务。</div>
+    </section>
+  </main>
+  <script>
+    const q=new URLSearchParams(location.search),value=(key,fallback='—')=>q.get(key)||fallback;
+    document.title=value('pomId','POM')+' · POM 事务详情';
+    document.getElementById('name').textContent=value('name','POM 事务详情');
+    document.getElementById('requirement').textContent='关联需求：'+value('requirementId');
+    ['pomId','owner','plannedEnd','closed','businessStatus'].forEach(id=>document.getElementById(id).textContent=value(id));
+    const time=key=>{const raw=q.get(key);return raw?raw.replace('T',' ').slice(0,16):'—'};
+    document.getElementById('startAt').textContent=time('startAt');document.getElementById('actualEnd').textContent=time('actualEnd');
+    const closed=value('closed','未关闭'),badge=document.getElementById('closedBadge');badge.textContent=closed;if(closed==='已关闭')badge.classList.add('closed');
+  </script>
+</body>
+</html>
