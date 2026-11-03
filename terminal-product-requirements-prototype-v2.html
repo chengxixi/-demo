@@ -388,6 +388,9 @@ const pkgById=id=>state.packages.find(p=>p.id===id);
  const txPackageFrozen=p=>p&&['待承接','开发中','待验收','已完成','挂起','需求终止'].includes(p.status);
  const txPackageSnapshot=p=>({version:p.currentVersion||1,name:p.planningName||p.title,content:p.planningContent||p.reason||'',members:txMembers(p).map(r=>({id:r.id,title:r.title,scope:r.scope||r.description||'',acceptance:r.acceptance||r.transaction?.criteria||''})),at:stamp(),actor:CONTEXT.currentUser,reason:'历史版本补录'});
 const members=p=>state.requirements.filter(r=>r.packageId===p.id);
+const packageVersionControlled=p=>!!(p&&(p.versionControlStarted||state.reviews.some(r=>r.packageId===p.id&&r.gate===1&&r.status==='passed')));
+const packageVersionSnapshot=(p,reason)=>({version:p.version,title:p.title,description:p.description,scope:p.scope,members:members(p).map(r=>({id:r.id,title:r.title,analysis:r.analysis||'',scope:r.scope||'',acceptance:r.acceptance||'',source:r.source,sourceId:r.sourceId})),at:stamp(),actor:CONTEXT.currentUser,reason:reason||'需求评审通过冻结'});
+state.packages.forEach(p=>{if(packageVersionControlled(p)){p.versionControlStarted=true;p.versions=p.versions||[];if(!p.versions.length)p.versions.push(packageVersionSnapshot(p,'历史需求评审版本补录'))}});
 const pendingMembership=(id,exceptId)=>state.changes.find(c=>c.id!==exceptId&&c.status==='pending'&&c.operation!=='content'&&c.ids.includes(id));
 function routingSnapshot(r){
  return clone({kind:r.kind,requirementKind:requirementKind(r),packageId:r.packageId,status:r.status,owner:r.owner,scope:r.scope,acceptance:r.acceptance,transaction:r.transaction||null,localProgress:r.localProgress||null});
@@ -446,6 +449,7 @@ function startReview(p,g,data){
  }
  function confirmPass(p,round){
   round.status='passed';round.finishedAt=stamp();p.gates[round.gate].status='passed';audit('package',p.id,GATES[round.gate]+'通过','第 '+round.round+' 轮 · 依据 V'+round.snapshot.packageVersion);
+  if(round.gate===1&&!p.versionControlStarted){p.versionControlStarted=true;p.versions=p.versions||[];p.versions.push(packageVersionSnapshot(p,'需求评审通过，冻结送审版本'));audit('package',p.id,'冻结需求评审版本','V'+p.version+' · '+members(p).length+' 条需求明细')}
   if(round.gate===2)freezeAtInitiation(p,round);
   commit();if(round.gate===0&&admissionReady(p))syncPackage(p.id,'admit');if(round.gate===2)syncPackage(p.id,'initiate');
 }
@@ -514,7 +518,8 @@ function requestMembership(targetId,ids,scopeMap,operation,sourceId,reason,impac
  validateMembership(ids,operation,sourceId);
   const initiated=[source,target].filter(Boolean).some(p=>p.gates[2].status==='passed');
   if(initiated){if(!reason||!reason.trim())fail('立项后的范围调整需要填写 ECR 变更原因');const record={id:uid('CHG'),ecrId:uid('ECR'),changeType:'ECR',packageId:(source||target).id,targetId:targetId||'',sourceId:sourceId||'',ids:clone(ids),scopes:clone(scopeMap||{}),operation,reason,impact:impact||'requirements',status:'pending',at:stamp(),actor:CONTEXT.currentUser,before:clone([source,target].filter(Boolean).map(p=>({id:p.id,version:p.version,requirements:members(p)})))};state.changes.push(record);audit('package',record.packageId,'提出 ECR 设计变更',record.ecrId+' · '+reason);ids.forEach(id=>audit('requirement',id,'提出 ECR 归属变更',record.ecrId+' · '+(sourceId||'需求池')+' → '+(targetId||'需求池')+'；确认前保持原去向'));commit();return 'pending'}
-  applyMembership(targetId,ids,scopeMap,operation,sourceId,reason);[source,target].filter(Boolean).forEach(p=>{if(p.gates[1].status==='passed'){p.version+=1;p.gates[1].status='unstarted';p.gates[2].status='unstarted';audit('package',p.id,'立项前调整需求','已在产品规格书标注；工作版本 V'+p.version+'，重新确认关键需求')}});commit();return 'applied';
+  if([source,target].filter(Boolean).some(packageVersionControlled))fail('需求评审已通过，请从开发需求包执行“升级需求版本”，系统将保留历史版本并重新发起需求评审');
+  applyMembership(targetId,ids,scopeMap,operation,sourceId,reason);commit();return 'applied';
 }
 function confirmChange(id){
  const c=state.changes.find(x=>x.id===id);if(!c||c.status!=='pending')fail('该变更已处理');
@@ -724,10 +729,10 @@ function renderRequirement(r){
  '<section class="card"><h3>处理记录</h3>'+history('requirement',r.id)+'</section>';
 }
 function renderPackageOverview(p){
- const rs=members(p);
- return '<div class="grid2"><section class="card"><div class="section-head"><h3>开发目标</h3>'+btn('编辑概况','edit-package',attrs(p.id),'small','Pencil')+'</div><p class="paragraph">'+e(p.description)+'</p><dl class="kv">'+kv('目标产品',e(p.product||'新品待定义'))+kv('主要产品线',e(lineName(p.line)))+kv('当前 / 目标版本',e(p.currentVersion||'新品')+' → '+e(p.targetVersion))+kv('需求来源',e(sourceLabel(p)))+kv('需求期望时间',dateText(p.desired))+kv('需求等级',levelBadge(p.level))+'</dl></section><section class="card"><h3>本次开发范围</h3><p class="paragraph">'+e(p.scope)+'</p><div class="notice">'+I('Layers')+' 当前工作版本 V'+p.version+' · '+(p.baseline?'已冻结基线 '+e(p.baseline.id):'尚未冻结')+'</div><p class="meta">需求包产品经理负责整体推进；原提报人和条目负责人保留在来源记录中。</p><dl class="kv">'+sourceInfo(p)+'</dl></section></div>'+
- '<section class="card"><div class="section-head"><div><h3>需求明细 <span class="muted">· '+rs.length+' 条</span></h3><p class="muted">关联原始反馈 '+feedbackCount(rs)+' 条，按来源编号去重</p></div><div class="row">'+btn('录入明细','create','data-package="'+p.id+'"','small','Plus')+btn('纳入已有需求','group','data-package="'+p.id+'"','small','GitMerge')+'</div></div>'+
- (rs.length?'<div class="table-wrap"><table><thead><tr><th>需求条目</th><th>纳入范围 / 验收要求</th><th>需求来源</th><th class="right">归属操作</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+detailLink(r,'requirement')+'<div class="meta">'+e(r.id)+'</div></td><td><p class="paragraph">'+e(r.scope)+'</p><div class="meta">'+e(r.acceptance||'待明确验收')+'</div></td><td>'+e(sourceLabel(r))+'</td><td class="right">'+link('调整归属','move',attrs(r.id)+' data-package="'+p.id+'"')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">'+I('FolderOpen')+'<h3>先明确这次要解决的需求</h3><p>可以录入新需求，也可以把多条反馈需求归入本需求包。</p></div>')+'</section>';
+ const rs=members(p),locked=packageVersionControlled(p),versionAction=btn('升级需求版本','package-version',attrs(p.id),'small primary','Layers');
+ return '<div class="grid2"><section class="card"><div class="section-head"><h3>开发目标</h3>'+(locked?versionAction:btn('编辑概况','edit-package',attrs(p.id),'small','Pencil'))+'</div><p class="paragraph">'+e(p.description)+'</p><dl class="kv">'+kv('目标产品',e(p.product||'新品待定义'))+kv('主要产品线',e(lineName(p.line)))+kv('当前 / 目标版本',e(p.currentVersion||'新品')+' → '+e(p.targetVersion))+kv('需求来源',e(sourceLabel(p)))+kv('需求期望时间',dateText(p.desired))+kv('需求等级',levelBadge(p.level))+'</dl></section><section class="card"><h3>本次开发范围</h3><p class="paragraph">'+e(p.scope)+'</p><div class="notice">'+I('Layers')+' 当前工作版本 V'+p.version+' · '+(locked?'需求评审版本已冻结':p.baseline?'已冻结基线 '+e(p.baseline.id):'尚未冻结')+'</div><p class="meta">'+(locked?'后续修改需求明细、补充需求或调整归属，必须升级需求版本；历史版本只读保留。':'需求包产品经理负责整体推进；原提报人和条目负责人保留在来源记录中。')+'</p><dl class="kv">'+sourceInfo(p)+'</dl></section></div>'+
+ '<section class="card"><div class="section-head"><div><h3>需求明细 <span class="muted">· '+rs.length+' 条</span></h3><p class="muted">关联原始反馈 '+feedbackCount(rs)+' 条，按来源编号去重</p></div><div class="row">'+(locked?versionAction:btn('录入明细','create','data-package="'+p.id+'"','small','Plus')+btn('纳入已有需求','group','data-package="'+p.id+'"','small','GitMerge'))+'</div></div>'+
+ (rs.length?'<div class="table-wrap"><table><thead><tr><th>需求条目</th><th>纳入范围 / 验收要求</th><th>需求来源</th><th class="right">归属操作</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+detailLink(r,'requirement')+'<div class="meta">'+e(r.id)+'</div></td><td><p class="paragraph">'+e(r.scope)+'</p><div class="meta">'+e(r.acceptance||'待明确验收')+'</div></td><td>'+e(sourceLabel(r))+'</td><td class="right">'+(locked?'<span class="muted">随版本管理</span>':link('调整归属','move',attrs(r.id)+' data-package="'+p.id+'"'))+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">'+I('FolderOpen')+'<h3>先明确这次要解决的需求</h3><p>可以录入新需求，也可以把多条反馈需求归入本需求包。</p></div>')+'</section>';
 }
 function renderMaterials(p,g){
  const cats=[...new Set(requiredDocs(p,g).concat(g===0?p.professionals:[]).concat(Object.keys(p.bindings[g])))];
@@ -774,9 +779,9 @@ function renderLinks(p){
  (logs.length?'<div class="timeline">'+logs.map(l=>'<div class="timeline-item"><div class="row"><strong>'+e(l.target==='plan'?'产品规划系统':'项目管理系统')+'</strong>'+badge(l.status==='success'?'成功':l.status==='error'?'失败':'同步中',l.status==='success'?'green':l.status==='error'?'red':'blue')+'<span class="spacer"></span><span class="muted">'+timeText(l.at)+'</span></div><p>'+e(l.detail||'等待模拟回执')+'</p></div>').join('')+'</div>':'<p class="muted">新增同步及重试将在这里分别记录每个目标系统的结果。</p>')+'</section>';
 }
 function renderChanges(p){
- const cs=state.changes.filter(c=>c.packageId===p.id||c.targetId===p.id||c.sourceId===p.id).slice().reverse();
- return '<section class="card"><div class="section-head"><h3>立项冻结基线</h3></div>'+
- (p.baseline?'<dl class="kv">'+kv('基线编号',e(p.baseline.id))+kv('冻结版本','V'+p.baseline.version)+kv('冻结来源',e(p.baseline.source||'立项评审'))+kv('确认人 / 时间',e(userName(p.baseline.actor))+' · '+timeText(p.baseline.at))+kv('需求数量',p.baseline.snapshot.requirements.length+' 条')+'</dl>'+btn('查看基线快照','baseline',attrs(p.id),'small'):'<p class="muted">立项评审通过时冻结。需求评审阶段只确认关键需求，不提前冻结。</p>')+
+ const cs=state.changes.filter(c=>c.packageId===p.id||c.targetId===p.id||c.sourceId===p.id).slice().reverse(),versions=p.versions||[];
+ return '<section class="card"><div class="section-head"><div><h3>需求版本记录</h3><p class="muted">需求评审通过后冻结；升级前后的包级范围及全部需求明细均只读保留。</p></div>'+badge(versions.length+' 个版本','blue')+'</div>'+(versions.length?versions.slice().reverse().map(v=>'<details><summary>V'+v.version+' · '+e(v.title)+(v.version===p.version?'（当前版本）':'')+'</summary><div class="notice"><div class="meta">'+timeText(v.at)+' · '+e(userName(v.actor))+' · '+e(v.reason||'需求版本冻结')+'</div><p class="paragraph">'+e(v.scope)+'</p>'+(v.members||[]).map(x=>'<div class="review-row"><strong>'+e(x.id+' · '+x.title)+'</strong><p class="paragraph">'+e(x.scope)+'</p><div class="meta">验收要求：'+e(x.acceptance||'待补充')+'</div></div>').join('')+'</div></details>').join(''):'<p class="muted">需求评审尚未通过，暂未形成冻结版本。</p>')+'</section><section class="card"><div class="section-head"><h3>立项冻结基线</h3></div>'+
+ (p.baseline?'<dl class="kv">'+kv('基线编号',e(p.baseline.id))+kv('冻结版本','V'+p.baseline.version)+kv('冻结来源',e(p.baseline.source||'立项评审'))+kv('确认人 / 时间',e(userName(p.baseline.actor))+' · '+timeText(p.baseline.at))+kv('需求数量',p.baseline.snapshot.requirements.length+' 条')+'</dl>'+btn('查看基线快照','baseline',attrs(p.id),'small'):'<p class="muted">立项评审通过时形成项目基线；需求评审通过后已先进入需求版本管理。</p>')+
  (p.baselineHistory.length?'<p class="meta">保留 '+p.baselineHistory.length+' 个历史基线，最近原批准版本 V'+p.baselineHistory.at(-1).version+'。'+link('查看历史基线','baseline',attrs(p.id)+' data-history="true"')+'</p>':'')+'</section>'+
  '<section class="card"><h3>变更控制边界</h3><div class="notice">立项前：在产品规格书备注并通过需求评审反复确认。立项后、转量前：走 ECR，需求池新增追溯记录并同步资料版本。转量后：走 ECN，本需求池不再跟进变更。</div></section>'+
  '<section class="card"><h3>范围与归属变更</h3>'+(cs.length?cs.map(c=>'<div class="review-row"><div class="row"><strong>'+e(c.ecrId||c.id)+'</strong>'+badge(c.changeType||'立项前调整',c.changeType==='ECR'?'blue':'')+badge(c.status==='pending'?'待确认':c.status==='confirmed'?'已确认':'已取消',c.status==='pending'?'orange':c.status==='confirmed'?'green':'')+'<span class="spacer"></span><span class="muted">'+timeText(c.at)+'</span></div><p class="paragraph">'+e(c.reason)+'</p><p class="meta">'+e(c.ids.join('、'))+' · '+e(c.sourceId||'未归包')+' → '+e(c.targetId||'移出归包')+'</p>'+(c.status==='pending'?'<div class="row">'+btn(c.changeType==='ECR'?'确认 ECR 并同步':'查看并确认变更','confirm-change',attrs(c.id),'small primary')+btn('取消变更','cancel-change',attrs(c.id),'small')+'</div>':'')+'</div>').join(''):'<p class="muted">尚无立项后 ECR 变更。</p>')+'</section><section class="card"><h3>操作记录</h3>'+history('package',p.id)+'</section>';
@@ -845,6 +850,7 @@ function openModal(kind,data){
  if(kind==='tx-add-detail'){const tp=txPkgById(m.id),sample=tp&&txMembers(tp)[0];m.values={line:sample?.line||'scale',product:sample?.product||'',level:'L2',due:tp?.due||day(7),...m.values}}
  if(kind==='planning-admission')m.values=clone(pkgById(m.id).planningAdmission||{});
  if(kind==='edit-package')m.values=clone(pkgById(m.id));
+ if(kind==='package-version')m.values={...clone(pkgById(m.id)),...m.values};
  if(kind==='edit-requirement')m.values=clone(reqById(m.id));
  renderModal();const d=ROOT.querySelector('#business-dialog');if(!d.open)d.showModal();
 }
@@ -949,6 +955,9 @@ function renderModal(){
   (r.packageId?area('调整原因 / 影响说明 *','reason',v.reason,'required'):'');
  }else if(m.kind==='edit-package'){
   title='编辑需求包概况';const x=Object.keys(v).length?v:p;body=packageFields(x,false)+area('调整原因 *','reason',v.reason,'required');
+ }else if(m.kind==='package-version'){
+  const current=p.version||1,ms=members(p),candidates=state.requirements.filter(canJoinPackage);title='升级开发需求包版本';submit='生成 V'+(current+1);
+  body='<div class="notice">需求评审已通过，当前 V'+current+' 已冻结。请在本流程中统一修改需求明细或补充需求；提交后保留旧版本完整数据，并将需求评审、立项评审重置为待发起。</div>'+area('新版本开发范围 *','scope',v.scope||p.scope,'required')+'<h3>当前需求明细（'+ms.length+' 条）</h3>'+ms.map(item=>'<section class="card"><strong>'+e(item.id)+'</strong>'+field('需求明细名称 *','memberTitle_'+item.id,item.title,'text','required maxlength="100"')+area('需求内容 / 纳入范围 *','memberScope_'+item.id,item.scope||item.description,'required')+area('验收要求 *','memberAcceptance_'+item.id,item.acceptance,'required')+'</section>').join('')+'<h3>补充需求（选填）</h3>'+field('新增需求名称','newTitle',v.newTitle,'text','maxlength="100" placeholder="不新增可留空"')+area('新增需求内容 / 纳入范围','newScope',v.newScope,'placeholder="填写后将作为新需求明细加入本版本"')+area('新增需求验收要求','newAcceptance',v.newAcceptance)+sel('或纳入一条已有需求','existingRequirementId',options(Object.fromEntries(candidates.map(x=>[x.id,x.id+' · '+x.title])),v.existingRequirementId,'不纳入已有需求'))+area('版本升级原因 *','reason',v.reason,'required');
  }else if(m.kind==='group'){title='归入开发需求包';body=renderGroup(m);submit=m.step===3?'确认提交':'下一步';if(m.step>0)footerExtra=btn('上一步','wizard-back')}
  else if(m.kind==='assign'){const o=m.type==='package'?p:r;title='调整负责人';body='<div class="notice">当前：'+e(userName(o.owner))+' · 产品线默认：'+e(userName(lineOwner(o.line)))+'</div>'+sel('新的产品经理 *','owner',userOptions(o.owner,'请选择'),'required')+area('调整原因 *','reason','','required');}
  else if(m.kind==='material'){
@@ -1068,8 +1077,8 @@ function proposeContentChange(p,type,obj,patch,reason){
   const c={id:uid('CHG'),ecrId:uid('ECR'),changeType:'ECR',packageId:p.id,targetId:p.id,sourceId:p.id,ids:type==='requirement'?[obj.id]:members(p).map(r=>r.id),scopes:{},operation:'content',patchType:type,patch:clone(patch),reason:requireText(reason,'ECR 变更原因与影响'),impact:'requirements',status:'pending',at:stamp(),actor:CONTEXT.currentUser,before:clone([{id:p.id,version:p.version,requirements:members(p),scope:p.scope}])};
   state.changes.push(c);audit('package',p.id,'提出 ECR 设计变更',c.ecrId+' · '+reason);return 'pending';
  }
+ if(packageVersionControlled(p))fail('需求评审已通过，请使用“升级需求版本”统一修改需求明细，系统将保留历史版本');
  Object.assign(obj,patch);
- if(p.gates[1].status==='passed'){p.version+=1;p.gates[1].status='unstarted';p.gates[2].status='unstarted';audit('package',p.id,'立项前调整需求','产品规格书标注变更；工作版本 V'+p.version+'，重新发起需求评审')}
  audit(type,obj.id,'更新产品侧内容',reason||'更新分析、范围及验收要求');return 'applied';
 }
 function updateAssignmentFields(obj,v,reason){
@@ -1187,7 +1196,7 @@ function submitModal(event){
    if(!CONTEXT.lines.some(x=>x.id===v.line))fail('请选择产品线');
     if(!m.packageId&&v.createScene==='package'){const np=newPackageFrom(v,v.createType,'draft');next={type:'package',id:np.id};message='开发需求包草稿已创建，请录入需求明细'}
    else{
-    const parent=m.packageId?pkgById(m.packageId):null;if(parent)assertPackageEditable(parent);
+    const parent=m.packageId?pkgById(m.packageId):null;if(parent){assertPackageEditable(parent);if(packageVersionControlled(parent))fail('需求评审已通过，请使用“升级需求版本”补充需求明细')}
      validateDemandDetail(v,v.createType);
     if(m.packageId&&!parent)fail('未找到所属开发需求包');
     if(parent&&!isDevelopmentKind(parent.kind))fail('只能为新产品或产品迭代录入开发明细');
@@ -1212,6 +1221,14 @@ function submitModal(event){
    assertPackageEditable(p);validatePackage(v,p.kind);
    const patch={title:v.title,product:v.product,currentVersion:v.currentVersion||'',targetVersion:v.targetVersion,description:v.description,scope:v.scope,level:v.level,desired:v.desired||'',professionals:selectedProfessionals(v)};
    const result=proposeContentChange(p,'package',p,patch,v.reason);updateAssignmentFields(p,v,v.reason);message=result==='pending'?'已提出范围变更，待确认后开启复审':'需求包已更新';
+  }else if(m.kind==='package-version'){
+   if(!p||!packageVersionControlled(p))fail('需求评审通过后才能执行版本升级');assertPackageEditable(p);const initiated=p.gates[2].status==='passed';
+   const reason=requireText(v.reason,'版本升级原因'),nextScope=requireText(v.scope,'新版本开发范围'),ms=members(p),current=p.version||1;let changed=nextScope!==p.scope;
+   p.versions=p.versions||[];if(!p.versions.some(x=>x.version===current))p.versions.push(packageVersionSnapshot(p,'历史版本补录'));
+   ms.forEach(item=>{const nextTitle=requireText(v['memberTitle_'+item.id],'需求明细名称'),scope=requireText(v['memberScope_'+item.id],'需求内容 / 纳入范围'),acceptance=requireText(v['memberAcceptance_'+item.id],'验收要求');if(nextTitle!==item.title||scope!==item.scope||acceptance!==item.acceptance)changed=true;Object.assign(item,{title:nextTitle,scope,description:scope,acceptance});audit('requirement',item.id,'随开发需求包升级版本',p.id+' · V'+(current+1))});
+   if(v.existingRequirementId){const existing=reqById(v.existingRequirementId);if(!canJoinPackage(existing))fail('所选已有需求已不可纳入');applyMembership(p.id,[existing.id],{[existing.id]:{scope:existing.scope,acceptance:existing.acceptance}},'add','','版本升级纳入已有需求：'+existing.title);changed=true}
+   if(String(v.newTitle||'').trim()){const title=requireText(v.newTitle,'新增需求名称'),scope=requireText(v.newScope,'新增需求内容 / 纳入范围'),acceptance=requireText(v.newAcceptance,'新增需求验收要求'),nr=makeReq(uid('REQ'),title,{source:'manual',manualCategory:'other',sourceId:'MANUAL-'+state.counters.REQ,line:p.line,product:p.product||'',owner:p.owner,assignment:'manual',kind:p.kind,status:'active',description:scope,original:scope,analysis:scope,scope,acceptance,evidence:'通过开发需求包版本升级补充',desired:p.desired,createdAt:stamp(),feedbackIds:[],feedbackFlow:null});state.requirements.push(nr);applyMembership(p.id,[nr.id],{[nr.id]:{scope,acceptance}},'add','','版本升级补充需求明细：'+title);changed=true}
+   if(!changed)fail('需求内容未发生变化，无需升级版本');if(initiated){const c={id:uid('CHG'),ecrId:uid('ECR'),changeType:'ECR',packageId:p.id,targetId:p.id,sourceId:p.id,ids:members(p).map(x=>x.id),scopes:{},operation:'content',patchType:'version',patch:{},reason,impact:'requirements',status:'confirmed',at:stamp(),actor:CONTEXT.currentUser,before:clone(p.versions.find(x=>x.version===current)),confirmationEvidence:'通过需求版本升级流程确认'};state.changes.push(c);if(p.baseline){p.baselineHistory.push(clone(p.baseline));p.baseline=null}audit('package',p.id,'确认 ECR 需求版本升级',c.ecrId+' · '+reason)}p.scope=nextScope;p.version=current+1;p.gates[1].status='unstarted';p.gates[2].status='unstarted';p.versions.push(packageVersionSnapshot(p,reason));audit('package',p.id,'升级需求版本','V'+current+' → V'+p.version+'；'+reason+'；当前 '+members(p).length+' 条需求明细');message='已生成开发需求包 V'+p.version+'，旧版本完整保留，请重新发起需求评审';next={type:'package',id:p.id};
   }else if(m.kind==='planning-admission'){
    p.planningAdmission={configuration:requireText(data.configuration,'配置'),classification:requireText(data.classification,'分类'),purpose:requireText(data.purpose,'规划目的')};audit('package',p.id,'完善产品规划准入信息',p.planningAdmission.classification+' · '+p.planningAdmission.purpose);message=p.gates[0].status==='passed'?'准入信息已保存，正在同步产品规划与待立项项目':'准入信息已保存';if(p.gates[0].status==='passed')syncPackage(p.id,'admit');
   }else if(m.kind==='tx-package'){const tp=createTransactionPackage(data,m.ids);view.page=1;next={type:'transactionPackage',id:tp.id};message='事务包 '+tp.id+' 已创建，可在事务需求页查看';}
@@ -1347,7 +1364,7 @@ function handleAction(el){
  else if(a==='wizard-back'){const m=view.modal;m.values={...m.values,...readForm()};if(m.step===2)m.ids.forEach(id=>m.scopes[id]={scope:m.values['scope_'+id]||'',acceptance:m.values['acceptance_'+id]||''});m.step=Math.max(0,m.step-1);renderModal()}
  else if(a==='review-detail')openDetail('review',id);
  else if(a==='preview')openModal('preview',{id,reviewId:el.dataset.review});
- else if(['edit-requirement','edit-package','assign','opinion','conclusion','release','withdraw','correction','freeze','move','confirm-change','transaction','tx-version','tx-package-accept','tx-package-version','local-progress','project-progress','accept','planning-admission','package-to-transaction','tx-package-progress'].includes(a))openModal(a,{id,type});
+ else if(['edit-requirement','edit-package','package-version','assign','opinion','conclusion','release','withdraw','correction','freeze','move','confirm-change','transaction','tx-version','tx-package-accept','tx-package-version','local-progress','project-progress','accept','planning-admission','package-to-transaction','tx-package-progress'].includes(a))openModal(a,{id,type});
  else if(a==='material')openModal(a,{id,gate:Number(el.dataset.gate),category:el.dataset.category});
  else if(a==='start-review')openModal(a,{id,gate:Number(el.dataset.gate)});
  else if(a==='condition')openModal(a,{id,index:Number(el.dataset.index)});
