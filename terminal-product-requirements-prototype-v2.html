@@ -356,7 +356,7 @@ const CONTEXT={today:'2026-10-27',currentUser:'pm-1',users:[{id:'pm-1',name:'林
 const REVIEWER_FORM_IDS=['pm-1','pm-2','rd-1','pj-1'];
 const DEFAULT_REVIEWER_IDS=['pm-1','rd-1','pj-1'];
 const GATES=['可行性评审','需求评审','立项评审'];
-const DOC_TYPES={report:'立项报告',plan:'产品规划书',project:'项目技术规格书',hardware:'硬件设计说明',software:'软件设计说明',structure:'结构设计说明',other:'补充资料'};
+const DOC_TYPES={report:'立项报告',plan:'产品规划书',project:'项目技术规格书',projectPlan:'项目整体计划',hardware:'硬件设计说明',software:'软件设计说明',structure:'结构设计说明',other:'补充资料'};
  const SOURCE={manual:'手动创建',feedback:'反馈线索',strategy:'战略',public:'公海需求池'};
  const MANUAL_CATEGORY={brand:'品牌规划输入',research:'研发规划',customer:'客户定制',other:'其他'};
  const CREATE_SCENE={detail:'新建待办需求',package:'新建开发需求包'};
@@ -465,7 +465,7 @@ function seed(){
  function external(p,projectStatus){p.external.plan={id:'PLAN-'+p.id.slice(4),status:'admitted',syncStatus:'success',lastSuccess:'2026-10-24T11:01:00',planned:day(65)};p.external.project={id:'PRJ-'+p.id.slice(4),status:projectStatus,syncStatus:'success',lastSuccess:'2026-10-24T11:01:00',supervisor:'ps-1',manager:'pj-1',planned:day(60),pendingOp:''}}
  const p1=s.packages[0];['report','plan'].forEach(c=>sd(p1,c,0));
  const p2=s.packages[1];['report','plan'].forEach(c=>sd(p2,c,0));sr(p2,0,'passed');external(p2,'pending');['report','plan','software'].forEach(c=>sd(p2,c,1));sr(p2,1,'reviewing');
-  for(const p of s.packages.slice(2)){p.planningAdmission={configuration:'标准配置 / 目标配置待样机确认',classification:'新品 / 迭代规划',purpose:'纳入产品路线图并进入研发立项'};for(let g=0;g<3;g++){(g===0?['report']:g===1?['plan',...p.professionals]:['report','plan','project',...p.professionals]).forEach(c=>sd(p,c,g));sr(p,g,'passed')}p.baseline={id:'BASE-'+String(++s.counters.BASE).padStart(3,'0'),version:1,at:'2026-10-25T15:00:00',actor:'pm-1',snapshot:snap(p,2),deferred:[],source:'立项评审'};external(p,p.id==='PKG-004'?'complete':'pending')}
+  for(const p of s.packages.slice(2)){p.planningAdmission={configuration:'标准配置 / 目标配置待样机确认',classification:'新品 / 迭代规划',purpose:'纳入产品路线图并进入研发立项'};for(let g=0;g<3;g++){(g===0?['report']:g===1?['plan',...p.professionals]:['report','plan','project','projectPlan',...p.professionals]).forEach(c=>sd(p,c,g));sr(p,g,'passed')}p.baseline={id:'BASE-'+String(++s.counters.BASE).padStart(3,'0'),version:1,at:'2026-10-25T15:00:00',actor:'pm-1',snapshot:snap(p,2),deferred:[],source:'立项评审'};external(p,p.id==='PKG-004'?'complete':'pending')}
  const p3=s.packages[2];p3.external.project.syncStatus='error';p3.external.project.pendingOp='initiate';p3.external.project.error='项目系统暂未响应，立项评审结果已保存。';
  s.audit=[{id:'LOG-001',entityType:'package',entityId:'PKG-003',action:'立项评审通过',detail:'送审版本 V1 已确认，自动立项同步失败，等待重试。',actor:'pm-1',at:'2026-10-26T14:30:00'},{id:'LOG-002',entityType:'package',entityId:'PKG-002',action:'需求评审待补充',detail:'需补齐项目说明书后发起新轮次。',actor:'pm-1',at:'2026-10-26T10:30:00'}];s.counters.LOG=2;
  return normalizeVocabulary(s);
@@ -519,10 +519,10 @@ function fail(message){throw new Error(message)}
  function requiredDocs(p,g){
   if(g===0)return ['report'];
   if(g===1)return ['plan',...p.professionals];
-  return ['report','plan','project',...p.professionals];
+  return ['report','plan','project','projectPlan',...p.professionals];
  }
 function boundDoc(p,g,cat){return state.documents.find(d=>d.id===p.bindings[g][cat])}
-function materialMissing(p,g){return requiredDocs(p,g).filter(cat=>{const d=boundDoc(p,g,cat);return !d||(d.na&&!d.reason)||(['report','plan','project'].includes(cat)&&d.na)})}
+function materialMissing(p,g){return requiredDocs(p,g).filter(cat=>{const d=boundDoc(p,g,cat);return !d||(d.na&&!d.reason)||(['report','plan','project','projectPlan'].includes(cat)&&d.na)})}
 function reviewBlockers(p,g){
  const list=[];if(!isDevelopmentKind(p.kind))list.push('仅新产品开发、产品迭代开发进入开发评审流程');if(p.status!=='active')list.push('请先恢复需求包为推进中');if(!p.owner)list.push('请指定负责产品经理');if(!members(p).length)list.push('请先添加需求明细');if(!p.scope.trim())list.push('请明确本次开发范围');
  if(g===0&&!admissionReady(p))list.push('请补全产品规划必填信息：分类、配置、目的、需求评审和立项评审里程碑');
@@ -890,7 +890,7 @@ function renderPackageOverview(p){
 }
 function renderMaterials(p,g){
  const cats=[...new Set(requiredDocs(p,g).concat(g===0?p.professionals:[]).concat(Object.keys(p.bindings[g])))];
- return '<section class="card"><div class="section-head"><div><h3>本关口送审资料</h3><p class="muted">'+['仅立项报告：用于判断是否准入研发项目','产品规划书与适用设计说明：用于确认关键需求','立项报告、规划、项目说明及适用设计资料：通过时冻结版本'][g]+'</p></div>'+btn('添加补充资料','material',attrs(p.id)+' data-gate="'+g+'" data-category="other"','small','Upload')+'</div>'+
+ return '<section class="card"><div class="section-head"><div><h3>本关口送审资料</h3><p class="muted">'+['仅立项报告：用于判断是否准入研发项目','产品规划书与适用设计说明：用于确认关键需求','立项报告、产品规划书、项目技术规格书、项目整体计划及适用设计资料：通过时冻结版本'][g]+'</p></div>'+btn('添加补充资料','material',attrs(p.id)+' data-gate="'+g+'" data-category="other"','small','Upload')+'</div>'+
  '<div class="table-wrap"><table><thead><tr><th>资料类别</th><th>当前引用版本</th><th>提供人 / 上传时间</th><th class="right">操作</th></tr></thead><tbody>'+cats.map(cat=>{const d=boundDoc(p,g,cat);return '<tr><td>'+e(DOC_TYPES[cat])+' '+(requiredDocs(p,g).includes(cat)?badge('必备'):badge('按需'))+'</td><td>'+(d?link(e(d.na?'不适用 · '+d.reason:d.fileName),'preview',attrs(d.id))+'<div class="meta">'+e(d.version)+' · '+(d.na?'保留原因':'模拟资料')+'</div>':badge('待补充','orange'))+'</td><td>'+(d?e(userName(d.provider))+'<div class="meta">'+timeText(d.uploadedAt)+'</div>':'—')+'</td><td class="right">'+link(d?'更新 / 引用':'补充资料','material',attrs(p.id)+' data-gate="'+g+'" data-category="'+cat+'"')+'</td></tr>'}).join('')+'</tbody></table></div><p class="meta">送审时锁定具体版本；后续更新资料不会改变历史评审快照。迭代可引用有效资料并补充差异说明。</p></section>';
 }
 function renderReviewIssues(issues,exportContext){
